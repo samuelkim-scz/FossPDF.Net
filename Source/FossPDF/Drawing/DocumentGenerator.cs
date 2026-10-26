@@ -25,18 +25,19 @@ namespace FossPDF.Drawing
         {
             CheckIfStreamIsCompatible(stream);
 
-            var metadata = document.GetMetadata();
-            using var canvas = new PdfCanvas(stream, metadata);
-            return RenderDocument(canvas, document);
+            var configuration = GenerationConfiguration.Resolve(document);
+            configuration.ValidatePdf();
+            using var canvas = new PdfCanvas(stream, configuration.Metadata);
+            return RenderDocument(canvas, document, configuration);
         }
 
         internal static void GenerateXps(Stream stream, IDocument document)
         {
             CheckIfStreamIsCompatible(stream);
 
-            var metadata = document.GetMetadata();
-            using var canvas = new XpsCanvas(stream, metadata);
-            RenderDocument(canvas, document);
+            var configuration = GenerationConfiguration.Resolve(document);
+            using var canvas = new XpsCanvas(stream, configuration.Metadata);
+            RenderDocument(canvas, document, configuration);
         }
 
         private static void CheckIfStreamIsCompatible(Stream stream)
@@ -48,53 +49,57 @@ namespace FossPDF.Drawing
                 throw new ArgumentException("The library requires a Stream object with the 'seek' capability available (the CanSeek flag). Please consider using the MemoryStream class.");
         }
 
-        internal static ICollection<byte[]> GenerateImages(IDocument document)
+        internal static ICollection<byte[]> GenerateImages(IDocument document, ImageGenerationSettings? settings = null)
         {
-            var metadata = document.GetMetadata();
-            using var canvas = new ImageCanvas(metadata);
-            RenderDocument(canvas, document);
+            var configuration = GenerationConfiguration.Resolve(document);
+            configuration.ApplyImageOutput(settings ?? ImageGenerationSettings.Default);
+            using var canvas = new ImageCanvas(configuration.Metadata);
+            RenderDocument(canvas, document, configuration);
 
             return canvas.Images;
         }
 
         internal static ICollection<string> GenerateSvg(IDocument document)
         {
+            var configuration = GenerationConfiguration.Resolve(document);
             using var canvas = new SvgCanvas();
-            RenderDocument(canvas, document);
+            RenderDocument(canvas, document, configuration);
 
             return canvas.Images;
         }
 
         internal static ICollection<PreviewerPicture> GeneratePreviewerPictures(IDocument document)
         {
+            var configuration = GenerationConfiguration.Resolve(document);
             using var canvas = new SkiaPictureCanvas();
-            RenderDocument(canvas, document);
+            RenderDocument(canvas, document, configuration);
             return canvas.Pictures;
         }
 
-        internal static int RenderDocument<TCanvas>(TCanvas canvas, IDocument document)
+        internal static int RenderDocument<TCanvas>(TCanvas canvas, IDocument document, GenerationConfiguration configuration)
             where TCanvas : ICanvas, IRenderingCanvas
         {
             var container = new DocumentContainer();
             document.Compose(container);
             var content = container.Compose();
             ApplyInheritedAndGlobalTexStyle(content, TextStyle.Default);
-            ApplyContentDirection(content, ContentDirection.LeftToRight);
+            ApplyContentDirection(content, configuration.ContentDirection);
 
-            var debuggingState = Settings.EnableDebugging ? ApplyDebugging(content) : null;
+            var debuggingState = configuration.EnableDebugging ? ApplyDebugging(content) : null;
 
-            if (Settings.EnableCaching)
+            if (configuration.EnableCaching)
                 ApplyCaching(content);
 
             var documentSpecificFontManager = FontManager.MakeDocumentSpecific();
             try
             {
-                documentSpecificFontManager.Tag = document.GetMetadata().Title ?? string.Empty;
+                documentSpecificFontManager.Tag = configuration.Metadata.Title ?? string.Empty;
                 var pageContext = new PageContext
                 {
-                    FontManager = documentSpecificFontManager
+                    FontManager = documentSpecificFontManager,
+                    CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs
                 };
-                RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
+                RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
 
                 // interrogate all TextBlockSpans
                 var allMyFuckingGlyphs = new Dictionary<Font, HashSet<uint>>();
@@ -112,9 +117,9 @@ namespace FossPDF.Drawing
                     ShaperFont = typeFaceToShaperFont[entry.Key]
                 }).ToList();
                 pageContext.FontManager.FireSubsetCallback(reqs);
-                RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
+                RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
 
-                RenderPass(pageContext, canvas, content, debuggingState);
+                RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
                 return pageContext.GetPageNumbers();
             }
             finally
@@ -169,7 +174,7 @@ namespace FossPDF.Drawing
             }
         }
 
-        internal static void RenderPass<TCanvas>(PageContext pageContext, TCanvas canvas, Container content, DebuggingState? debuggingState)
+        internal static void RenderPass<TCanvas>(PageContext pageContext, TCanvas canvas, Container content, DebuggingState? debuggingState, int pageLimit)
             where TCanvas : ICanvas, IRenderingCanvas
         {
             InjectDependencies(content, pageContext, canvas);
@@ -205,14 +210,14 @@ namespace FossPDF.Drawing
 
                 canvas.EndPage();
 
-                if (currentPage >= Settings.DocumentLayoutExceptionThreshold)
+                if (spacePlan.Type == SpacePlanType.FullRender)
+                    break;
+
+                if (currentPage >= pageLimit)
                 {
                     canvas.EndDocument();
                     ThrowLayoutException();
                 }
-
-                if (spacePlan.Type == SpacePlanType.FullRender)
-                    break;
 
                 currentPage++;
             }
@@ -222,8 +227,9 @@ namespace FossPDF.Drawing
             void ThrowLayoutException()
             {
                 var message = $"Composed layout generates infinite document. This may happen in two cases. " +
-                              $"1) Your document and its layout configuration is correct but the content takes more than {Settings.DocumentLayoutExceptionThreshold} pages. " +
-                              $"In this case, please increase the value {nameof(FossPDF)}.{nameof(Settings)}.{nameof(Settings.DocumentLayoutExceptionThreshold)} static property. " +
+                              $"1) Your document and its layout configuration is correct but the content takes more than {pageLimit} pages. " +
+                              $"In this case, increase DocumentSettings.DocumentLayoutExceptionThreshold for this document " +
+                              $"or the {nameof(FossPDF)}.{nameof(Settings)}.{nameof(Settings.DocumentLayoutExceptionThreshold)} process default. " +
                               $"2) The layout configuration of your document is invalid. Some of the elements require more space than is provided." +
                               $"Please analyze your documents structure to detect this element and fix its size constraints.";
 

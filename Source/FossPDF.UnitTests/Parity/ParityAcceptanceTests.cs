@@ -27,6 +27,7 @@ namespace FossPDF.UnitTests.Parity
                 ["TXT-001"] = RunStyledText,
                 ["IMG-001"] = RunRasterImage,
                 ["OUT-001"] = RunRasterDpi,
+                ["SET-004"] = RunDocumentSettings,
                 ["FAIL-001"] = RunMalformedImage,
                 ["FAIL-002"] = RunImpossibleLayout,
                 ["RES-001"] = RunCallerOwnedStream
@@ -196,6 +197,25 @@ namespace FossPDF.UnitTests.Parity
             RenderAndCheck(CreatePage(fixture, page =>
                 page.Content().Height(fixture.Input.GetProperty("block_height").GetInt32())
                     .Background(fixture.Input.GetProperty("color").GetString())), fixture);
+
+        private static void RunDocumentSettings(ParityFixture fixture)
+        {
+            var metadata = new DocumentMetadata
+            {
+                RasterDpi = fixture.Input.GetProperty("legacy_dpi").GetInt32()
+            };
+            var document = CreatePage(fixture, page => page.Content()
+                    .Height(fixture.Input.GetProperty("block_height").GetInt32())
+                    .Background(fixture.Input.GetProperty("color").GetString()))
+                .WithMetadata(metadata)
+                .WithSettings(new DocumentSettings
+                {
+                    ImageRasterDpi = fixture.Input.GetProperty("document_dpi").GetInt32(),
+                    DocumentLayoutExceptionThreshold = 1
+                });
+            RenderAndCheck(document, fixture);
+            Assert.That(metadata.RasterDpi, Is.EqualTo(fixture.Input.GetProperty("legacy_dpi").GetInt32()));
+        }
 
         private static void RunRasterImage(ParityFixture fixture)
         {

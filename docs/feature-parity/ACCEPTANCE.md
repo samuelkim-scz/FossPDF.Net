@@ -2,12 +2,12 @@
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
-The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The eight initial executable fixtures exercise behavior already supported by FossPDF. The remaining 27 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
+The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The nine active fixtures cover the initial eight baseline scenarios plus FP-004 settings isolation. The remaining 27 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
 
 ## Public-contract and equivalence rules
 
 - Equivalent supported FossPDF APIs are acceptable when they provide the documented behavior. Preserve existing namespaces, defaults, stream/resource ownership and supported framework contracts; document any new availability limits.
-- Behavioral contracts below are normative. Proposed method names are illustrative until [FP-004](https://github.com/samuelkim-scz/FossPDF.Net/issues/5) settles the settings/API contract. A fixture does not authorize a breaking API change.
+- Behavioral contracts below are normative. Settings APIs follow the [FP-004 contract](SETTINGS.md); other proposed method names remain illustrative until their feature issues settle the API. A fixture does not authorize a breaking API change.
 - Page count, ordering, semantic structure, Unicode mappings, metadata values and expected failure categories are exact assertions. Visual similarity alone does not establish correctness.
 - Compare logical results and decoded output. PDF timestamps, object numbering, font subset prefixes, compression and byte identity are outside equivalence.
 - Treat existing equivalents separately from missing capabilities. RTL, shaping, fallback, SVG output, basic page controls and ordinary compression already exist. Qualification tasks must reproduce gaps before requiring fixes.
@@ -24,6 +24,7 @@ Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-
 | `TXT-001` — Styled spans retain color and left-to-right placement | Exactly one PDF/raster page is produced. Red and blue glyph pixels both exist; the red run precedes the blue run and both stay inside the 10-point margins. This is a styled-rendering baseline, not a Unicode-extraction or bidi conformance claim. |
 | `IMG-001` — Raster quadrant input preserves aspect ratio and order | Exactly one 120x100 page is produced. The image occupies (10,10,80,40), with red/green above blue/yellow and white outside. |
 | `OUT-001` — Document DPI scales page and marker dimensions | The PDF has one page; raster export is 240x200 pixels at 144 DPI. The red rectangle becomes (20,20,200,40) without changing page content coordinates. |
+| `SET-004` — Document settings override legacy DPI without mutation | A 144-DPI document override produces a 240x200 PNG with the red rectangle at (20,20,200,40); caller metadata remains at 36 DPI, and a one-page limit accepts the completed page. |
 | `FAIL-001` — Malformed image produces a composition error | Rendering throws DocumentComposeException; no valid PDF output is returned. |
 | `FAIL-002` — Impossible fixed-size content produces a layout error | Rendering throws DocumentLayoutException instead of silently clipping or returning a completed PDF. |
 | `RES-001` — Caller-owned PDF output stream stays open | The stream contains a PDF header after rendering and remains readable, seekable and writable. Appending data after generation succeeds; the fixture disposes its own stream. |
@@ -91,7 +92,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The initial category contains eight executable scenarios, one catalog/traceability check, four raster-comparison checks, and 27 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains nine executable scenarios, one catalog/traceability check, four raster-comparison checks, and 27 explicitly planned/skipped contracts.
 
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 

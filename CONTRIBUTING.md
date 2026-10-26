@@ -4,6 +4,8 @@ Start with the [feature-parity roadmap](FEATURE_PARITY.md) and its linked GitHub
 
 Use the [acceptance specification and fixture catalog](docs/feature-parity/ACCEPTANCE.md) to define observable behavior and reuse stable fixture IDs. Planned/skipped contracts are visible backlog, not evidence of implemented parity. Feature PRs should activate relevant fixtures and include the required semantic/visual evidence.
 
+Settings and output changes should follow the [per-document settings contract](docs/feature-parity/SETTINGS.md), including precedence, supported framework availability, concurrency and stream ownership.
+
 ## Claim and coordinate work
 
 - Find an open `feature-parity` issue and check its native blockers, milestone, acceptance criteria and linked PRs.

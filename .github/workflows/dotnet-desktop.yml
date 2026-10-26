@@ -51,6 +51,11 @@ jobs:
         run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
+      - name: Run .NET 9 settings consumer example
+        shell: bash
+        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity
+        working-directory: ./Source
+
       - name: Upload test and parity fixture evidence
         uses: actions/upload-artifact@v7
         if: always()
@@ -59,6 +64,7 @@ jobs:
           path: |
             artifacts/parity/**/*.trx
             Source/FossPDF.UnitTests/bin/Release/net*/parity-artifacts/**
+            Source/FossPDF.Examples/bin/Release/net9.0/settings-example/**
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

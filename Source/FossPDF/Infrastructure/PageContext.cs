@@ -13,6 +13,7 @@ namespace FossPDF.Infrastructure
         public int CurrentPage { get; private set; }
 
         public DocumentSpecificFontManager FontManager { get; set; } = null!; // Set by DocumentGenerator.
+        public bool CheckIfAllTextGlyphsAreAvailable { get; set; }
 
         internal void SetPageNumber(int number)
         {
