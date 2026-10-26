@@ -1,5 +1,7 @@
 using System;
+using FossPDF.Helpers;
 using FossPDF.Infrastructure;
+using SkiaSharp;
 
 namespace FossPDF.Drawing
 {
@@ -78,8 +80,12 @@ namespace FossPDF.Drawing
                 throw new ArgumentOutOfRangeException(nameof(settings.CompressionQuality));
             if (!Enum.IsDefined(typeof(ImageOutputFormat), settings.Format))
                 throw new ArgumentOutOfRangeException(nameof(settings.Format));
-            if (settings.Format != ImageOutputFormat.Png)
-                throw new NotSupportedException("JPEG/WebP page export requires FP-203. PNG is currently supported.");
+            if (settings.BackgroundColor != null)
+            {
+                ColorValidator.Validate(settings.BackgroundColor);
+                if (settings.Format == ImageOutputFormat.Jpeg && SKColor.Parse(settings.BackgroundColor).Alpha != 255)
+                    throw new ArgumentException("JPEG requires an opaque output background.", nameof(settings.BackgroundColor));
+            }
             Metadata.RasterDpi = settings.RasterDpi ?? Metadata.RasterDpi;
         }
     }

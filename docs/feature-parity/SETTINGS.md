@@ -91,10 +91,13 @@ document.GenerateImages(
 | ImageGenerationSettings member | Default / behavior |
 | --- | --- |
 | RasterDpi | Null inherits the resolved document DPI. An explicit positive value affects this export only. |
-| Format | Png. Jpeg and Webp are reserved for FP-203 and currently throw NotSupportedException. |
-| CompressionQuality | Integer 0-100, default 100. PNG is lossless and ignores quality. Lossy encoders will consume this setting when implemented. |
+| Format | Png by default; Jpeg and Webp are also supported. |
+| CompressionQuality | Integer 0-100, default 100. PNG ignores quality; JPEG uses lossy quality; WebP uses lossless encoding at 100 and lossy encoding below 100. |
+| BackgroundColor | Null selects transparent for PNG/WebP or white for JPEG. Explicit JPEG backgrounds must be opaque. |
 
 Existing GenerateImages() and GenerateImages(Func<int, string>) calls preserve their behavior. The new path-selector overload adds a settings argument; indices remain zero-based. Images are generated eagerly before path selection. The caller receives managed byte arrays and does not dispose the settings or results.
+
+GenerateImagesToStreams adds caller-owned per-page writable streams without requiring seek or transferring ownership. See [the image export guide](IMAGE_EXPORT.md) for format, background, quality, dimension and failure rules.
 
 ## Conformance and compression extension points
 
@@ -107,7 +110,7 @@ Likewise, disabling ordinary compression, requesting extra optimization or enabl
 | [FP-402](https://github.com/samuelkim-scz/FossPDF.Net/issues/27) | Implement the six PDF/A profiles and validation; replace the corresponding generation guard only when the backend honors the selected profile. |
 | [FP-401 / FP-403](https://github.com/samuelkim-scz/FossPDF.Net/issues/26) / [PDF/UA](https://github.com/samuelkim-scz/FossPDF.Net/issues/28) | Carry semantic structure and enforce PDF/UA requirements before accepting PdfUa1. |
 | [FP-306](https://github.com/samuelkim-scz/FossPDF.Net/issues/25) | Honor compression overrides/linearization and document their conformance/security interactions. |
-| [FP-203](https://github.com/samuelkim-scz/FossPDF.Net/issues/17) | Implement JPEG/WebP encoding, quality, alpha/background policy and decoded-output validation. |
+| [FP-203](https://github.com/samuelkim-scz/FossPDF.Net/issues/17) | PNG/JPEG/WebP encoding, output quality, alpha/background policy and caller-owned streams follow [the image export contract](IMAGE_EXPORT.md). |
 | [FP-202](https://github.com/samuelkim-scz/FossPDF.Net/issues/16) | Add per-image optimization overrides without changing these document/output precedence rules. |
 
 Valid PDF-only conformance/compression options do not prevent PNG, SVG, XPS or preview generation. Those outputs do not make PDF conformance claims. Invalid enum values, non-positive explicit DPI/page limits and out-of-range explicit quality values fail with ArgumentOutOfRangeException. Null settings arguments fail with ArgumentNullException.
@@ -125,6 +128,7 @@ These extension points establish a shared contract. The corresponding feature is
 | GenerateXps(Stream) | Preserves the existing writable/seekable requirement and caller ownership. |
 | GenerateXps(path) | Preserves existing behavior: creates/truncates the destination before generation. |
 | Image/SVG path selectors | Preserve zero-based indexing and existing overwrite behavior. |
+| GenerateImagesToStreams | Borrows writable caller streams, writes at their current positions, never seeks/closes them and preserves page order. |
 | Shared images and registered fonts | Caller/global ownership contracts remain unchanged; keep borrowed resources alive until generation finishes. |
 | Rendering-native objects | Generation still releases owned canvases, fonts and temporary resources on success/failure. Preview picture ownership remains with its caller. |
 

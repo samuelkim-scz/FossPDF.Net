@@ -2,7 +2,7 @@
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
-The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The nine active fixtures cover the initial eight baseline scenarios plus FP-004 settings isolation. The remaining 27 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
+The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The ten active fixtures cover the initial eight baseline scenarios, FP-004 settings isolation and FP-203 image formats. The remaining 26 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
 
 ## Public-contract and equivalence rules
 
@@ -15,7 +15,7 @@ The independently authored [fixture catalog](acceptance-fixtures.json) defines i
 
 Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-scz/FossPDF.Net/issues/2), [FP-002](https://github.com/samuelkim-scz/FossPDF.Net/issues/3), [FP-003](https://github.com/samuelkim-scz/FossPDF.Net/issues/4) and [FP-004](https://github.com/samuelkim-scz/FossPDF.Net/issues/5). The final [FP-504 audit](https://github.com/samuelkim-scz/FossPDF.Net/issues/33) reconciles implementation evidence across all feature contracts. These planning/release work items are not additional missing rendering features.
 
-## Initial executable corpus
+## Executable corpus
 
 | Fixture | Input and expected result |
 | --- | --- |
@@ -25,6 +25,7 @@ Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-
 | `IMG-001` — Raster quadrant input preserves aspect ratio and order | Exactly one 120x100 page is produced. The image occupies (10,10,80,40), with red/green above blue/yellow and white outside. |
 | `OUT-001` — Document DPI scales page and marker dimensions | The PDF has one page; raster export is 240x200 pixels at 144 DPI. The red rectangle becomes (20,20,200,40) without changing page content coordinates. |
 | `SET-004` — Document settings override legacy DPI without mutation | A 144-DPI document override produces a 240x200 PNG with the red rectangle at (20,20,200,40); caller metadata remains at 36 DPI, and a one-page limit accepts the completed page. |
+| `OUT-203` - PNG/JPEG/WebP page export | All formats decode into two 240x200 pages at 144 DPI, with red then blue markers. PNG probes are exact; lossy RGB probes allow eight levels away from edges. Alpha, backgrounds, quality, bounds and output ownership are covered by ImageExportTests. |
 | `FAIL-001` — Malformed image produces a composition error | Rendering throws DocumentComposeException; no valid PDF output is returned. |
 | `FAIL-002` — Impossible fixed-size content produces a layout error | Rendering throws DocumentLayoutException instead of silently clipping or returning a completed PDF. |
 | `RES-001` — Caller-owned PDF output stream stays open | The stream contains a PDF header after rendering and remains readable, seekable and writable. Appending data after generation succeeds; the fixture disposes its own stream. |
@@ -33,7 +34,7 @@ Rectangles and dimensions in each fixture's `raster` object are authored referen
 
 The PDF baseline checks establish successful generation and reported page count; the geometric comparisons inspect raster output. Future PDF-processing and conformance fixtures require independent PDF inspection/validators, as specified in their work items.
 
-## Feature contracts and planned fixtures
+## Feature contracts
 
 Each catalog entry records the current capability, initial assessment, concrete input and observable expected results. These assessments remain pinned to the original baseline; execution state and GitHub completion represent subsequent progress.
 
@@ -92,7 +93,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains nine executable scenarios, one catalog/traceability check, four raster-comparison checks, and 27 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains ten executable scenarios, one catalog/traceability check, four raster-comparison checks, and 26 explicitly planned/skipped contracts.
 
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 
