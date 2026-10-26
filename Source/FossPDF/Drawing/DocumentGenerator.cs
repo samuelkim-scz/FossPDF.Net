@@ -52,8 +52,9 @@ namespace FossPDF.Drawing
         internal static ICollection<byte[]> GenerateImages(IDocument document, ImageGenerationSettings? settings = null)
         {
             var configuration = GenerationConfiguration.Resolve(document);
-            configuration.ApplyImageOutput(settings ?? ImageGenerationSettings.Default);
-            using var canvas = new ImageCanvas(configuration.Metadata);
+            var imageSettings = settings ?? ImageGenerationSettings.Default;
+            configuration.ApplyImageOutput(imageSettings);
+            using var canvas = new ImageCanvas(configuration.Metadata, imageSettings);
             RenderDocument(canvas, document, configuration);
 
             return canvas.Images;

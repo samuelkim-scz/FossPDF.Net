@@ -99,6 +99,28 @@ namespace FossPDF.Fluent
             }
         }
 
+        /// <summary>Writes pages to caller-owned writable streams, without seeking or closing them.</summary>
+        public static void GenerateImagesToStreams(this IDocument document, Func<int, Stream> streamSelector)
+        {
+            document.GenerateImagesToStreams(streamSelector, ImageGenerationSettings.Default);
+        }
+
+        public static void GenerateImagesToStreams(this IDocument document, Func<int, Stream> streamSelector, ImageGenerationSettings settings)
+        {
+            if (streamSelector == null)
+                throw new ArgumentNullException(nameof(streamSelector));
+
+            var index = 0;
+            foreach (var data in document.GenerateImages(settings))
+            {
+                var stream = streamSelector(index++)
+                    ?? throw new ArgumentException("The stream selector returned null.", nameof(streamSelector));
+                if (!stream.CanWrite)
+                    throw new ArgumentException("The selected stream must be writable.", nameof(streamSelector));
+                stream.Write(data, 0, data.Length);
+            }
+        }
+
         #endregion
 
         #region SVG

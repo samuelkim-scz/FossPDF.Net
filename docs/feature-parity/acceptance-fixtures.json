@@ -971,7 +971,7 @@
       "work_items": [
         "FP-203"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "source": "PAG-001",
         "formats": [
@@ -984,8 +984,9 @@
       },
       "expected": [
         "Each format decodes into two pages of 240x200 pixels, in red-then-blue order.",
-        "PNG preserves alpha where supported; JPEG transparency compositing follows a documented background policy.",
-        "Invalid format/quality/DPI settings fail before partial output is accepted."
+        "PNG/WebP retain transparent/semitransparent alpha by default; JPEG uses white or an explicitly opaque export background.",
+        "Invalid format/quality/DPI settings fail before partial output is accepted.",
+        "ImageExportTests cover quality, alpha/background compositing, format bounds, concurrent exports, file/byte-array ordering and caller-owned non-seeking streams. Lossy color probes allow at most 8 levels of RGB difference away from edges."
       ]
     },
     {

@@ -28,6 +28,7 @@ namespace FossPDF.UnitTests.Parity
                 ["TXT-001"] = RunStyledText,
                 ["IMG-001"] = RunRasterImage,
                 ["OUT-001"] = RunRasterDpi,
+                ["OUT-203"] = RunImageFormats,
                 ["SET-004"] = RunDocumentSettings,
                 ["FAIL-001"] = RunMalformedImage,
                 ["FAIL-002"] = RunImpossibleLayout,
@@ -390,6 +391,49 @@ namespace FossPDF.UnitTests.Parity
             RenderAndCheck(CreatePage(fixture, page =>
                 page.Content().Height(fixture.Input.GetProperty("block_height").GetInt32())
                     .Background(fixture.Input.GetProperty("color").GetString())), fixture);
+
+        private static void RunImageFormats(ParityFixture fixture)
+        {
+            var source = FixtureCatalog.Load().Fixtures.Single(x =>
+                x.Id == fixture.Input.GetProperty("source").GetString());
+            var document = ExplicitPagination(source);
+            foreach (var name in FixtureCatalog.ReadArray(fixture.Input, "formats"))
+            {
+                var format = Enum.Parse<ImageOutputFormat>(name.GetString(), ignoreCase: true);
+                var pages = document.GenerateImages(new ImageGenerationSettings
+                {
+                    Format = format,
+                    RasterDpi = fixture.Input.GetProperty("dpi").GetInt32(),
+                    CompressionQuality = fixture.Input.GetProperty("quality").GetInt32()
+                }).ToArray();
+                Assert.That(pages.Length, Is.EqualTo(2));
+                for (var index = 0; index < pages.Length; index++)
+                {
+                    var extension = format.ToString().ToLowerInvariant();
+                    SaveArtifact(fixture.Id, $"page-{index + 1}.{extension}", pages[index]);
+                    using var data = SKData.CreateCopy(pages[index]);
+                    using var codec = SKCodec.Create(data);
+                    Assert.That(codec.EncodedFormat, Is.EqualTo(format switch
+                    {
+                        ImageOutputFormat.Png => SKEncodedImageFormat.Png,
+                        ImageOutputFormat.Jpeg => SKEncodedImageFormat.Jpeg,
+                        _ => SKEncodedImageFormat.Webp
+                    }));
+                    using var bitmap = SKBitmap.Decode(pages[index]);
+                    Assert.That(bitmap.Width, Is.EqualTo(240));
+                    Assert.That(bitmap.Height, Is.EqualTo(200));
+                    var marker = bitmap.GetPixel(60, 40);
+                    var expected = index == 0 ? SKColors.Red : SKColors.Blue;
+                    var tolerance = format == ImageOutputFormat.Png ? 0 : 8;
+                    Assert.That((int)marker.Red, Is.EqualTo((int)expected.Red).Within(tolerance));
+                    Assert.That((int)marker.Green, Is.EqualTo((int)expected.Green).Within(tolerance));
+                    Assert.That((int)marker.Blue, Is.EqualTo((int)expected.Blue).Within(tolerance));
+                    using var decoded = SKImage.FromBitmap(bitmap);
+                    using var preview = decoded.Encode(SKEncodedImageFormat.Png, 100);
+                    SaveArtifact(fixture.Id, $"decoded-{extension}-{index + 1}.png", preview.ToArray());
+                }
+            }
+        }
 
         private static void RunDocumentSettings(ParityFixture fixture)
         {

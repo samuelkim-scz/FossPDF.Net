@@ -301,16 +301,17 @@ namespace FossPDF.UnitTests
                 Linearize = mode == "linearize"
             });
 
+        [TestCase(ImageOutputFormat.Png)]
         [TestCase(ImageOutputFormat.Jpeg)]
         [TestCase(ImageOutputFormat.Webp)]
-        public void UnavailableImageFormatsFailBeforeCompositionAndPathSelection(ImageOutputFormat format)
+        public void InvalidImageOptionsFailBeforeCompositionAndPathSelection(ImageOutputFormat format)
         {
             var composed = false;
             var pathSelected = false;
             var document = MarkerDocument(() => composed = true);
-            Assert.Throws<NotSupportedException>(() => document.GenerateImages(
+            Assert.Throws<ArgumentOutOfRangeException>(() => document.GenerateImages(
                 _ => { pathSelected = true; return "must-not-be-written"; },
-                new ImageGenerationSettings { Format = format }));
+                new ImageGenerationSettings { Format = format, RasterDpi = 0 }));
             Assert.That(composed, Is.False);
             Assert.That(pathSelected, Is.False);
         }
