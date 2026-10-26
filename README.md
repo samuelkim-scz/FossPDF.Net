@@ -5,6 +5,10 @@
 
 It's MIT-licensed regardless of who you are, or what you're using the library for.
 
+## Feature parity roadmap
+
+See the [shared feature-parity plan](FEATURE_PARITY.md) for the QuestPDF target, confirmed gaps, milestones and implementation issues. Contributors can claim work and track progress through the linked GitHub issues. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and build checks.
+
 <table>
 <tr>
     <td>👨‍💻</td>

@@ -1,0 +1,69 @@
+name: Feature parity work item
+description: Propose or refine a trackable QuestPDF feature-parity work package.
+title: "[FP-XXX] "
+labels: ["feature-parity", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Check FEATURE_PARITY.md and existing parity issues before adding a work item. Live ownership and blockers are tracked on GitHub."
+  - type: input
+    id: parity_id
+    attributes:
+      label: Parity ID
+      description: Use an existing FP identifier or request a new one.
+      placeholder: FP-XXX
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: QuestPDF reference version and source
+      description: Include a released version and documentation or tagged-source links.
+      placeholder: QuestPDF 2026.9.1 - https://...
+    validations:
+      required: true
+  - type: dropdown
+    id: baseline
+    attributes:
+      label: Current FossPDF capability
+      options:
+        - Missing
+        - Partial
+        - Validation required
+        - Already present or equivalent
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Current behavior and evidence
+      description: Link relevant FossPDF code, examples or a reproducible test.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope and public API
+      description: Explain observable behavior, framework availability and compatibility considerations.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use measurable checkboxes; include docs and an example.
+      value: "- [ ] Observable behavior is implemented.\n- [ ] Tests and validation evidence pass.\n- [ ] Documentation and a runnable example are included."
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and coordination
+      description: Link blocking issues and shared interfaces; add native GitHub blocker relationships after creation.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation and platform coverage
+      description: Include semantic/visual tests, failure/ownership checks, conformance or publish-run evidence as applicable.
+    validations:
+      required: true

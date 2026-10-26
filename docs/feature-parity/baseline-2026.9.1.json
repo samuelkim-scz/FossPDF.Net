@@ -1,0 +1,1409 @@
+{
+  "schema_version": 1,
+  "created_on": "2026-10-26",
+  "repository": "samuelkim-scz/FossPDF.Net",
+  "target": {
+    "questpdf": "2026.9.1",
+    "questpdf_commit": "5a1422e15040484498236a5696d3aa9eefad8b10",
+    "fosspdf_baseline_commit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e",
+    "primary_consumer_framework": "net9.0",
+    "core_compatibility_framework": "netstandard2.1",
+    "test_frameworks": [
+      "net8.0",
+      "net9.0"
+    ]
+  },
+  "tracker": {
+    "number": 1,
+    "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/1"
+  },
+  "sources": {
+    "release": "https://github.com/QuestPDF/QuestPDF/releases/tag/2026.9.1",
+    "overview": "https://www.questpdf.com/features-overview.html",
+    "settings": "https://www.questpdf.com/concepts/document-settings.html",
+    "operations": "https://www.questpdf.com/concepts/document-operations.html",
+    "accessibility": "https://www.questpdf.com/concepts/accessibility.html",
+    "paragraph": "https://www.questpdf.com/api-reference/text/paragraph-style.html",
+    "text": "https://www.questpdf.com/api-reference/text/text-style.html",
+    "multicolumn": "https://www.questpdf.com/api-reference/multi-column.html",
+    "lazy": "https://www.questpdf.com/api-reference/lazy.html",
+    "prevent": "https://www.questpdf.com/api-reference/prevent-page-break.html",
+    "repeat": "https://www.questpdf.com/api-reference/repeat.html",
+    "capture": "https://www.questpdf.com/concepts/code-patterns/capture-content-position.html",
+    "svg": "https://www.questpdf.com/api-reference/image/svg.html",
+    "images": "https://www.questpdf.com/api-reference/image/optimization.html",
+    "output": "https://www.questpdf.com/concepts/generating-output.html",
+    "rounded": "https://www.questpdf.com/api-reference/rounded-corners.html",
+    "shadow": "https://www.questpdf.com/api-reference/shadow.html",
+    "background": "https://www.questpdf.com/api-reference/background.html",
+    "border": "https://www.questpdf.com/api-reference/border.html",
+    "line": "https://www.questpdf.com/api-reference/line.html",
+    "companion": "https://www.questpdf.com/companion/features.html",
+    "roadmap": "https://www.questpdf.com/roadmap.html",
+    "elementApi": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Fluent/ElementExtensions.cs",
+    "mergeApi": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Infrastructure/IMergedDocument.cs",
+    "aot": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/QuestPDF.csproj"
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Parity M0 - Baseline and architecture",
+      "goal": "Define testable contracts, compatible settings, native-backend decisions, and reproducible quality baselines.",
+      "github": {
+        "number": 1,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/1"
+      }
+    },
+    {
+      "id": "M1",
+      "title": "Parity M1 - Text and layout",
+      "goal": "Deliver paragraph, typography, pagination, multi-column, lazy, geometry, and layout API parity.",
+      "github": {
+        "number": 2,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/2"
+      }
+    },
+    {
+      "id": "M2",
+      "title": "Parity M2 - Images and graphics",
+      "goal": "Deliver SVG input, image optimization/output controls, and modern container/line styling.",
+      "github": {
+        "number": 3,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/3"
+      }
+    },
+    {
+      "id": "M3",
+      "title": "Parity M3 - PDF document operations",
+      "goal": "Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization.",
+      "github": {
+        "number": 4,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/4"
+      }
+    },
+    {
+      "id": "M4",
+      "title": "Parity M4 - Accessibility and conformance",
+      "goal": "Deliver tagged PDF, the six PDF/A-2/PDF/A-3 conformance levels, PDF/UA-1, and validated e-invoice packaging.",
+      "github": {
+        "number": 5,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/5"
+      }
+    },
+    {
+      "id": "M5",
+      "title": "Parity M5 - Tooling, deployment and release",
+      "goal": "Deliver inspection tooling, qualify NativeAOT/platform support, and publish the final evidence-based parity audit.",
+      "github": {
+        "number": 6,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/milestone/6"
+      }
+    }
+  ],
+  "work_items": [
+    {
+      "id": "FP-001",
+      "milestone": "M0",
+      "area": "foundation",
+      "priority": "P0",
+      "size": "M",
+      "baseline_status": "planning",
+      "title": "Define the parity specification and acceptance fixtures",
+      "summary": "Turn the pinned QuestPDF capabilities into a traceable, executable specification and shared fixture corpus.",
+      "depends_on": [],
+      "acceptance": [
+        "Map every in-scope gap to a work item, public contract, and observable result; classify existing equivalents and unverified capabilities explicitly.",
+        "Create independently authored fixtures for pagination, styled text, images, PDF operations, accessibility, and failure cases, with expected semantic results.",
+        "Define visual tolerances and API-equivalence rules; demonstrate the fixture runner on the current FossPDF baseline."
+      ],
+      "validation": [
+        "Publish fixture IDs and expected outcomes in the repository.",
+        "Show existing tests and baseline fixtures passing on .NET 8 and .NET 9."
+      ],
+      "touchpoints": [
+        "Source/FossPDF.UnitTests",
+        "docs/feature-parity"
+      ],
+      "sources": [
+        {
+          "title": "release",
+          "url": "https://github.com/QuestPDF/QuestPDF/releases/tag/2026.9.1"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "issue": {
+        "number": 2,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/2"
+      }
+    },
+    {
+      "id": "FP-002",
+      "milestone": "M0",
+      "area": "foundation",
+      "priority": "P0",
+      "size": "L",
+      "baseline_status": "decision required",
+      "title": "Choose native backends and dependency contracts",
+      "summary": "Assess how supported SkiaSharp, SVG parsing, PDF processing, and tagged-PDF capabilities can cover the target without duplicating native infrastructure.",
+      "depends_on": [],
+      "acceptance": [
+        "Publish an architecture decision with prototypes for SVG input, existing-PDF operations, and semantic tagging; identify which capabilities the current native stack exposes.",
+        "Record dependency versions/licenses/notices, supported runtime assets, native packaging, upgrade policy, and ownership/error-handling contracts.",
+        "Select implementation paths and document fallback decisions for unsupported platforms, with an integration contract contributors can build against."
+      ],
+      "validation": [
+        "Run proof-of-concept fixtures on Windows, Linux, and macOS for proposed backends.",
+        "Verify deterministic cleanup, caller-owned stream handling, and redistributable native assets."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing",
+        "Source/FossPDF/Infrastructure",
+        "Source/FossPDF.FontSubset"
+      ],
+      "sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "svg",
+          "url": "https://www.questpdf.com/api-reference/image/svg.html"
+        }
+      ],
+      "issue": {
+        "number": 3,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/3"
+      }
+    },
+    {
+      "id": "FP-003",
+      "milestone": "M0",
+      "area": "foundation",
+      "priority": "P0",
+      "size": "L",
+      "baseline_status": "planning",
+      "title": "Establish cross-platform visual, conformance and performance baselines",
+      "summary": "Make quality evidence reproducible before parallel feature work changes layout or native dependencies.",
+      "depends_on": [],
+      "acceptance": [
+        "Add reproducible visual/semantic regression infrastructure with pinned fonts and documented platform-specific rendering tolerances.",
+        "Record generation time, throughput, allocated bytes, and peak managed/native memory for representative reports, image-heavy documents, large tables, and concurrent generation.",
+        "Define reviewable regression budgets from measurements and publish CI artifacts; include warning-free builds and version-pinned external validation tooling."
+      ],
+      "validation": [
+        "Exercise Windows, Linux, and macOS CI; distinguish infrastructure failures from rendering failures.",
+        "Preserve baseline evidence from FossPDF commit 0339255; add optional QuestPDF reference runs where its licensing terms permit."
+      ],
+      "touchpoints": [
+        ".github/workflows",
+        "Source/FossPDF.UnitTests",
+        "Source/FossPDF.Examples"
+      ],
+      "sources": [
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "issue": {
+        "number": 4,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/4"
+      }
+    },
+    {
+      "id": "FP-004",
+      "milestone": "M0",
+      "area": "foundation",
+      "priority": "P0",
+      "size": "M",
+      "baseline_status": "partial",
+      "title": "Define per-document settings and compatibility rules",
+      "summary": "Provide extensible per-document and image-output settings while preserving the existing FossPDF APIs and .NET 9 consumer workflow.",
+      "depends_on": [],
+      "acceptance": [
+        "Design DocumentSettings/ImageGenerationSettings equivalents covering conformance, compression, image quality/DPI/format, and content direction, with explicit defaults.",
+        "Keep existing DocumentMetadata properties, fluent calls, namespaces, .NET 9 support, and netstandard2.1 core consumption working through documented compatibility mappings.",
+        "Document which new APIs are available on each target framework and define disposal/stream-ownership contracts for public APIs."
+      ],
+      "validation": [
+        "Compile existing samples and a .NET 9 consumer unchanged.",
+        "Add tests proving per-document settings do not leak between concurrently generated documents."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Infrastructure",
+        "Source/FossPDF/Fluent/MinimalApi.cs",
+        "Source/FossPDF/Drawing/DocumentMetadata.cs"
+      ],
+      "sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "output",
+          "url": "https://www.questpdf.com/concepts/generating-output.html"
+        }
+      ],
+      "issue": {
+        "number": 5,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/5"
+      }
+    },
+    {
+      "id": "FP-101",
+      "milestone": "M1",
+      "area": "text",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add paragraph justification, logical alignment, indentation and word spacing",
+      "summary": "Extend the text layout engine beyond left/center/right alignment and character spacing.",
+      "depends_on": [
+        "FP-001",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Implement justified paragraphs, logical start/end alignment, first-line indentation, and independent word spacing through documented fluent APIs.",
+        "Preserve formatting across rich-text spans, explicit line breaks, wrapping, page breaks, hyperlinks, and inherited styles.",
+        "Define interactions with RTL content, font fallback, available width, and final-line justification."
+      ],
+      "validation": [
+        "Add mixed-span, multi-page, RTL, and narrow-column fixtures.",
+        "Compare geometry and visual output to agreed fixtures within declared tolerances."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements/Text",
+        "Source/FossPDF/Fluent/TextExtensions.cs",
+        "Source/FossPDF/Infrastructure/TextStyle.cs"
+      ],
+      "sources": [
+        {
+          "title": "paragraph",
+          "url": "https://www.questpdf.com/api-reference/text/paragraph-style.html"
+        },
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "issue": {
+        "number": 6,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/6"
+      }
+    },
+    {
+      "id": "FP-102",
+      "milestone": "M1",
+      "area": "text",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "missing",
+      "title": "Add text line clamping and custom ellipses",
+      "summary": "Provide ClampLines-style truncation without requiring callers to pre-truncate strings or discard an entire overflowing element.",
+      "depends_on": [
+        "FP-001"
+      ],
+      "acceptance": [
+        "Add a maximum-line API with a default ellipsis and caller-specified replacement text.",
+        "Compute truncation after shaping/wrapping, preserving rich-text styles and avoiding broken Unicode sequences or glyph clusters.",
+        "Specify behavior for empty text, zero/invalid limits, unavailable width, multi-page parents, links, and combined paragraph settings."
+      ],
+      "validation": [
+        "Test plain/rich text, Unicode, RTL, empty input, and multiple widths.",
+        "Verify truncation neither creates extra pages nor corrupts PDF text."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements/Text",
+        "Source/FossPDF/Fluent/TextExtensions.cs"
+      ],
+      "sources": [
+        {
+          "title": "paragraph",
+          "url": "https://www.questpdf.com/api-reference/text/paragraph-style.html"
+        }
+      ],
+      "issue": {
+        "number": 7,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/7"
+      }
+    },
+    {
+      "id": "FP-103",
+      "milestone": "M1",
+      "area": "text",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add OpenType controls and richer text decorations",
+      "summary": "Expose font feature toggles and decoration styling that the current text-style API does not offer.",
+      "depends_on": [
+        "FP-001",
+        "FP-002"
+      ],
+      "acceptance": [
+        "Support enabling/disabling OpenType features using documented tags, with font fallback and cache keys reflecting the chosen features.",
+        "Add overline plus decoration color, thickness, and solid/double/dotted/dashed/wavy styles while preserving existing underline/strikethrough calls.",
+        "Keep shaping, glyph collection, font subsetting, metrics, and drawing consistent for the same style."
+      ],
+      "validation": [
+        "Use licensed test fonts with known ligature/stylistic-feature behavior.",
+        "Test decorations on wrapped, mixed-size, superscript/subscript, and fallback-font spans."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing/TextShaper.cs",
+        "Source/FossPDF/Elements/Text/Items/TextBlockSpan.cs",
+        "Source/FossPDF/Infrastructure/TextStyleManager.cs"
+      ],
+      "sources": [
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "issue": {
+        "number": 8,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/8"
+      }
+    },
+    {
+      "id": "FP-104",
+      "milestone": "M1",
+      "area": "layout",
+      "priority": "P1",
+      "size": "XL",
+      "baseline_status": "missing",
+      "title": "Implement newspaper-style multi-column flow and balancing",
+      "summary": "Flow a single content stream across columns and pages, including optional balancing and separator content.",
+      "depends_on": [
+        "FP-001"
+      ],
+      "acceptance": [
+        "Implement a MultiColumn-style API with column count, spacing, a flowing content container, optional separator content, and height balancing.",
+        "Define layout-state snapshot/rollback rules so iterative measurement does not consume dynamic content or duplicate output.",
+        "Preserve reading order, nested layouts, page numbering, and deterministic results when content crosses columns or pages."
+      ],
+      "validation": [
+        "Test uneven content, long paragraphs, tables/images, empty columns, RTL ordering, and multi-page flow.",
+        "Record generation-time and memory costs for balanced and unbalanced modes."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements",
+        "Source/FossPDF/Infrastructure/IStateResettable.cs",
+        "Source/FossPDF/Fluent"
+      ],
+      "sources": [
+        {
+          "title": "multicolumn",
+          "url": "https://www.questpdf.com/api-reference/multi-column.html"
+        }
+      ],
+      "issue": {
+        "number": 9,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/9"
+      }
+    },
+    {
+      "id": "FP-105",
+      "milestone": "M1",
+      "area": "layout",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "partial",
+      "title": "Add PreventPageBreak, Repeat and page-aware conditional rendering",
+      "summary": "Extend existing ShowEntire/EnsureSpace/ShowIf behavior with the newer pagination modifiers.",
+      "depends_on": [
+        "FP-001"
+      ],
+      "acceptance": [
+        "Implement PreventPageBreak semantics: attempt to move an initial block intact, then allow normal pagination when it exceeds a page.",
+        "Implement a standalone Repeat modifier and a ShowIf predicate receiving page number and total-page availability.",
+        "Document rendering-phase behavior and prevent loops, duplicate state consumption, or regressions in headers/footers and existing bool ShowIf."
+      ],
+      "validation": [
+        "Test blocks shorter/longer than a page, nested pagination, page-count-dependent predicates, and repeated content.",
+        "Retain existing ShowOnce, SkipOnce, ShowEntire, and EnsureSpace tests."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements",
+        "Source/FossPDF/Fluent/ElementExtensions.cs",
+        "Source/FossPDF/Infrastructure/PageContext.cs"
+      ],
+      "sources": [
+        {
+          "title": "prevent",
+          "url": "https://www.questpdf.com/api-reference/prevent-page-break.html"
+        },
+        {
+          "title": "repeat",
+          "url": "https://www.questpdf.com/api-reference/repeat.html"
+        },
+        {
+          "title": "elementApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Fluent/ElementExtensions.cs"
+        }
+      ],
+      "issue": {
+        "number": 10,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/10"
+      }
+    },
+    {
+      "id": "FP-106",
+      "milestone": "M1",
+      "area": "layout",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Implement Lazy and LazyWithCache composition",
+      "summary": "Defer construction of large document sections and release intermediate objects at well-defined lifecycle points.",
+      "depends_on": [
+        "FP-001",
+        "FP-002"
+      ],
+      "acceptance": [
+        "Expose deferred composition and an explicitly cached variant, with documented construction/reconstruction semantics.",
+        "Handle measurement passes, page replay, subsetting, dynamic components, cancellation/failures, and repeated sections safely.",
+        "Demonstrate lower retained memory on large reports and document the native-memory tradeoff of caching."
+      ],
+      "validation": [
+        "Compare output of eager, lazy, and cached-lazy versions of the same fixtures.",
+        "Measure retained managed/native memory and verify cleanup on partial rendering and exceptions."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing/DocumentGenerator.cs",
+        "Source/FossPDF/Drawing/Proxy",
+        "Source/FossPDF/Elements"
+      ],
+      "sources": [
+        {
+          "title": "lazy",
+          "url": "https://www.questpdf.com/api-reference/lazy.html"
+        }
+      ],
+      "issue": {
+        "number": 11,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/11"
+      }
+    },
+    {
+      "id": "FP-107",
+      "milestone": "M1",
+      "area": "layout",
+      "priority": "P2",
+      "size": "M",
+      "baseline_status": "partial",
+      "title": "Complete layout helpers and inline-element alignment",
+      "summary": "Fill smaller public API gaps around shrinking, stacking order, and embedded content in text.",
+      "depends_on": [
+        "FP-001"
+      ],
+      "acceptance": [
+        "Add per-axis shrinking while retaining MinimalBox behavior as a supported equivalent for shrinking both axes.",
+        "Add generic ZIndex support for overlapping content, preserving the existing table-cell z-index API.",
+        "Support above/below-baseline, top, bottom, and middle alignment for injected inline elements with stable text metrics."
+      ],
+      "validation": [
+        "Test nested layers, equal/different z-index values, RTL shrink alignment, and mixed-size inline elements.",
+        "Publish API mappings for equivalent existing helpers so renamed features are not counted as missing."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements/MinimalBox.cs",
+        "Source/FossPDF/Elements/Layers.cs",
+        "Source/FossPDF/Elements/Text/Items/TextBlockElement.cs"
+      ],
+      "sources": [
+        {
+          "title": "elementApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Fluent/ElementExtensions.cs"
+        },
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "issue": {
+        "number": 12,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/12"
+      }
+    },
+    {
+      "id": "FP-108",
+      "milestone": "M1",
+      "area": "layout",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "missing",
+      "title": "Add content-position capture and dynamic geometry access",
+      "summary": "Expose supported geometry capture rather than requiring callers to inspect Skia canvas matrices manually.",
+      "depends_on": [
+        "FP-001"
+      ],
+      "acceptance": [
+        "Capture an identified element's page number, position, and size for every rendered fragment/occurrence.",
+        "Make captured locations available through a documented document/dynamic-component API, with rendering-phase and unit semantics.",
+        "Handle translations, rotation/scaling, page margins, multi-page content, repeated elements, and duplicate IDs explicitly."
+      ],
+      "validation": [
+        "Assert coordinates and fragment counts for nested transforms and page-spanning content.",
+        "Demonstrate a positioning/highlighting example and a tooling consumer."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing/DocumentGenerator.cs",
+        "Source/FossPDF/Infrastructure/PageContext.cs",
+        "Source/FossPDF/Elements/Dynamic.cs"
+      ],
+      "sources": [
+        {
+          "title": "capture",
+          "url": "https://www.questpdf.com/concepts/code-patterns/capture-content-position.html"
+        }
+      ],
+      "issue": {
+        "number": 13,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/13"
+      }
+    },
+    {
+      "id": "FP-109",
+      "milestone": "M1",
+      "area": "text",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "validation required",
+      "title": "Qualify complex-script, mixed-direction and CJK behavior",
+      "summary": "Measure actual typography gaps before claiming FossPDF lacks language capabilities already partly provided by HarfBuzz.",
+      "depends_on": [
+        "FP-001",
+        "FP-002"
+      ],
+      "acceptance": [
+        "Build fixtures for mixed RTL/LTR runs, Arabic/Hebrew, Indic shaping, CJK breaks, emoji/surrogates, combining marks, and font fallback.",
+        "Record pass/fail evidence against defined Unicode/layout expectations and public QuestPDF behavior; identify confirmed implementation gaps.",
+        "Implement or separately track each confirmed defect, with glyph/selection/reading-order regressions covered and current RTL support preserved."
+      ],
+      "validation": [
+        "Verify visual output and extracted text where meaningful; document font/platform dependencies.",
+        "Do not claim full-script parity from screenshots or a single-language sample."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing/TextShaper.cs",
+        "Source/FossPDF/Elements/Text/FontFallback.cs",
+        "Source/FossPDF/Elements/Text/Items/TextBlockSpan.cs"
+      ],
+      "sources": [
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "issue": {
+        "number": 14,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/14"
+      }
+    },
+    {
+      "id": "FP-201",
+      "milestone": "M2",
+      "area": "graphics",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "partial",
+      "title": "Add first-class SVG input and preloading",
+      "summary": "Bring SVG input into the library API; SVG export and an external Svg.Skia example already exist.",
+      "depends_on": [
+        "FP-002",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Support SVG strings/files/streams or a documented equivalent, preloaded reusable SVG objects, and standard fit modes.",
+        "Integrate registered/default fonts and define handling for malformed SVG, unsupported constructs, external resource references, and ownership.",
+        "Preserve vector output where supported and document rasterization fallbacks."
+      ],
+      "validation": [
+        "Test logos, paths, text/fonts, view boxes, transparency, reuse, and malformed inputs.",
+        "Run cross-platform native/parser compatibility checks with declared dependency licenses."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Fluent/ImageExtensions.cs",
+        "Source/FossPDF/Infrastructure",
+        "Source/FossPDF.Examples/SvgImageExample.cs"
+      ],
+      "sources": [
+        {
+          "title": "svg",
+          "url": "https://www.questpdf.com/api-reference/image/svg.html"
+        }
+      ],
+      "issue": {
+        "number": 15,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/15"
+      }
+    },
+    {
+      "id": "FP-202",
+      "milestone": "M2",
+      "area": "graphics",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "partial",
+      "title": "Add per-image DPI, resampling and compression quality controls",
+      "summary": "Extend the existing document-wide image quality/DPI settings with image-specific optimization.",
+      "depends_on": [
+        "FP-004"
+      ],
+      "acceptance": [
+        "Provide per-image quality and DPI overrides with a documented resolution/physical-size calculation and no unnecessary upscaling.",
+        "Preserve transparency and shared-image reuse while defining compressed/original image behavior.",
+        "Include effective image settings in cache keys and preserve current defaults for existing calls."
+      ],
+      "validation": [
+        "Measure embedded image dimensions and output size for opaque/transparent images at several physical sizes.",
+        "Test shared images reused with different optimization settings and concurrently generated documents."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Fluent/ImageExtensions.cs",
+        "Source/FossPDF/Elements/Image.cs",
+        "Source/FossPDF/Drawing"
+      ],
+      "sources": [
+        {
+          "title": "images",
+          "url": "https://www.questpdf.com/api-reference/image/optimization.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "issue": {
+        "number": 16,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/16"
+      }
+    },
+    {
+      "id": "FP-203",
+      "milestone": "M2",
+      "area": "graphics",
+      "priority": "P1",
+      "size": "S",
+      "baseline_status": "partial",
+      "title": "Add JPEG and WebP page export settings",
+      "summary": "Extend GenerateImages beyond its current PNG-only encoder.",
+      "depends_on": [
+        "FP-004"
+      ],
+      "acceptance": [
+        "Support PNG, JPEG, and WebP output with quality and raster-DPI settings, retaining the current overload/default behavior.",
+        "Define background/transparency behavior and format-specific validation.",
+        "Keep file, stream/byte-array workflows and page ordering consistent."
+      ],
+      "validation": [
+        "Decode every output format and verify dimensions, page count, alpha/background behavior, and invalid settings.",
+        "Verify existing PNG generation remains compatible."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Drawing/ImageCanvas.cs",
+        "Source/FossPDF/Fluent/GenerateExtensions.cs"
+      ],
+      "sources": [
+        {
+          "title": "output",
+          "url": "https://www.questpdf.com/concepts/generating-output.html"
+        }
+      ],
+      "issue": {
+        "number": 17,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/17"
+      }
+    },
+    {
+      "id": "FP-204",
+      "milestone": "M2",
+      "area": "graphics",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "partial",
+      "title": "Add rounded containers, border alignment and gradients",
+      "summary": "Extend solid rectangular backgrounds/borders with first-class styling APIs.",
+      "depends_on": [
+        "FP-002"
+      ],
+      "acceptance": [
+        "Support uniform/per-corner radii, explicit border alignment, and linear background/border gradients.",
+        "Define clipping, layout bounds, units, content transforms, transparency, and interactions with existing border/padding APIs.",
+        "Introduce shared drawing contracts that other graphics tasks can extend safely."
+      ],
+      "validation": [
+        "Add PDF/image/SVG visual fixtures at multiple sizes and DPI settings.",
+        "Verify old solid backgrounds/borders are unchanged and native resources are disposed."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Elements/Background.cs",
+        "Source/FossPDF/Elements/Border.cs",
+        "Source/FossPDF/Infrastructure/ICanvas.cs"
+      ],
+      "sources": [
+        {
+          "title": "rounded",
+          "url": "https://www.questpdf.com/api-reference/rounded-corners.html"
+        },
+        {
+          "title": "background",
+          "url": "https://www.questpdf.com/api-reference/background.html"
+        },
+        {
+          "title": "border",
+          "url": "https://www.questpdf.com/api-reference/border.html"
+        }
+      ],
+      "issue": {
+        "number": 18,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/18"
+      }
+    },
+    {
+      "id": "FP-205",
+      "milestone": "M2",
+      "area": "graphics",
+      "priority": "P2",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add advanced line styles and shadows",
+      "summary": "Provide dash/gradient line APIs and configurable blurred shadows without requiring custom Canvas code.",
+      "depends_on": [
+        "FP-002",
+        "FP-204"
+      ],
+      "acceptance": [
+        "Support custom line dash patterns and line gradients, with explicit stroke width/units and clipping behavior.",
+        "Support shadow blur, color, offset, spread, and rounded-box interactions through a documented style object.",
+        "Document vector/raster fallback behavior and the effect of raster DPI on PDF/SVG output."
+      ],
+      "validation": [
+        "Test dash scaling, gradient interpolation, transparency, clipping, nested transforms, and high-DPI shadows.",
+        "Verify determinism and native-memory cleanup for repeated drawing."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Fluent/LineExtensions.cs",
+        "Source/FossPDF/Drawing/SkiaCanvasBase.cs",
+        "Source/FossPDF/Infrastructure/ICanvas.cs"
+      ],
+      "sources": [
+        {
+          "title": "line",
+          "url": "https://www.questpdf.com/api-reference/line.html"
+        },
+        {
+          "title": "shadow",
+          "url": "https://www.questpdf.com/api-reference/shadow.html"
+        }
+      ],
+      "issue": {
+        "number": 19,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/19"
+      }
+    },
+    {
+      "id": "FP-301",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "missing",
+      "title": "Add generated-document merging and page-number strategies",
+      "summary": "Provide a public merge workflow for multiple IDocument instances, including original or continuous numbering.",
+      "depends_on": [
+        "FP-001",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Implement merging generated documents while retaining each document's composition and a documented metadata/settings precedence.",
+        "Support original page numbering and continuous page numbering, including totals and section references.",
+        "Define empty inputs, repeated document instances, mixed page sizes, exceptions, and shared-resource ownership."
+      ],
+      "validation": [
+        "Test merging 2-page and 3-page fixtures with both numbering strategies and correct totals.",
+        "Verify PDF/image/SVG output and .NET 9 consumer examples."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Fluent/MinimalApi.cs",
+        "Source/FossPDF/Drawing/DocumentContainer.cs",
+        "Source/FossPDF/Infrastructure/PageContext.cs"
+      ],
+      "sources": [
+        {
+          "title": "mergeApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Infrastructure/IMergedDocument.cs"
+        }
+      ],
+      "issue": {
+        "number": 20,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/20"
+      }
+    },
+    {
+      "id": "FP-302",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "XL",
+      "baseline_status": "missing",
+      "title": "Implement existing-PDF loading, saving, page selection and merging",
+      "summary": "Introduce a PDF processing backend and public API for working with existing files rather than only generating new documents.",
+      "depends_on": [
+        "FP-002",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Support loading/saving existing PDFs through documented file/stream/byte-array workflows and merging selected pages from multiple sources.",
+        "Define and implement page selection, extraction, reordering, reverse/range handling, and clear invalid-range behavior.",
+        "Preserve supported page geometry, links/resources/metadata, caller-owned streams, and predictable failure cleanup."
+      ],
+      "validation": [
+        "Validate page count/order, mixed sizes, malformed/truncated files, empty selections, and input/output stream ownership.",
+        "Verify native packaging and the same operation corpus on all supported OS targets."
+      ],
+      "touchpoints": [
+        "New PDF operations module and public API",
+        "Source/FossPDF/Fluent",
+        "Native backend selected by FP-002"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "issue": {
+        "number": 21,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/21"
+      }
+    },
+    {
+      "id": "FP-303",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "missing",
+      "title": "Add existing-PDF overlays and underlays",
+      "summary": "Apply PDF watermarks, stationery, or background templates to selected pages of existing PDFs.",
+      "depends_on": [
+        "FP-302"
+      ],
+      "acceptance": [
+        "Support overlay and underlay sources with explicit target/source page selection and repeat/placement rules.",
+        "Define behavior for page boxes, rotation, transparency, differing sizes, and layering order.",
+        "Preserve source PDFs and links/resources without accidental rasterization."
+      ],
+      "validation": [
+        "Test selected/all pages, rotated/mixed-size pages, repeated templates, and transparent overlays.",
+        "Check page content/resource validity with independent PDF tools."
+      ],
+      "touchpoints": [
+        "PDF operations module"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "issue": {
+        "number": 22,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/22"
+      }
+    },
+    {
+      "id": "FP-304",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add PDF encryption, decryption and permissions",
+      "summary": "Expose password protection and permission controls matching the pinned target's supported workflows.",
+      "depends_on": [
+        "FP-302"
+      ],
+      "acceptance": [
+        "Support user/owner passwords, decryption, and the target's 40/128/256-bit compatibility options with explicit strong-encryption defaults/documentation.",
+        "Implement supported permissions for printing, copying, annotations, modification, assembly, form filling, and metadata encryption.",
+        "Define password failures, unsupported security handlers, restrictions, stream handling, and PDF/A incompatibilities."
+      ],
+      "validation": [
+        "Verify output with independent PDF readers/tools and wrong/right password cases.",
+        "Ensure passwords are not logged or included in exception messages or persisted test artifacts."
+      ],
+      "touchpoints": [
+        "PDF operations module"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "issue": {
+        "number": 23,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/23"
+      }
+    },
+    {
+      "id": "FP-305",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add attachments, associated-file relationships and XMP extensions",
+      "summary": "Provide the packaging and metadata primitives needed for attachments and structured invoice data.",
+      "depends_on": [
+        "FP-302"
+      ],
+      "acceptance": [
+        "Embed attachments with names, MIME types, descriptions, timestamps, replacement keys, and associated-file relationships supported by the pinned target.",
+        "Add a documented XMP metadata extension workflow that preserves existing namespaces and document metadata.",
+        "Handle duplicate names, invalid files/metadata, Unicode filenames, stream ownership, and malformed input."
+      ],
+      "validation": [
+        "Verify attachment bytes, PDF associated-file dictionaries, replacement behavior, and metadata round trips.",
+        "Include fixtures for Data/Source/Alternative/Supplement/Unspecified relationships."
+      ],
+      "touchpoints": [
+        "PDF operations module",
+        "Document metadata/conformance integration"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "issue": {
+        "number": 24,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/24"
+      }
+    },
+    {
+      "id": "FP-306",
+      "milestone": "M3",
+      "area": "pdf-operations",
+      "priority": "P1",
+      "size": "M",
+      "baseline_status": "partial",
+      "title": "Add explicit PDF compression and linearization controls",
+      "summary": "Provide configurable extra PDF compression and web-optimized output rather than relying only on the renderer's defaults.",
+      "depends_on": [
+        "FP-302",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Implement a documented extra-compression option and linearized output for generated/existing PDF workflows.",
+        "Preserve content/resources, metadata, selected conformance modes, and supported encryption/attachment combinations.",
+        "Document tradeoffs and settings precedence, including cases where file size cannot be reduced."
+      ],
+      "validation": [
+        "Verify linearization flags/structure and readable output with independent tools.",
+        "Measure file size and processing overhead on text-, image-, and attachment-heavy fixtures."
+      ],
+      "touchpoints": [
+        "PDF operations module",
+        "Source/FossPDF/Infrastructure/DocumentSettings equivalent"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "issue": {
+        "number": 25,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/25"
+      }
+    },
+    {
+      "id": "FP-401",
+      "milestone": "M4",
+      "area": "accessibility",
+      "priority": "P1",
+      "size": "XL",
+      "baseline_status": "missing",
+      "title": "Implement semantic structure and tagged PDF",
+      "summary": "Add the logical structure needed for accessible, machine-readable PDFs.",
+      "depends_on": [
+        "FP-002",
+        "FP-004"
+      ],
+      "acceptance": [
+        "Define a semantic model and fluent APIs for headings, paragraphs, links, figures/alt text, lists, tables/headers, language, and ignored/decorative content.",
+        "Emit a consistent PDF structure tree with correct reading order, role mappings, page/content associations, and multi-page/repeated-element behavior.",
+        "Provide sensible automatic tags for standard layout elements and documented overrides without changing existing visual output."
+      ],
+      "validation": [
+        "Inspect structure with independent PDF tools and accessibility-focused fixtures.",
+        "Test nested tables, lists, links, figures, repeated headers/footers, and mixed document languages."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Infrastructure",
+        "Source/FossPDF/Elements",
+        "Source/FossPDF/Drawing/SkiaCanvasBase.cs",
+        "Native tagging backend"
+      ],
+      "sources": [
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "issue": {
+        "number": 26,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/26"
+      }
+    },
+    {
+      "id": "FP-402",
+      "milestone": "M4",
+      "area": "accessibility",
+      "priority": "P1",
+      "size": "XL",
+      "baseline_status": "partial",
+      "title": "Add selectable PDF/A-2 and PDF/A-3 conformance levels",
+      "summary": "Extend the existing boolean PdfA option to the six target conformance levels with evidence-based validation.",
+      "depends_on": [
+        "FP-002",
+        "FP-305",
+        "FP-401"
+      ],
+      "acceptance": [
+        "Support PDF/A-2a/2b/2u and PDF/A-3a/3b/3u with documented settings; map and validate the legacy PdfA boolean behavior.",
+        "Supply required metadata/output intents/font embedding/Unicode mappings and associated-file rules, with correct behavior when optimization is enabled.",
+        "Reject or clearly report incompatible combinations rather than claiming conformance from a setting alone."
+      ],
+      "validation": [
+        "Validate every supported level with pinned veraPDF profiles and publish reports in CI.",
+        "Include tagged A-level, Unicode U-level, and attachment-bearing PDF/A-3 fixtures plus expected-failure cases."
+      ],
+      "touchpoints": [
+        "Document settings and metadata",
+        "PDF/tagging backend",
+        "Attachment integration"
+      ],
+      "sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "issue": {
+        "number": 27,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/27"
+      }
+    },
+    {
+      "id": "FP-403",
+      "milestone": "M4",
+      "area": "accessibility",
+      "priority": "P1",
+      "size": "XL",
+      "baseline_status": "missing",
+      "title": "Implement PDF/UA-1 accessibility conformance",
+      "summary": "Build PDF/UA-1 support on top of semantic tagging and validate real accessibility outcomes.",
+      "depends_on": [
+        "FP-401"
+      ],
+      "acceptance": [
+        "Expose PDF/UA-1 configuration and satisfy document language/title, structure, text encoding, reading order, links, figures, and table/list semantics.",
+        "Report missing author-supplied accessibility information and document author responsibilities and limitations.",
+        "Support combined archival/accessibility output where applicable without breaking either conformance mode."
+      ],
+      "validation": [
+        "Run applicable automated PDF/UA validation and retain reports; include deliberate negative fixtures.",
+        "Perform documented human checks with at least one screen reader/accessibility inspection tool; automated validation alone is insufficient."
+      ],
+      "touchpoints": [
+        "Semantic/tagging APIs",
+        "Document metadata and native backend",
+        "Conformance validation fixtures"
+      ],
+      "sources": [
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "issue": {
+        "number": 28,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/28"
+      }
+    },
+    {
+      "id": "FP-404",
+      "milestone": "M4",
+      "area": "accessibility",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "missing",
+      "title": "Add validated ZUGFeRD and Factur-X packaging workflows",
+      "summary": "Demonstrate and validate embedding structured invoice XML with the required PDF/A-3 packaging and XMP metadata.",
+      "depends_on": [
+        "FP-305",
+        "FP-402"
+      ],
+      "acceptance": [
+        "Provide a documented packaging example/API workflow using externally supplied invoice XML, the correct attachment relationship, and required invoice metadata.",
+        "State supported ZUGFeRD/Factur-X profiles/versions and keep XML generation, invoice correctness, and packaging responsibilities explicit.",
+        "Preserve payload bytes and compatible document processing/conformance settings."
+      ],
+      "validation": [
+        "Validate representative positive/negative examples with pinned Mustang tooling and veraPDF.",
+        "Confirm invoice XML can be extracted intact and the selected profile is correctly identified."
+      ],
+      "touchpoints": [
+        "PDF operations and conformance APIs",
+        "Source/FossPDF.ReportSample or dedicated invoice example",
+        "Documentation"
+      ],
+      "sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "issue": {
+        "number": 29,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/29"
+      }
+    },
+    {
+      "id": "FP-501",
+      "milestone": "M5",
+      "area": "tooling",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "partial",
+      "title": "Add previewer element-inspection transport and source mapping",
+      "summary": "Extend the existing picture/hot-reload protocol with structured element and source information.",
+      "depends_on": [
+        "FP-108",
+        "FP-002"
+      ],
+      "acceptance": [
+        "Define a versioned, backward-compatible inspection protocol carrying stable element IDs, hierarchy, occurrence geometry, configuration, and source locations.",
+        "Capture source file/line/member information through supported APIs with predictable behavior for reusable components and optimized/release builds.",
+        "Keep inspection optional and local, and bound payload/resource lifetime across refreshes and failed renders."
+      ],
+      "validation": [
+        "Add protocol compatibility, malformed-input, refresh/disposal, and large-document tests.",
+        "Verify old preview clients continue to work or receive a clear version-compatibility response."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/Previewer",
+        "Source/FossPDF.Previewer/CommunicationService.cs",
+        "Source/FossPDF/Fluent/ElementExtensions.cs"
+      ],
+      "sources": [
+        {
+          "title": "companion",
+          "url": "https://www.questpdf.com/companion/features.html"
+        },
+        {
+          "title": "capture",
+          "url": "https://www.questpdf.com/concepts/code-patterns/capture-content-position.html"
+        }
+      ],
+      "issue": {
+        "number": 30,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/30"
+      }
+    },
+    {
+      "id": "FP-502",
+      "milestone": "M5",
+      "area": "tooling",
+      "priority": "P2",
+      "size": "XL",
+      "baseline_status": "partial",
+      "title": "Add interactive inspection, measurement, search and source navigation",
+      "summary": "Bring the existing Avalonia previewer closer to the current Companion App's development workflow.",
+      "depends_on": [
+        "FP-501"
+      ],
+      "acceptance": [
+        "Add hierarchy selection, per-occurrence element details, coordinate picking, magnification, horizontal/vertical measurement, and content search.",
+        "Implement supported IDE/source navigation and richer runtime/layout diagnostics using captured source and geometry data.",
+        "Preserve pan/zoom, PDF export, hot reload, accessibility of controls, and responsive refresh/disposal behavior."
+      ],
+      "validation": [
+        "Publish reproducible UI smoke-test steps and automated protocol/view-model tests where feasible.",
+        "Verify Windows/Linux/macOS behavior, large documents, repeated refreshes, and fallback behavior without IDE integration."
+      ],
+      "touchpoints": [
+        "Source/FossPDF.Previewer",
+        "Source/FossPDF/Previewer/ExceptionDocument.cs"
+      ],
+      "sources": [
+        {
+          "title": "companion",
+          "url": "https://www.questpdf.com/companion/features.html"
+        }
+      ],
+      "issue": {
+        "number": 31,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/31"
+      }
+    },
+    {
+      "id": "FP-503",
+      "milestone": "M5",
+      "area": "deployment",
+      "priority": "P1",
+      "size": "L",
+      "baseline_status": "validation required",
+      "title": "Qualify NativeAOT, trimming and runtime asset support",
+      "summary": "Establish deployment parity from actual publish/run evidence rather than assuming unsupported behavior from source inspection.",
+      "depends_on": [
+        "FP-002",
+        "FP-201"
+      ],
+      "acceptance": [
+        "Publish and execute .NET 9 trimmed and NativeAOT consumer fixtures for text, images, SVG, fonts/subsetting, and applicable PDF operations.",
+        "Audit reflection, generated interop, resource loading, initialization, and native asset selection; fix or explicitly track reproduced gaps.",
+        "Publish an OS/architecture/runtime support matrix, including verification of Windows ARM64 where infrastructure is available, and define CI coverage."
+      ],
+      "validation": [
+        "Retain publish logs and runtime smoke-test evidence for each claimed supported combination.",
+        "Keep validation-required or explicitly unsupported combinations visible; do not infer support from successful compilation alone."
+      ],
+      "touchpoints": [
+        "Source/FossPDF/FossPDF.csproj",
+        "Source/FossPDF.FontSubset/FontSubsetBuilder.cs",
+        "Native packaging and consumer samples"
+      ],
+      "sources": [
+        {
+          "title": "aot",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/QuestPDF.csproj"
+        },
+        {
+          "title": "roadmap",
+          "url": "https://www.questpdf.com/roadmap.html"
+        }
+      ],
+      "issue": {
+        "number": 32,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/32"
+      }
+    },
+    {
+      "id": "FP-504",
+      "milestone": "M5",
+      "area": "foundation",
+      "priority": "P0",
+      "size": "L",
+      "baseline_status": "release gate",
+      "title": "Complete the parity audit, migration guide and release evidence",
+      "summary": "Close the pinned target only after every in-scope capability has reproducible evidence and contributor-facing documentation.",
+      "depends_on": [
+        "FP-001",
+        "FP-002",
+        "FP-003",
+        "FP-004",
+        "FP-101",
+        "FP-102",
+        "FP-103",
+        "FP-104",
+        "FP-105",
+        "FP-106",
+        "FP-107",
+        "FP-108",
+        "FP-109",
+        "FP-201",
+        "FP-202",
+        "FP-203",
+        "FP-204",
+        "FP-205",
+        "FP-301",
+        "FP-302",
+        "FP-303",
+        "FP-304",
+        "FP-305",
+        "FP-306",
+        "FP-401",
+        "FP-402",
+        "FP-403",
+        "FP-404",
+        "FP-501",
+        "FP-502",
+        "FP-503"
+      ],
+      "acceptance": [
+        "Audit every baseline row and accepted work item against QuestPDF 2026.9.1; link implementation, tests, documentation, and any approved scope decisions.",
+        "Publish a migration/API-equivalence guide, current support matrix, benchmark/conformance results, and release notes while preserving existing FossPDF workflows.",
+        "Verify clean consumers and packages on the supported runtime matrix and record the next separately versioned parity target."
+      ],
+      "validation": [
+        "Require all in-scope work items complete, clean warning-as-error builds, and all test/conformance/consumer checks passing.",
+        "Reconcile missing/partial/unverified statuses and publish remaining limitations without declaring unsupported capabilities complete."
+      ],
+      "touchpoints": [
+        "FEATURE_PARITY.md",
+        "Release packaging/CI",
+        "Migration and API documentation"
+      ],
+      "sources": [
+        {
+          "title": "release",
+          "url": "https://github.com/QuestPDF/QuestPDF/releases/tag/2026.9.1"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "issue": {
+        "number": 33,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/33"
+      }
+    }
+  ]
+}
