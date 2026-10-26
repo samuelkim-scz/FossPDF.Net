@@ -54,6 +54,15 @@ public class FontSubsetBuilder
 
         try
         {
+            var nameIds = HarfBuzzSubsetNative.hb_subset_input_set(subsetInput, HarfBuzzSubsetNative.SubsetSet.NameId);
+            if (nameIds == IntPtr.Zero)
+                throw new SubsetException("Failed to get name ID set from subset input.");
+
+            // HarfBuzz retains only name IDs 0-6 by default. Keep typographic family/subfamily
+            // names too, so Skia resolves the same font family and styles on every platform.
+            HarfBuzzSubsetNative.hb_set_add(nameIds, 16);
+            HarfBuzzSubsetNative.hb_set_add(nameIds, 17);
+
             var glyphSet = HarfBuzzSubsetNative.hb_subset_input_glyph_set(subsetInput);
             if (glyphSet == IntPtr.Zero)
                 throw new SubsetException("Failed to get glyph set from subset input.");

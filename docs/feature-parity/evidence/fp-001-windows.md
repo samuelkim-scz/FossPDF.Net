@@ -34,6 +34,12 @@ The generated TXT-001, PAG-002 page 1 and IMG-001 PNGs were visually inspected. 
 
 Rendering fixtures emit PDFs, actual PNGs and applicable reference PNGs beneath each test framework's parity-artifacts directory. The TRX logs and attachments are local ignored artifacts; subsequent CI runs upload the same evidence for review.
 
+## Font-subsetting regression discovered by CI
+
+The [initial cross-platform run](https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40389499970) exposed an existing Linux/macOS failure in the font-style preservation test. The new parity fixtures passed. HarfBuzz's [default name-ID filter](https://github.com/harfbuzz/harfbuzz/blob/8.3.1/src/hb-subset-input.cc) retains IDs 0-6, discarding the typographic family/subfamily names in IDs 16/17. Different Skia platform backends then resolve the subset fonts into different families.
+
+The subset builder now preserves IDs 16/17. The existing regression test also compares the original and subset typographic name records, so Windows detects the loss as well. This strengthened check failed before the fix and passed afterward. The warning-as-error solution build and complete .NET 8/.NET 9 suites were rerun successfully with the same counts above; logs are under artifacts/fp001/font-fix. The CI matrix now lets each OS finish independently. Follow-up cross-platform results are linked from [PR #34](https://github.com/samuelkim-scz/FossPDF.Net/pull/34).
+
 ## Scope of this evidence
 
 This establishes the initial executable corpus on Windows. PDF counts are checked through the generation API and raster output; this run does not perform independent PDF structure, accessibility, PDF/A, encryption or invoice validation. Their catalog scenarios remain planned. Linux/macOS results come from CI and broader platform/performance qualification remains in FP-003/FP-503.
