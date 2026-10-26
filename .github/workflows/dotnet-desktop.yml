@@ -1,4 +1,4 @@
-name: Build And Create Nuget Package
+name: Build, Test And Create Nuget Package
 
 on:
   push:
@@ -22,16 +22,18 @@ jobs:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-      UNIT_TEST_PROJECT: QuestPDF.UnitTests/QuestPDF.UnitTests.csproj
+      UNIT_TEST_PROJECT: FossPDF.UnitTests/FossPDF.UnitTests.csproj
 
     steps:
       - name: 📝 Fetch Sources 📝
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
 
-      - name: ⚙ Setup .NET 6.0 SDK ⚙
-        uses: actions/setup-dotnet@v1
+      - name: ⚙ Setup .NET SDKs ⚙
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: |
+            8.0.x
+            9.0.x
           
       - name: 🔄 Restore Nuget Packages 🔄
         shell: bash
@@ -42,9 +44,14 @@ jobs:
         shell: bash
         run: dotnet build -c Release --no-restore
         working-directory: ./Source
+
+      - name: Run unit tests
+        shell: bash
+        run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore
+        working-directory: ./Source
         
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: ${{ matrix.environment == 'windows-latest' }}
         with:
           name: Build Package
