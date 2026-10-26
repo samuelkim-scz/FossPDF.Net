@@ -24,7 +24,9 @@ namespace FossPDF.Fluent
             return element.SimpleRotate(x => x.TurnCount++);
         }
         
-        /// <param name="angle">In degrees</param>
+        /// <summary>Rotates the element content by the specified angle.</summary>
+        /// <param name="element">The container to rotate.</param>
+        /// <param name="angle">Rotation angle in degrees.</param>
         public static IContainer Rotate(this IContainer element, float angle)
         {
             return element.Element(new Rotate
