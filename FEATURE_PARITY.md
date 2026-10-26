@@ -82,7 +82,7 @@ Each issue carries its acceptance checklist, validation requirements, likely tou
 
 ### [Parity M0 - Baseline and architecture](https://github.com/samuelkim-scz/FossPDF.Net/milestone/1)
 
-Define testable contracts, compatible settings, native-backend decisions, and reproducible quality baselines.
+Define testable contracts, compatible settings, native-backend decisions, and reproducible quality baselines. The runnable baseline tool, tolerances, performance budgets and CI artifacts are documented in [docs/feature-parity/QUALITY.md](docs/feature-parity/QUALITY.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

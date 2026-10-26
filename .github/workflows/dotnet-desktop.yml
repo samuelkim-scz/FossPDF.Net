@@ -75,3 +75,54 @@ jobs:
             **/*.nupkg
             **/*.snupkg
             !.nuget
+
+  quality:
+    name: Quality baselines (${{ matrix.environment }})
+    runs-on: ${{ matrix.environment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+    steps:
+      - name: 📝 Fetch Sources 📝
+        uses: actions/checkout@v7
+
+      - name: ⚙ Setup .NET SDK ⚙
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9.0.x
+
+      - name: 🔄 Restore Nuget Packages 🔄
+        shell: bash
+        run: dotnet restore
+        working-directory: ./Source
+
+      - name: 🛠 Build Solution 🛠
+        shell: bash
+        run: dotnet build -c Release --no-restore --warnaserror
+        working-directory: ./Source
+
+      - name: Install qpdf (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y qpdf
+
+      - name: Run quality baselines
+        shell: bash
+        run: dotnet run --project FossPDF.Quality/FossPDF.Quality.csproj -c Release --no-build --no-restore -- --mode all --output ../artifacts/quality
+        working-directory: ./Source
+
+      - name: Upload quality evidence
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: quality-evidence-${{ matrix.environment }}
+          path: artifacts/quality/**/*
