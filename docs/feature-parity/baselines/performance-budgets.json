@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "measuredOn": "win-x64",
+  "policy": "Elapsed budgets are 8x and allocation budgets are 2x the measured baseline. The working-set budget is the larger of 1 GiB or 2x the measured peak. These are CI sanity ceilings, not service-level objectives; tighten them only with reviewed evidence.",
+  "scenarios": {
+    "report": {
+      "maxMedianElapsedMs": 138,
+      "maxAllocatedBytesPerDocument": 4150048,
+      "maxPeakWorkingSetBytes": 1073741824
+    },
+    "image-heavy": {
+      "maxMedianElapsedMs": 70,
+      "maxAllocatedBytesPerDocument": 1097114,
+      "maxPeakWorkingSetBytes": 1073741824
+    },
+    "large-table": {
+      "maxMedianElapsedMs": 2608,
+      "maxAllocatedBytesPerDocument": 186327024,
+      "maxPeakWorkingSetBytes": 1073741824
+    },
+    "concurrent": {
+      "maxMedianElapsedMs": 50,
+      "maxAllocatedBytesPerDocument": 4140594,
+      "maxPeakWorkingSetBytes": 1073741824
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-26",
+  "currentClaims": {
+    "pdfA": "None",
+    "pdfUa": "None"
+  },
+  "tools": {
+    "qpdf": {
+      "minimumVersion": "11.0.0",
+      "purpose": "Structural PDF validation (qpdf --check). Not a PDF/A or PDF/UA validator.",
+      "availability": "Installed on the Linux CI runner; optional elsewhere."
+    },
+    "verapdf": {
+      "minimumVersion": "1.26.0",
+      "purpose": "PDF/A and PDF/UA validation. Output is recorded for future profile work and is not a current claim.",
+      "availability": "Optional; the quality tool records it when present."
+    }
+  },
+  "notes": [
+    "The library does not currently claim PDF/A or PDF/UA conformance.",
+    "Selectable PDF/A-2/PDF/A-3 profiles require FP-402.",
+    "PDF/UA-1 requires FP-401 and FP-403.",
+    "The legacy DocumentMetadata.PdfA flag is not a validated profile."
+  ]
+}

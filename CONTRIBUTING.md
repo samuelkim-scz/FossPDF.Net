@@ -25,6 +25,14 @@ dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --n
 
 Include meaningful tests for changed behavior and the acceptance evidence requested by the issue. Review visual results when changing rendering/layout. Test native resource ownership, caller-owned streams and failure cleanup when those paths change. CI runs on Windows, Linux and macOS.
 
+When changing layout, text, fonts or output, also run the FP-003 quality baseline from `Source`:
+
+```powershell
+dotnet run --project FossPDF.Quality/FossPDF.Quality.csproj -c Release -- --mode all --output ../artifacts/quality
+```
+
+It records the runtime/font pins, semantic visual metrics, performance budgets and optional validator output. Update `docs/feature-parity/baselines/` only with reviewed artifacts and an explanation; see [QUALITY.md](docs/feature-parity/QUALITY.md).
+
 ## Pull requests
 
 Use the PR template and link the work item. `Closes #<number>` is appropriate when the PR completes the entire issue; `Refs #<number>` tracks partial work. Preserve existing FossPDF APIs/namespaces and document supported frameworks and migration paths for additions. Record licenses/notices and runtime assets for new dependencies.

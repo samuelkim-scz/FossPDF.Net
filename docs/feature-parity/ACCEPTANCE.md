@@ -100,6 +100,8 @@ Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parit
 
 See the [initial Windows evidence](evidence/fp-001-windows.md) for the recorded local run. Other platform qualification and broader conformance/performance coverage remain tracked by their work items.
 
+[FP-003](https://github.com/samuelkim-scz/FossPDF.Net/issues/4) adds a separate reproducible quality-baseline layer: runtime and font pins, semantic raster metrics, performance/memory measurements and optional external validator output. See [QUALITY.md](QUALITY.md) for the runnable tool, tolerances, budgets and CI artifacts. The parity corpus above remains the acceptance contract; the quality tool supplies the cross-platform baseline evidence and does not add parity fixtures.
+
 ## Activate or extend a fixture
 
 1. Agree the feature's public behavior and settings/ownership contract in its issue before broad changes.
