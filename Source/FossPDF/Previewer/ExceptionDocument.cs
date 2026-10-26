@@ -87,7 +87,7 @@ namespace FossPDF.Previewer
                                 text.Span(currentException.Message);
                             });
                         
-                        foreach (var trace in currentException.StackTrace.Split('\n'))
+                        foreach (var trace in (currentException.StackTrace ?? string.Empty).Split('\n'))
                         {
                             column
                                 .Item()

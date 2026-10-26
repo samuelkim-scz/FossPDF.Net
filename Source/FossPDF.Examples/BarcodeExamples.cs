@@ -13,7 +13,8 @@ namespace FossPDF.Examples
         [Test]
         public void Example()
         {
-            FontManager.RegisterFont(File.OpenRead("LibreBarcode39-Regular.ttf"));
+            using var fontStream = File.OpenRead("LibreBarcode39-Regular.ttf");
+            FontManager.RegisterFont(fontStream);
             
             RenderingTest
                 .Create()

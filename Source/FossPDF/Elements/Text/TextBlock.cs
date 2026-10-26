@@ -18,7 +18,7 @@ namespace FossPDF.Elements.Text
 
         public string Text => string.Join(" ", Items.OfType<TextBlockSpan>().Select(x => x.Text));
 
-        private Queue<ITextBlockItem> RenderingQueue { get; set; }
+        private Queue<ITextBlockItem> RenderingQueue { get; } = new();
         private int CurrentElementIndex { get; set; }
 
         private bool FontFallbackApplied { get; set; } = false;
@@ -31,13 +31,6 @@ namespace FossPDF.Elements.Text
 
             void InitializeQueue()
             {
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-                if (RenderingQueue == null)
-                {
-                    RenderingQueue = new Queue<ITextBlockItem>(Items);
-                    return;
-                }
-
                 RenderingQueue.Clear();
 
                 foreach (var item in Items)

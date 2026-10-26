@@ -1,4 +1,4 @@
-using System.Net;
+using System.Net.Http;
 using NUnit.Framework;
 using FossPDF.Examples.Engine;
 using FossPDF.Fluent;
@@ -22,10 +22,10 @@ namespace FossPDF.Examples
             if (Greyscale)
                 url += "?grayscale";
 
-            using var client = new WebClient();
-            client.Headers.Add("user-agent", "FossPDF/1.0 Unit Testing");
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "FossPDF/1.0 Unit Testing");
             
-            var response = client.DownloadData(url);
+            var response = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
             container.Image(response);
         }
     }

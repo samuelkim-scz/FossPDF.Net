@@ -5,8 +5,9 @@ namespace FossPDF.Elements.Text.Calculation
 {
     internal class TextDrawingRequest
     {
-        public ICanvas Canvas { get; set; }
-        public IPageContext PageContext { get; set; }
+        // TextBlock supplies these dependencies when creating a drawing request.
+        public ICanvas Canvas { get; set; } = null!;
+        public IPageContext PageContext { get; set; } = null!;
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
         public float TotalAscent { get; set; }

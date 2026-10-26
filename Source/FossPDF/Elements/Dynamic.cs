@@ -73,7 +73,7 @@ namespace FossPDF.Elements
                 ContentDirection = ContentDirection,
                 
                 PageNumber = PageContext.CurrentPage,
-                TotalPages = PageContext.GetLocation(Infrastructure.PageContext.DocumentLocation).PageEnd,
+                TotalPages = PageContext.GetLocation(Infrastructure.PageContext.DocumentLocation)?.PageEnd ?? 0,
                 AvailableSize = availableSize
             };
             
@@ -88,10 +88,11 @@ namespace FossPDF.Elements
 
     public class DynamicContext
     {
-        internal IPageContext PageContext { get; set; }
-        internal ICanvas Canvas { get; set; }
+        // DynamicHost supplies these dependencies before invoking the component.
+        internal IPageContext PageContext { get; set; } = null!;
+        internal ICanvas Canvas { get; set; } = null!;
         
-        internal TextStyle TextStyle { get; set; }
+        internal TextStyle TextStyle { get; set; } = TextStyle.Default;
         internal ContentDirection ContentDirection { get; set; }
     
         public int PageNumber { get; internal set; }

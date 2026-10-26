@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using Avalonia.Threading;
 
 namespace FossPDF.Previewer;
 
@@ -42,38 +43,86 @@ class CommunicationService
 
     public async Task Stop()
     {
-        await Application.StopAsync();
-        await Application.DisposeAsync();
+        var application = Application;
+        if (application == null)
+            return;
+
+        Application = null;
+        await application.StopAsync();
+        await application.DisposeAsync();
     }
 
-    private async Task<IResult> HandlePing()
+    private IResult HandlePing()
     {
         return OnDocumentRefreshed == null 
             ? Results.StatusCode(StatusCodes.Status503ServiceUnavailable) 
             : Results.Ok();
     }
     
-    private async Task<IResult> HandleVersion()
+    private IResult HandleVersion()
     {
         return Results.Json(GetType().Assembly.GetName().Version);
     }
     
     private async Task<IResult> HandleUpdatePreview(HttpRequest request)
     {
-        var command = JsonSerializer.Deserialize<DocumentSnapshot>(request.Form["command"], JsonSerializerOptions);
+        var onDocumentRefreshed = OnDocumentRefreshed;
+        if (onDocumentRefreshed == null)
+            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        var pages = command
-            .Pages
-            .Select(page =>
+        if (!request.HasFormContentType)
+            return Results.BadRequest("A multipart preview update is required.");
+
+        var form = await request.ReadFormAsync();
+        var commandJson = form["command"].ToString();
+        if (string.IsNullOrWhiteSpace(commandJson))
+            return Results.BadRequest("The preview command is missing.");
+
+        DocumentSnapshot? command;
+        try
+        {
+            command = JsonSerializer.Deserialize<DocumentSnapshot>(commandJson, JsonSerializerOptions);
+        }
+        catch (JsonException)
+        {
+            return Results.BadRequest("The preview command is invalid.");
+        }
+
+        if (command?.Pages == null)
+            return Results.BadRequest("The preview pages are missing.");
+
+        var pages = new List<PreviewPage>();
+        var ownershipTransferred = false;
+        try
+        {
+            foreach (var page in command.Pages)
             {
-                using var stream = request.Form.Files[page.Id].OpenReadStream();
-                var picture = SKPicture.Deserialize(stream);
-                        
-                return new PreviewPage(picture, page.Width, page.Height);
-            })
-            .ToList();
+                var file = form.Files.GetFile(page.Id);
+                if (file == null)
+                    return Results.BadRequest($"Preview data for page '{page.Id}' is missing.");
 
-        Task.Run(() => OnDocumentRefreshed(pages));
-        return Results.Ok();
+                using var stream = file.OpenReadStream();
+                var picture = SKPicture.Deserialize(stream);
+                if (picture == null)
+                    return Results.BadRequest($"Preview data for page '{page.Id}' is invalid.");
+
+                pages.Add(new PreviewPage(picture, page.Width, page.Height));
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ownershipTransferred = true;
+                onDocumentRefreshed(pages);
+            });
+            return Results.Ok();
+        }
+        finally
+        {
+            if (!ownershipTransferred)
+            {
+                foreach (var page in pages)
+                    page.Picture.Dispose();
+            }
+        }
     }
 }

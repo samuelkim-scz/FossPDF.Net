@@ -20,9 +20,12 @@ namespace FossPDF.Fluent
             return container;
         }
 
-        internal static T Element<T>(this IContainer element, T child) where T : IElement
+        internal static T Element<T>(this IContainer element, T child) where T : IElement?
         {
-            if (element?.Child != null && element.Child is Empty == false)
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+
+            if (element.Child != null && element.Child is Empty == false)
             {
                 var message = "You should not assign multiple child elements to a single-child container. " +
                               "This may happen when a container variable is used outside of its scope/closure OR the container is used in multiple fluent API chains OR the container is used incorrectly in a loop. " +

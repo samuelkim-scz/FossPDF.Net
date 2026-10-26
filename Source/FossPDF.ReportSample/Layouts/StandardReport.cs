@@ -60,14 +60,17 @@ namespace FossPDF.ReportSample.Layouts
 
                 column.Item().ShowOnce().PaddingVertical(15).Border(1f).BorderColor(Colors.Grey.Lighten1).ExtendHorizontal();
                 
-                column.Item().ShowOnce().Grid(grid =>
+                column.Item().ShowOnce().Padding(-2.5f).Table(table =>
                 {
-                    grid.Columns(2);
-                    grid.Spacing(5);
-                        
+                    table.ColumnsDefinition(definition =>
+                    {
+                        for (var columnIndex = 0; columnIndex < 2; columnIndex++)
+                            definition.RelativeColumn();
+                    });
+
                     foreach (var field in Model.HeaderFields)
                     {
-                        grid.Item().Text(text =>
+                        table.Cell().Padding(2.5f).Text(text =>
                         {
                             text.Span($"{field.Label}: ").SemiBold();
                             text.Span(field.Value);

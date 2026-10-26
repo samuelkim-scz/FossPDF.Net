@@ -5,10 +5,11 @@ namespace FossPDF.Elements.Text.Calculation
 {
     internal class TextMeasurementRequest
     {
-        public ICanvas Canvas { get; set; }
-        public IPageContext PageContext { get; set; }
+        // TextBlock supplies these dependencies when creating a measurement request.
+        public ICanvas Canvas { get; set; } = null!;
+        public IPageContext PageContext { get; set; } = null!;
 
-        public DocumentSpecificFontManager FontManager { get; set; }
+        public DocumentSpecificFontManager? FontManager { get; set; }
 
         public int StartIndex { get; set; }
         public float AvailableWidth { get; set; }

@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FossPDF.Helpers;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 
 namespace FossPDF.Drawing
 {
-    internal class ImageCanvas : SkiaCanvasBase
+    internal sealed class ImageCanvas : SkiaCanvasBase
     {
         private DocumentMetadata Metadata { get; }
-        private SKSurface Surface { get; set; }
+        private SKSurface? Surface { get; set; }
 
         internal ICollection<byte[]> Images { get; } = new List<byte[]>();
 
@@ -24,8 +25,15 @@ namespace FossPDF.Drawing
 
         public override void EndDocument()
         {
+            Dispose();
+        }
+
+        public override void Dispose()
+        {
             Canvas?.Dispose();
+            Canvas = null;
             Surface?.Dispose();
+            Surface = null;
         }
 
         public override void BeginPage(Size size)
@@ -34,7 +42,7 @@ namespace FossPDF.Drawing
             var imageInfo = new SKImageInfo((int) (size.Width * scalingFactor), (int) (size.Height * scalingFactor));
 
             Surface?.Dispose();
-            Surface = SKSurface.Create(imageInfo);
+            Surface = SKSurface.Create(imageInfo) ?? throw new InvalidOperationException("Could not create the page image surface.");
             Canvas = Surface.Canvas;
 
             Canvas.Scale(scalingFactor);
@@ -42,15 +50,14 @@ namespace FossPDF.Drawing
 
         public override void EndPage()
         {
-            Canvas.Save();
-            using var skImage = Surface.Snapshot();
+            ActiveCanvas.Save();
+            var surface = Surface ?? throw new InvalidOperationException("No page image surface is available.");
+            using var skImage = surface.Snapshot();
             using var skData = skImage.Encode(SKEncodedImageFormat.Png, 100);
             var image = skData.ToArray();
             Images.Add(image);
 
-            Canvas.Dispose();
-            Canvas = null;
-            Surface.Dispose();
+            Dispose();
         }
     }
 }

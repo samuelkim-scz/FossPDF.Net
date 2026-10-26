@@ -7,7 +7,7 @@ namespace FossPDF.Elements.Text.Calculation
 {
     internal class TextLine
     {
-        public ICollection<TextLineElement> Elements { get; private set; }
+        public ICollection<TextLineElement> Elements { get; private set; } = Array.Empty<TextLineElement>();
 
         public float TextHeight { get; private set; }
         public float LineHeight { get; private set; }

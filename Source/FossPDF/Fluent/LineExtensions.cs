@@ -32,7 +32,7 @@ namespace FossPDF.Fluent
         public static void LineColor(this ILine descriptor, string value)
         {
             ColorValidator.Validate(value);
-            (descriptor as Line).Color = value;
+            ((Line)descriptor).Color = value;
         }
     }
 }

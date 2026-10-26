@@ -45,17 +45,21 @@ namespace FossPDF.ReportSample.Layouts
 
         void PhotoDetails(IContainer container)
         {
-            container.Border(0.75f).BorderColor(Colors.Grey.Medium).Grid(grid =>
+            container.Border(0.75f).BorderColor(Colors.Grey.Medium).Table(table =>
             {
-                grid.Columns(6);
+                table.ColumnsDefinition(definition =>
+                {
+                    for (var columnIndex = 0; columnIndex < 6; columnIndex++)
+                        definition.RelativeColumn();
+                });
 
-                grid.Item().LabelCell().Text("Date");
-                grid.Item(2).ValueCell().Text(Model.Date?.ToString("g") ?? string.Empty);
-                grid.Item().LabelCell().Text("Location");
-                grid.Item(2).ValueCell().Text(Model.Location.Format());
+                table.Cell().LabelCell().Text("Date");
+                table.Cell().ColumnSpan(2).ValueCell().Text(Model.Date?.ToString("g") ?? string.Empty);
+                table.Cell().LabelCell().Text("Location");
+                table.Cell().ColumnSpan(2).ValueCell().Text(Model.Location.Format());
                 
-                grid.Item().LabelCell().Text("Comments");
-                grid.Item(5).ValueCell().Text(Model.Comments);
+                table.Cell().LabelCell().Text("Comments");
+                table.Cell().ColumnSpan(5).ValueCell().Text(Model.Comments);
             });
         }
     }

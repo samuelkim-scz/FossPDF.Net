@@ -151,13 +151,16 @@ namespace FossPDF.Examples
                     container
                         .Padding(25)
                         .DebugArea("Grid example", Colors.Blue.Medium)
-                        .Grid(grid =>
+                        .Padding(-2.5f).Table(table =>
                         {
-                            grid.Columns(3);
-                            grid.Spacing(5);
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 3; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
 
                             foreach (var _ in Enumerable.Range(0, 8))
-                                grid.Item().Height(50).Placeholder();
+                                table.Cell().Padding(2.5f).Height(50).Placeholder();
                         });
                 });
         }
@@ -185,6 +188,7 @@ namespace FossPDF.Examples
         }
         
         [Test]
+        [System.Obsolete("Demonstrates the legacy Grid API. New layouts should use Table.")]
         public void GridExample()
         {
             RenderingTest
@@ -192,7 +196,7 @@ namespace FossPDF.Examples
                 .PageSize(400, 230)
                 .Render(container =>
                 {
-                    var textStyle = TextStyle.Default.Size(14);
+                    var textStyle = TextStyle.Default.FontSize(14);
             
                     container
                         .Padding(15)
@@ -335,15 +339,19 @@ namespace FossPDF.Examples
                 {
                     container
                         .Padding(25)
-                        .Grid(grid =>
+                        .Table(table =>
                         {
-                            grid.Columns(5);
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 5; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
                     
                             Enumerable
                                 .Range(0, 25)
                                 .Select(x => Placeholders.BackgroundColor())
                                 .ToList()
-                                .ForEach(x => grid.Item().Height(50).Background(x));
+                                .ForEach(x => table.Cell().Height(50).Background(x));
                         });
                 });
         }
@@ -411,13 +419,17 @@ namespace FossPDF.Examples
                 {
                     container
                         .Padding(25)
-                        .Grid(grid =>
+                        .Table(table =>
                         {
-                            grid.Columns(3);
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 3; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
 
                             foreach (var font in fonts)
                             {
-                                grid.Item()
+                                table.Cell()
                                     .Border(1)
                                     .BorderColor(Colors.Grey.Medium)
                                     .Padding(10)
@@ -503,8 +515,8 @@ namespace FossPDF.Examples
                         {
                             var headerFontStyle = TextStyle
                                 .Default
-                                .Size(20)
-                                .Color(Colors.Blue.Darken2)
+                                .FontSize(20)
+                                .FontColor(Colors.Blue.Darken2)
                                 .SemiBold();
     
                             decoration
@@ -525,7 +537,7 @@ namespace FossPDF.Examples
                                             ? Colors.Red.Lighten4
                                             : Colors.Green.Lighten4;
 
-                                        var fontStyle = TextStyle.Default.Size(16);
+                                        var fontStyle = TextStyle.Default.FontSize(16);
                 
                                         column
                                             .Item()
@@ -579,14 +591,17 @@ namespace FossPDF.Examples
                 {
                     container
                         .Padding(20)
-                        .Grid(grid =>
+                        .Padding(-5f).Table(table =>
                         {
-                            grid.Columns(2);
-                            grid.Spacing(10);
-                            
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 2; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
+
                             foreach (var turns in Enumerable.Range(0, 4))
                             {
-                                grid.Item()
+                                table.Cell().Padding(5f)
                                     .Width(300)
                                     .Height(200)
                                     .Background(Colors.Grey.Lighten2)
@@ -675,14 +690,17 @@ namespace FossPDF.Examples
                 {
                     container
                         .Padding(20)
-                        .Grid(grid =>
+                        .Padding(-5f).Table(table =>
                         {
-                            grid.Columns(2);
-                            grid.Spacing(10);
-                            
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 2; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
+
                             foreach (var turns in Enumerable.Range(0, 4))
                             {
-                                grid.Item()
+                                table.Cell().Padding(5f)
                                     .Width(150)
                                     .Height(150)
                                     .Background(Colors.Grey.Lighten3)
@@ -784,15 +802,19 @@ namespace FossPDF.Examples
                             {
                                 row.RelativeItem().LabelCell("Label 1");
                                 
-                                row.RelativeItem(3).Grid(grid =>
+                                row.RelativeItem(3).Table(table =>
                                 {
-                                    grid.Columns(3);
+                                    table.ColumnsDefinition(definition =>
+                                    {
+                                        for (var columnIndex = 0; columnIndex < 3; columnIndex++)
+                                            definition.RelativeColumn();
+                                    });
                                     
-                                    grid.Item(2).LabelCell("Label 2");
-                                    grid.Item().LabelCell("Label 3");
+                                    table.Cell().ColumnSpan(2).LabelCell("Label 2");
+                                    table.Cell().LabelCell("Label 3");
                                     
-                                    grid.Item(2).ValueCell().Text("Value 2");
-                                    grid.Item().ValueCell().Text("Value 3");
+                                    table.Cell().ColumnSpan(2).ValueCell().Text("Value 2");
+                                    table.Cell().ValueCell().Text("Value 3");
                                 });
                             });
                             
@@ -800,15 +822,19 @@ namespace FossPDF.Examples
                             {
                                 row.RelativeItem().ValueCell().Text("Value 1");
                                 
-                                row.RelativeItem(3).Grid(grid =>
+                                row.RelativeItem(3).Table(table =>
                                 {
-                                    grid.Columns(3);
+                                    table.ColumnsDefinition(definition =>
+                                    {
+                                        for (var columnIndex = 0; columnIndex < 3; columnIndex++)
+                                            definition.RelativeColumn();
+                                    });
                                     
-                                    grid.Item().LabelCell("Label 4");
-                                    grid.Item(2).LabelCell("Label 5");
+                                    table.Cell().LabelCell("Label 4");
+                                    table.Cell().ColumnSpan(2).LabelCell("Label 5");
                                     
-                                    grid.Item().ValueCell().Text("Value 4");
-                                    grid.Item(2).ValueCell().Text("Value 5");
+                                    table.Cell().ValueCell().Text("Value 4");
+                                    table.Cell().ColumnSpan(2).ValueCell().Text("Value 5");
                                 });
                             });
                             
@@ -831,14 +857,18 @@ namespace FossPDF.Examples
                 {
                     container
                         .Padding(25)
-                        .Grid(grid =>
+                        .Table(table =>
                         {
-                            grid.Columns(10);
+                            table.ColumnsDefinition(definition =>
+                            {
+                                for (var columnIndex = 0; columnIndex < 10; columnIndex++)
+                                    definition.RelativeColumn();
+                            });
                             
                             for(var i=1; i<=4; i++)
                             {
-                                grid.Item(2).LabelCell(Placeholders.Label());
-                                grid.Item(3).ValueCell().Image(Placeholders.Image(200, 150));
+                                table.Cell().ColumnSpan(2).LabelCell(Placeholders.Label());
+                                table.Cell().ColumnSpan(3).ValueCell().Image(Placeholders.Image(200, 150));
                             }
                         });
                 });

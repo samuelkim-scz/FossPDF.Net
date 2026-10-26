@@ -74,15 +74,18 @@ namespace FossPDF.ReportSample.Layouts
                 return;
             }
 
-            container.DebugArea("Photos").Grid(grid =>
+            container.DebugArea("Photos").Padding(-2.5f).Table(table =>
             {
-                grid.Spacing(5);
-                grid.Columns(3);
+                table.ColumnsDefinition(definition =>
+                {
+                    for (var columnIndex = 0; columnIndex < 3; columnIndex++)
+                        definition.RelativeColumn();
+                });
                 
                 Enumerable
                     .Range(0, model.PhotoCount)
                     .ToList()
-                    .ForEach(x => grid.Item().AspectRatio(4 / 3f).Component<ImagePlaceholder>());
+                    .ForEach(x => table.Cell().Padding(2.5f).AspectRatio(4 / 3f).Component<ImagePlaceholder>());
             });
         }
     }

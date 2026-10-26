@@ -27,7 +27,7 @@ namespace FossPDF.Examples
                         {
                             decoration.Before().Text(text =>
                             {
-                                text.DefaultTextStyle(TextStyle.Default.Size(20));
+                                text.DefaultTextStyle(TextStyle.Default.FontSize(20));
                                 
                                 text.CurrentPageNumber();
                                 text.Span(" / ");
@@ -64,10 +64,14 @@ namespace FossPDF.Examples
                                             .Background(Placeholders.BackgroundColor())
                                             .Layers(layers =>
                                             {
-                                                layers.Layer().Grid(grid =>
+                                                layers.Layer().Table(table =>
                                                 {
-                                                    grid.Columns(width);
-                                                    Enumerable.Range(0, width * height).ToList().ForEach(x => grid.Item().Border(1).BorderColor(Colors.White).Width(25).Height(25));
+                                                    table.ColumnsDefinition(definition =>
+                                                    {
+                                                        for (var columnIndex = 0; columnIndex < width; columnIndex++)
+                                                            definition.RelativeColumn();
+                                                    });
+                                                    Enumerable.Range(0, width * height).ToList().ForEach(x => table.Cell().Border(1).BorderColor(Colors.White).Width(25).Height(25));
                                                 });
                                                 
                                                 layers

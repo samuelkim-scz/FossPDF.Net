@@ -14,7 +14,7 @@ namespace FossPDF.Elements.Table
         public List<TableCell> Cells { get; set; } = new();
         public List<TableCell> AllCells { get; set; } = new();
         public Dictionary<int, float> ColumnsWidth { get; set; } = new();
-        public Action<Dictionary<int, float>> AfterUpdateColumnsWidth { get; set; }
+        public Action<Dictionary<int, float>>? AfterUpdateColumnsWidth { get; set; }
 
         public bool ExtendLastCellsToTableBottom { get; set; }
         
@@ -26,7 +26,7 @@ namespace FossPDF.Elements.Table
         // cache that stores all cells
         // first index: row number
         // inner table: list of all cells that ends at the corresponding row
-        private TableCell[][] CellsCache { get; set; }
+        private TableCell[][] CellsCache { get; set; } = null!; // Initialized by BuildCache before layout.
         private int MaxRow { get; set; }
         private int MaxRowSpan { get; set; }
         

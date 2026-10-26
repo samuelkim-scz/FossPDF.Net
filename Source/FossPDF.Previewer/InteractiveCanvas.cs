@@ -10,7 +10,7 @@ namespace FossPDF.Previewer;
 class InteractiveCanvas : ICustomDrawOperation
 {
     public Rect Bounds { get; set; }
-    public ICollection<PreviewPage> Pages { get; set; }
+    public ICollection<PreviewPage> Pages { get; set; } = new List<PreviewPage>();
 
     private float Width => (float)Bounds.Width;
     private float Height => (float)Bounds.Height;
@@ -114,6 +114,9 @@ class InteractiveCanvas : ICustomDrawOperation
     {
         // get SkiaSharp canvas
         var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
+        if (leaseFeature == null)
+            return;
+
         using var lease = leaseFeature.Lease();
 
         var canvas = lease.SkCanvas;

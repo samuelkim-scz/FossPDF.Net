@@ -927,13 +927,8 @@ namespace FossPDF.Examples
                 {
                     var fontSize = 20;
 
-                    var paint = new SKPaint
-                    {
-                        Color = SKColors.Red,
-                        TextSize = fontSize
-                    };
-
-                    var fontMetrics = paint.FontMetrics;
+                    using var font = new SKFont { Size = fontSize };
+                    var fontMetrics = font.Metrics;
 
                     var start = 0f;
                     var end = 0f;
@@ -968,6 +963,7 @@ namespace FossPDF.Examples
 
                             layers.Layer().Canvas((canvas, size) =>
                             {
+                                using var paint = new SKPaint { Color = SKColors.Red };
                                 canvas.Save();
 
                                 canvas.Translate(-canvas.TotalMatrix.TransX / canvas.TotalMatrix.ScaleX,
@@ -1118,7 +1114,7 @@ namespace FossPDF.Examples
                                             {
 
                                                 // set up the SKPaint
-                                                var paint = new SKPaint
+                                                using var paint = new SKPaint
                                                 {
                                                     Style = SKPaintStyle.Fill,
                                                     Color = SKColors.Black,

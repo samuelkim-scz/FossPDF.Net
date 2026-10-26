@@ -9,7 +9,7 @@ namespace FossPDF.Elements
 {
     internal class DecorationItemRenderingCommand
     {
-        public Element Element { get; set; }
+        public Element Element { get; set; } = Empty.Instance;
         public SpacePlan Measurement { get; set; }
         public Position Offset { get; set; }
     }
@@ -31,9 +31,9 @@ namespace FossPDF.Elements
         
         internal override void CreateProxy(Func<Element?, Element?> create)
         {
-            Before = create(Before);
-            Content = create(Content);
-            After = create(After);
+            Before = create(Before) ?? Empty.Instance;
+            Content = create(Content) ?? Empty.Instance;
+            After = create(After) ?? Empty.Instance;
         }
 
         internal override SpacePlan Measure(Size availableSpace)

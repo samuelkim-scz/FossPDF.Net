@@ -7,7 +7,7 @@ namespace FossPDF.Fluent
 {
     public static class TextSpanDescriptorExtensions
     {
-        public static T Style<T>(this T descriptor, TextStyle style) where T : TextSpanDescriptor
+        public static T Style<T>(this T descriptor, TextStyle? style) where T : TextSpanDescriptor
         {
             if (style == null)
                 return descriptor;

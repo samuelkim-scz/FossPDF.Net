@@ -14,9 +14,13 @@ namespace FossPDF.Drawing.Proxy
         
         internal override SpacePlan Measure(Size availableSpace)
         {
-            DebuggingState.RegisterMeasure(Child, availableSpace);
+            var child = Child;
+            if (child == null)
+                return base.Measure(availableSpace);
+
+            DebuggingState.RegisterMeasure(child, availableSpace);
             var spacePlan = base.Measure(availableSpace);
-            DebuggingState.RegisterMeasureResult(Child, spacePlan);
+            DebuggingState.RegisterMeasureResult(child, spacePlan);
 
             return spacePlan;
         }

@@ -97,9 +97,7 @@ namespace FossPDF.Examples
             {
                 var image = Placeholders.Image(300, 100);
 
-                using var file = File.Create(fileName);
-                file.Write(image);
-                file.Dispose();
+                File.WriteAllBytes(fileName, image);
 
                 RenderingTest
                     .Create()

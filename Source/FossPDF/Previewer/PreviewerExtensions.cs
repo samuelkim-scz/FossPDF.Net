@@ -26,14 +26,21 @@ namespace FossPDF.Previewer
             await previewerService.Connect();
             await RefreshPreview();
             
-            HotReloadManager.UpdateApplicationRequested += (_, _) => RefreshPreview();
+            EventHandler refreshHandler = async (_, _) => await RefreshPreview();
+            HotReloadManager.UpdateApplicationRequested += refreshHandler;
+            try
+            {
+                await WaitForPreviewerExit(cancellationTokenSource.Token);
+            }
+            finally
+            {
+                HotReloadManager.UpdateApplicationRequested -= refreshHandler;
+            }
             
-            await WaitForPreviewerExit(cancellationTokenSource.Token);
-            
-            Task RefreshPreview()
+            async Task RefreshPreview()
             {
                 var pictures = GetPictures();
-                return previewerService.RefreshPreview(pictures);
+                await previewerService.RefreshPreview(pictures);
                 
                 ICollection<PreviewerPicture> GetPictures()
                 {

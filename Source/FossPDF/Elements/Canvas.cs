@@ -9,7 +9,7 @@ namespace FossPDF.Elements
     
     internal class Canvas : Element, ICacheable
     {
-        public DrawOnCanvas Handler { get; set; }
+        public DrawOnCanvas? Handler { get; set; }
         
         internal override SpacePlan Measure(Size availableSpace)
         {

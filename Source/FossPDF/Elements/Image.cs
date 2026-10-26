@@ -9,10 +9,7 @@ namespace FossPDF.Elements
     {
         public SKImage? InternalImage { get; set; }
 
-        ~Image()
-        {
-            InternalImage?.Dispose();
-        }
+        // InternalImage is borrowed, including images shared through Infrastructure.Image.
         
         internal override SpacePlan Measure(Size availableSpace)
         {

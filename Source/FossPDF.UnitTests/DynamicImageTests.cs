@@ -71,8 +71,9 @@ namespace FossPDF.UnitTests
         
         byte[] GenerateImage(Size size)
         {
-            var image = GenerateImage((int) size.Width, (int) size.Height);
-            return image.Encode(SKEncodedImageFormat.Png, 100).ToArray();
+            using var image = GenerateImage((int) size.Width, (int) size.Height);
+            using var encodedImage = image.Encode(SKEncodedImageFormat.Png, 100);
+            return encodedImage.ToArray();
         }
         
         SKImage GenerateImage(int width, int height)

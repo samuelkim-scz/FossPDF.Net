@@ -13,7 +13,7 @@ namespace FossPDF.Elements.Text.Items
 {
     internal class TextBlockSpan : ITextBlockItem
     {
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
         public TextStyle Style { get; set; } = TextStyle.Default;
         private TextShapingResult? TextShapingResult { get; set; }
         private ushort? SpaceCodepoint { get; set; }
@@ -94,7 +94,7 @@ namespace FossPDF.Elements.Text.Items
                 return null;
 
             // break text only on spaces
-            var wrappedText = WrapText(startIndex, endIndex, request.IsFirstElementInLine);
+            var wrappedText = WrapText(TextShapingResult, startIndex, endIndex, request.IsFirstElementInLine);
 
             if (wrappedText == null)
                 return null;
@@ -127,12 +127,12 @@ namespace FossPDF.Elements.Text.Items
         }
 
         // TODO: consider introducing text wrapping abstraction (basic, english-like, asian-like)
-        private (int endIndex, int nextIndex)? WrapText(int startIndex, int endIndex, bool isFirstElementInLine)
+        private (int endIndex, int nextIndex)? WrapText(TextShapingResult shapingResult, int startIndex, int endIndex, bool isFirstElementInLine)
         {
             // textLength - length of the part of the text that fits in available width (creating a line)
 
             // entire text fits, no need to wrap
-            if (endIndex == TextShapingResult.Length - 1)
+            if (endIndex == shapingResult.Length - 1)
                 return (endIndex, endIndex);
 
             // breaking anywhere
@@ -140,7 +140,7 @@ namespace FossPDF.Elements.Text.Items
                 return (endIndex, endIndex + 1);
 
             // current line ends at word, next character is space, perfect place to wrap
-            if (TextShapingResult[endIndex].Codepoint != SpaceCodepoint && TextShapingResult[endIndex + 1].Codepoint == SpaceCodepoint)
+            if (shapingResult[endIndex].Codepoint != SpaceCodepoint && shapingResult[endIndex + 1].Codepoint == SpaceCodepoint)
                 return (endIndex, endIndex + 2);
 
             // find last space within the available text to wrap
@@ -148,7 +148,7 @@ namespace FossPDF.Elements.Text.Items
 
             while (lastSpaceIndex >= startIndex)
             {
-                if (TextShapingResult[lastSpaceIndex].Codepoint == SpaceCodepoint)
+                if (shapingResult[lastSpaceIndex].Codepoint == SpaceCodepoint)
                     break;
 
                 lastSpaceIndex--;
@@ -193,8 +193,8 @@ namespace FossPDF.Elements.Text.Items
 
             var textDrawingCommand = TextShapingResult.PositionText(request.StartIndex, request.EndIndex, Style);
 
-            if (Style.BackgroundColor != Colors.Transparent)
-                request.Canvas.DrawRectangle(new Position(0, request.TotalAscent), new Size(request.TextSize.Width, request.TextSize.Height), Style.BackgroundColor);
+            if (Style.BackgroundColor is { } backgroundColor && backgroundColor != Colors.Transparent)
+                request.Canvas.DrawRectangle(new Position(0, request.TotalAscent), new Size(request.TextSize.Width, request.TextSize.Height), backgroundColor);
 
             if (textDrawingCommand.HasValue)
             {
@@ -220,7 +220,7 @@ namespace FossPDF.Elements.Text.Items
 
             void DrawLine(float offset, float thickness)
             {
-                request.Canvas.DrawRectangle(new Position(0, offset), new Size(request.TextSize.Width, thickness), Style.Color);
+                request.Canvas.DrawRectangle(new Position(0, offset), new Size(request.TextSize.Width, thickness), Style.Color ?? Colors.Black);
             }
 
             float GetGlyphOffset()

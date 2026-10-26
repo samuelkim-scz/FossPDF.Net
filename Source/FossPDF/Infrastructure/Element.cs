@@ -7,8 +7,9 @@ namespace FossPDF.Infrastructure
 {
     internal abstract class Element : IElement
     {
-        internal IPageContext PageContext { get; set; }
-        internal ICanvas Canvas { get; set; }
+        // DocumentGenerator injects these dependencies before measuring or drawing.
+        internal IPageContext PageContext { get; set; } = null!;
+        internal ICanvas Canvas { get; set; } = null!;
         
         internal virtual IEnumerable<Element?> GetChildren()
         {

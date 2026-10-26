@@ -9,7 +9,7 @@ namespace FossPDF.Drawing
     internal class PdfCanvas : SkiaDocumentCanvasBase
     {
         public PdfCanvas(Stream stream, DocumentMetadata documentMetadata)
-            : base(CreatePdf(stream, documentMetadata))
+            : base(() => CreatePdf(stream, documentMetadata))
         {
 
         }

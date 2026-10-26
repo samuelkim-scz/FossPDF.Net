@@ -9,7 +9,7 @@ namespace FossPDF.Elements
     {
         public IElement? Child { get; set; }
         
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
         public string Color { get; set; } = Colors.Red.Medium;
         public void Compose(IContainer container)
         {

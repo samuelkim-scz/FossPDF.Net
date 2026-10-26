@@ -25,6 +25,9 @@ namespace FossPDF.Elements
         
         internal override void Draw(Size availableSpace)
         {
+            if (Child == null)
+                return;
+
             var perfectScale = FindPerfectScale(Child, availableSpace);
             
             if (!perfectScale.HasValue)

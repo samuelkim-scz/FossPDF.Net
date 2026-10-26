@@ -42,6 +42,8 @@
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
         <PackageReference Include="Avalonia.Skia" Version="11.3.10" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
+        <!-- Security patch for Avalonia's transitive D-Bus dependency. -->
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
         <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
         <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />

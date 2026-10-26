@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace FossPDF.Infrastructure;
 
-public class Image : IDisposable
+public sealed class Image : IDisposable
 {
     internal SKImage SkImage { get; }
 

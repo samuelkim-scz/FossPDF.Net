@@ -25,12 +25,12 @@ namespace FossPDF.Infrastructure
 
     internal static class TextStyleManager
     {
-        private static readonly ConcurrentDictionary<(TextStyle origin, TextStyleProperty property, object value), TextStyle> TextStyleMutateCache = new();
+        private static readonly ConcurrentDictionary<(TextStyle origin, TextStyleProperty property, object? value), TextStyle> TextStyleMutateCache = new();
         private static readonly ConcurrentDictionary<(TextStyle origin, TextStyle parent), TextStyle> TextStyleApplyInheritedCache = new();
         private static readonly ConcurrentDictionary<TextStyle, TextStyle> TextStyleApplyGlobalCache = new();
         private static readonly ConcurrentDictionary<(TextStyle origin, TextStyle parent), TextStyle> TextStyleOverrideCache = new();
 
-        public static TextStyle Mutate(this TextStyle origin, TextStyleProperty property, object value)
+        public static TextStyle Mutate(this TextStyle origin, TextStyleProperty property, object? value)
         {
             var cacheKey = (origin, property, value);
             return TextStyleMutateCache.GetOrAdd(cacheKey, x => MutateStyle(x.origin, x.property, x.value, overrideValue: true));
@@ -253,7 +253,7 @@ namespace FossPDF.Infrastructure
         private static TextStyle UpdateFontFallback(this TextStyle style, bool overrideStyle)
         {
             var targetFallbackStyle = style
-                ?.Fallback
+                .Fallback
                 ?.ApplyStyleProperties(style, overrideStyle: overrideStyle, overrideFontFamily: false, applyFallback: false)
                 ?.UpdateFontFallback(overrideStyle);
 

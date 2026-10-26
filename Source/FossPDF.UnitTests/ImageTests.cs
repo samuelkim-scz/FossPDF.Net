@@ -14,10 +14,11 @@ namespace FossPDF.UnitTests
         [Test]
         public void Measure_TakesAvailableSpaceRegardlessOfSize()
         {
+            using var image = GenerateImage(400, 300);
             TestPlan
                 .For(x => new Elements.Image
                 {
-                    InternalImage = GenerateImage(400, 300)
+                    InternalImage = image
                 })
                 .MeasureElement(new Size(300, 200))
                 .CheckMeasureResult(SpacePlan.FullRender(300, 200));
@@ -26,10 +27,11 @@ namespace FossPDF.UnitTests
         [Test]
         public void Draw_TakesAvailableSpaceRegardlessOfSize()
         {
+            using var image = GenerateImage(400, 300);
             TestPlan
                 .For(x => new Elements.Image
                 {
-                    InternalImage = GenerateImage(400, 300)
+                    InternalImage = image
                 })
                 .DrawElement(new Size(300, 200))
                 .ExpectCanvasDrawImage(new Position(0, 0), new Size(300, 200))
@@ -39,7 +41,9 @@ namespace FossPDF.UnitTests
         [Test]
         public void Fluent_RecognizesImageProportions()
         {
-            var image = GenerateImage(600, 200).Encode(SKEncodedImageFormat.Png, 100).ToArray();
+            using var skImage = GenerateImage(600, 200);
+            using var imageData = skImage.Encode(SKEncodedImageFormat.Png, 100);
+            var image = imageData.ToArray();
             
             TestPlan
                 .For(x =>

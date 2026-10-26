@@ -14,13 +14,13 @@ namespace FossPDF.Drawing
 {
     public class DocumentSpecificFontManager
     {
-        public string Tag { get; set; }
-        public ConcurrentDictionary<string, FontStyleSet> StyleSets { get; init; }
-        public ConcurrentDictionary<TextStyle, FontMetrics> FontMetrics { get; init; } // Managed
-        public ConcurrentDictionary<TextStyle, SKPaint> FontPaints { get; init; } // unmanaged
-        public ConcurrentDictionary<TextStyle, Font> ShaperFonts { get; init; } // unmanaged
-        public ConcurrentDictionary<TextStyle, SKFont> Fonts { get; init; } // unmanaged
-        public ConcurrentDictionary<TextStyle, TextShaper> TextShapers { get; init; } // contains unmanaged refs, but disposed using above
+        public string Tag { get; set; } = string.Empty;
+        public ConcurrentDictionary<string, FontStyleSet> StyleSets { get; init; } = new();
+        public ConcurrentDictionary<TextStyle, FontMetrics> FontMetrics { get; init; } = new(); // Managed
+        public ConcurrentDictionary<TextStyle, SKPaint> FontPaints { get; init; } = new(); // unmanaged
+        public ConcurrentDictionary<TextStyle, Font> ShaperFonts { get; init; } = new(); // unmanaged
+        public ConcurrentDictionary<TextStyle, SKFont> Fonts { get; init; } = new(); // unmanaged
+        public ConcurrentDictionary<TextStyle, TextShaper> TextShapers { get; init; } = new(); // contains unmanaged refs, but disposed using above
         public Action<DocumentSpecificFontManager, IEnumerable<FontToBeSubset>>? SubsetCallback { get; init; }
 
         // Crucially, DOESN'T contain stuff we inherit from the global FontManager:
@@ -28,7 +28,7 @@ namespace FossPDF.Drawing
 
         public void ClearCacheReadyForSubsets()
         {
-            foreach (var disposable in SafeToDisposeAtSubsetTime)
+            while (SafeToDisposeAtSubsetTime.TryTake(out var disposable))
             {
                 disposable.Dispose();
             }
@@ -109,7 +109,8 @@ namespace FossPDF.Drawing
             {
                 var filePath = $"FossPDF.Resources.DefaultFont.{fileName}";
 
-                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filePath);
+                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filePath)
+                    ?? throw new InvalidOperationException($"Embedded font '{filePath}' was not found.");
                 RegisterFont(stream);
             }
         }
@@ -124,48 +125,43 @@ namespace FossPDF.Drawing
             // But, objects like these that we are creating below _do_ need to be eligible for disposal.
             return FontPaints.GetOrAdd(style, style1 =>
             {
-                var targetTypeface = GetTypeface(style1);
-
                 var paint = new SKPaint
                 {
                     Color = SKColor.Parse(style1.Color),
-                    Typeface = targetTypeface,
-                    TextSize = (style1.Size ?? 12) * GetTextScale(style1),
-                    IsAntialias = true,
-                    TextSkewX = GetTextSkew(style1, targetTypeface),
-                    FakeBoldText = UseFakeBoldText(style1, targetTypeface)
+                    IsAntialias = true
                 };
                 SafeToDisposeAtSubsetTime.Add(paint);
                 return paint;
 
             });
 
-            static float GetTextScale(TextStyle style)
-            {
-                return style.FontPosition switch
-                {
-                    FontPosition.Normal => 1f,
-                    FontPosition.Subscript => 0.625f,
-                    FontPosition.Superscript => 0.625f,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
+        }
 
-            static float GetTextSkew(TextStyle originalTextStyle, SKTypeface targetTypeface)
+        private static float GetTextScale(TextStyle style)
+        {
+            return style.FontPosition switch
             {
-                // requested italic text but got typeface that is not italic
-                var useObliqueText = originalTextStyle.IsItalic == true && !targetTypeface.IsItalic;
+                FontPosition.Normal => 1f,
+                FontPosition.Subscript => 0.625f,
+                FontPosition.Superscript => 0.625f,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
 
-                return useObliqueText ? -0.25f : 0;
-            }
+        private static float GetTextSkew(TextStyle originalTextStyle, SKTypeface targetTypeface)
+        {
+            // requested italic text but got typeface that is not italic
+            var useObliqueText = originalTextStyle.IsItalic == true && !targetTypeface.IsItalic;
 
-            static bool UseFakeBoldText(TextStyle originalTextStyle, SKTypeface targetTypeface)
-            {
-                // requested bold text but got typeface that is not bold
-                using var targetTypeFaceStyle = targetTypeface.FontStyle;
-                var isBold = targetTypeFaceStyle.Weight >= (int)SKFontStyleWeight.SemiBold;
-                return originalTextStyle.FontWeight > FontWeight.Medium && !isBold;
-            }
+            return useObliqueText ? -0.25f : 0;
+        }
+
+        private static bool UseFakeBoldText(TextStyle originalTextStyle, SKTypeface targetTypeface)
+        {
+            // requested bold text but got typeface that is not bold
+            using var targetTypeFaceStyle = targetTypeface.FontStyle;
+            var isBold = targetTypeFaceStyle.Weight >= (int)SKFontStyleWeight.SemiBold;
+            return originalTextStyle.FontWeight > FontWeight.Medium && !isBold;
         }
 
         private SKTypeface GetTypeface(TextStyle style)
@@ -185,15 +181,20 @@ namespace FossPDF.Drawing
 
             using var fontStyle = new SKFontStyle(weight, SKFontStyleWidth.Normal, slant);
 
-            if (StyleSets.TryGetValue(style.FontFamily, out var fontStyleSet))
+            var fontFamily = style.FontFamily ?? FossPDF.Helpers.Fonts.Lato;
+            if (StyleSets.TryGetValue(fontFamily, out var fontStyleSet) && fontStyleSet.Match(fontStyle) is { } registeredTypeface)
             {
-                return fontStyleSet.Match(fontStyle);
+                return registeredTypeface;
             }
 
-            var fontFromDefaultSource = SKFontManager.Default.MatchFamily(style.FontFamily, fontStyle);
+            // Ownership transfers to SafeToDisposeAtSubsetTime below.
+            #pragma warning disable IDISP001
+            var fontFromDefaultSource = SKFontManager.Default.MatchFamily(fontFamily, fontStyle);
+            #pragma warning restore IDISP001
 
             if (fontFromDefaultSource != null)
             {
+                SafeToDisposeAtSubsetTime.Add(fontFromDefaultSource);
                 return fontFromDefaultSource;
             }
 
@@ -211,7 +212,7 @@ namespace FossPDF.Drawing
         {
             return FontMetrics.GetOrAdd(style, key =>
             {
-                var skiaFontMetrics = ToPaint(key.NormalPosition()).FontMetrics;
+                var skiaFontMetrics = ToFont(key.NormalPosition()).Metrics;
 
                 return new FontMetrics
                 {
@@ -287,8 +288,15 @@ namespace FossPDF.Drawing
         {
             return Fonts.GetOrAdd(style, key =>
             {
+                // The document owns cached fonts and releases them through SafeToDisposeAtSubsetTime.
                 #pragma warning disable IDISP001
-                var font = ToPaint(key).ToFont();
+                var typeface = GetTypeface(key);
+                var font = new SKFont(typeface, (key.Size ?? 12) * GetTextScale(key))
+                {
+                    Edging = SKFontEdging.Antialias,
+                    SkewX = GetTextSkew(key, typeface),
+                    Embolden = UseFakeBoldText(key, typeface)
+                };
                 #pragma warning restore IDISP001
                 SafeToDisposeAtSubsetTime.Add(font);
                 return font;

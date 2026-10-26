@@ -1,18 +1,15 @@
-﻿using SkiaSharp;
-
-namespace FossPDF.Previewer;
+﻿namespace FossPDF.Previewer;
 
 internal class DocumentSnapshot
 {
-    public ICollection<PageSnapshot> Pages { get; set; }
+    public ICollection<PageSnapshot> Pages { get; set; } = new List<PageSnapshot>();
 
     public class PageSnapshot
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         
         public float Width { get; set; }
         public float Height { get; set; }
         
-        public SKPicture Picture { get; set; }
     }
 }

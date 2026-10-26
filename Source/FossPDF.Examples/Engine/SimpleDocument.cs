@@ -26,12 +26,13 @@ namespace FossPDF.Examples.Engine
         
         public DocumentMetadata GetMetadata()
         {
+            Settings.DocumentLayoutExceptionThreshold = MaxPages;
+            Settings.EnableCaching = ApplyCaching;
+            Settings.EnableDebugging = ApplyDebugging;
+
             return new DocumentMetadata()
             {
-                RasterDpi = PageSizes.PointsPerInch * ImageScalingFactor,
-                DocumentLayoutExceptionThreshold = MaxPages,
-                ApplyCaching = ApplyCaching,
-                ApplyDebugging = ApplyDebugging
+                RasterDpi = PageSizes.PointsPerInch * ImageScalingFactor
             };
         }
         

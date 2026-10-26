@@ -6,7 +6,8 @@ namespace FossPDF.Drawing;
 
 public record FontToBeSubset
 {
-    public SKTypeface Typeface { get; init; }
-    public Font ShaperFont { get; init; }
-    public HashSet<uint> Glyphs { get; init; }
+    // DocumentGenerator supplies the font objects before invoking the subset callback.
+    public SKTypeface Typeface { get; init; } = null!;
+    public Font ShaperFont { get; init; } = null!;
+    public HashSet<uint> Glyphs { get; init; } = new();
 }

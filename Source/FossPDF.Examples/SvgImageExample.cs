@@ -26,7 +26,10 @@ namespace FossPDF.Examples
                         .Canvas((canvas, space) =>
                         {
                             using var svg = new SKSvg();
+                            // SKSvg owns and disposes the picture returned by Load.
+                            #pragma warning disable IDISP004
                             svg.Load("pdf-icon.svg");
+                            #pragma warning restore IDISP004
                             
                             canvas.DrawPicture(svg.Picture);
                         });

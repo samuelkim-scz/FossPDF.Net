@@ -2,6 +2,11 @@ namespace FossPDF.PlatformUtils;
 
 public class PlatformUtils
 {
+    public static void OpenFile(string path)
+    {
+        using var process = System.Diagnostics.Process.Start(GetFileExplorerForPlatform(), path);
+    }
+
     public static string GetFileExplorerForPlatform()
     {
         var fileExplorer = "explorer";

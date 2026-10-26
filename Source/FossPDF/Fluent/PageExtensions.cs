@@ -169,7 +169,7 @@ namespace FossPDF.Fluent
             var descriptor = new PageDescriptor();
             handler(descriptor);
             
-            (document as DocumentContainer).Pages.Add(descriptor.Page);
+            ((DocumentContainer)document).Pages.Add(descriptor.Page);
             
             return document;
         }

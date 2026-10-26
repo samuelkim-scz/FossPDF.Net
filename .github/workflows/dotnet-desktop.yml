@@ -42,7 +42,7 @@ jobs:
 
       - name: 🛠 Build Solution 🛠
         shell: bash
-        run: dotnet build -c Release --no-restore
+        run: dotnet build -c Release --no-restore --warnaserror
         working-directory: ./Source
 
       - name: Run unit tests

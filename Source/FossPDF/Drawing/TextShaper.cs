@@ -17,7 +17,7 @@ namespace FossPDF.Drawing
         private TextStyle TextStyle { get; }
 
         private Font ShaperFont => _fontManager.ToShaperFont(TextStyle);
-        private SKPaint Paint => _fontManager.ToPaint(TextStyle);
+        private SKFont SkiaFont => _fontManager.ToFont(TextStyle);
 
         public TextShaper(TextStyle textStyle, DocumentSpecificFontManager fontManager)
         {
@@ -29,7 +29,7 @@ namespace FossPDF.Drawing
         {
             using var buffer = new Buffer();
 
-            PopulateBufferWithText(buffer, text);
+            buffer.AddUtf8(text);
             buffer.GuessSegmentProperties();
 
             if (TextStyle.Direction == TextDirection.LeftToRight)
@@ -44,8 +44,8 @@ namespace FossPDF.Drawing
             var glyphInfos = buffer.GlyphInfos;
             var glyphPositions = buffer.GlyphPositions;
 
-            var scaleY = Paint.TextSize / FontShapingScale;
-            var scaleX = scaleY * Paint.TextScaleX;
+            var scaleY = SkiaFont.Size / FontShapingScale;
+            var scaleX = scaleY * SkiaFont.ScaleX;
 
             var xOffset = 0f;
             var yOffset = 0f;
@@ -56,8 +56,6 @@ namespace FossPDF.Drawing
 
             var glyphs = new ShapedGlyph[length];
 
-            bool isFirstGlyphCluster = true;
-
             for (var i = 0; i < length; i++)
             {
                 var hasExtents = ShaperFont.TryGetGlyphExtents(glyphInfos[i].Codepoint, out var extents);
@@ -66,17 +64,10 @@ namespace FossPDF.Drawing
                     ? scaleX * (glyphPositions[i].XAdvance - (extents.Width + extents.XBearing))
                     : null;
 
-                // if (isFirstGlyphCluster)
-                // {
-                //     xOffset -= lBearing ?? 0;
-                //     widthAdjustment = lBearing ?? 0;
-                // }
-
                 // letter spacing should be applied between glyph clusters, not between individual glyphs,
                 // different cluster id indicates the end of the glyph cluster
                 if (lastCluster != glyphInfos[i].Cluster)
                 {
-                    isFirstGlyphCluster = false;
                     lastCluster = glyphInfos[i].Cluster;
                     xOffset += letterSpacing;
                 }
@@ -107,22 +98,6 @@ namespace FossPDF.Drawing
             return new TextShapingResult(buffer.Direction, glyphs, scaleX, scaleY, _fontManager);
         }
 
-        void PopulateBufferWithText(Buffer buffer, string text)
-        {
-            var encoding = Paint.TextEncoding;
-
-            if (encoding == SKTextEncoding.Utf8)
-                buffer.AddUtf8(text);
-
-            else if (encoding == SKTextEncoding.Utf16)
-                buffer.AddUtf16(text);
-
-            else if (encoding == SKTextEncoding.Utf32)
-                buffer.AddUtf32(text);
-
-            else
-                throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
-        }
     }
 
     public struct ShapedGlyph
@@ -294,7 +269,7 @@ namespace FossPDF.Drawing
 
             var cmd = new DrawTextCommand
             {
-                SkTextBlob = skTextBlobBuilder.Build(),
+                SkTextBlob = skTextBlobBuilder.Build() ?? throw new InvalidOperationException("Could not build the shaped text blob."),
             };
 
 

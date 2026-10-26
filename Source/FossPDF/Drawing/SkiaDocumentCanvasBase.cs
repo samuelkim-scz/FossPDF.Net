@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 
@@ -6,16 +6,23 @@ namespace FossPDF.Drawing
 {
     internal class SkiaDocumentCanvasBase : SkiaCanvasBase
     {
-        private SKDocument? Document { get; }
+        private SKDocument Document { get; }
+        private bool Disposed { get; set; }
 
-        protected SkiaDocumentCanvasBase(SKDocument document)
+        protected SkiaDocumentCanvasBase(Func<SKDocument> createDocument)
         {
-            Document = document;
+            Document = createDocument();
         }
 
-        ~SkiaDocumentCanvasBase()
+        public override void Dispose()
         {
-            Document?.Dispose();
+            if (Disposed)
+                return;
+
+            Canvas?.Dispose();
+            Canvas = null;
+            Document.Dispose();
+            Disposed = true;
         }
 
         public override void BeginDocument()
@@ -25,10 +32,8 @@ namespace FossPDF.Drawing
 
         public override void EndDocument()
         {
-            Canvas?.Dispose();
-
             Document.Close();
-            Document.Dispose();
+            Dispose();
         }
 
         public override void BeginPage(Size size)

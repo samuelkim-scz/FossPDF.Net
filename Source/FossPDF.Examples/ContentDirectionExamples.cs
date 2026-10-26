@@ -111,7 +111,7 @@ namespace FossPDF.Examples
                                     var price = Placeholders.Random.NextDouble() * 100;
                                     
                                     table.Cell().Text(item);
-                                    table.Cell().Text(Placeholders.Random.Next(1, 10));
+                                    table.Cell().Text(Placeholders.Random.Next(1, 10).ToString(System.Globalization.CultureInfo.InvariantCulture));
                                     table.Cell().Text($"USD${price:F2}");
                                 }
 

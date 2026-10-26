@@ -30,13 +30,17 @@ namespace FossPDF.Examples
                             column.Item().Text("Default style applies to all children");
                             column.Item().Text("You can override certain styles").Underline(false).FontColor(Colors.Green.Darken2);
                             
-                            column.Item().PaddingTop(10).Border(1).Grid(grid =>
+                            column.Item().PaddingTop(10).Border(1).Table(table =>
                             {
-                                grid.Columns(4);
+                                table.ColumnsDefinition(definition =>
+                                {
+                                    for (var columnIndex = 0; columnIndex < 4; columnIndex++)
+                                        definition.RelativeColumn();
+                                });
 
                                 foreach (var i in Enumerable.Range(1, 16))
                                 {
-                                    grid.Item()
+                                    table.Cell()
                                         .Border(1)
                                         .BorderColor(Colors.Grey.Lighten1)
                                         .Background(Colors.Grey.Lighten3)

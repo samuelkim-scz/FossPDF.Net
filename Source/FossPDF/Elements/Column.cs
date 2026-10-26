@@ -13,7 +13,7 @@ namespace FossPDF.Elements
     
     internal class ColumnItemRenderingCommand
     {
-        public ColumnItem ColumnItem { get; set; }
+        public ColumnItem ColumnItem { get; set; } = null!; // Supplied by the layout planner.
         public SpacePlan Measurement { get; set; }
         public Size Size { get; set; }
         public Position Offset { get; set; }

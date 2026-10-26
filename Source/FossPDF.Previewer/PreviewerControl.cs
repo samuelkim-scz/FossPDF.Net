@@ -11,8 +11,8 @@ namespace FossPDF.Previewer
     {
         private InteractiveCanvas InteractiveCanvas { get; set; } = new ();
         
-        public static readonly StyledProperty<ObservableCollection<PreviewPage>> PagesProperty =
-            AvaloniaProperty.Register<PreviewerControl, ObservableCollection<PreviewPage>>(nameof(Pages));
+        public static readonly StyledProperty<ObservableCollection<PreviewPage>?> PagesProperty =
+            AvaloniaProperty.Register<PreviewerControl, ObservableCollection<PreviewPage>?>(nameof(Pages));
         
         public ObservableCollection<PreviewPage>? Pages
         {
@@ -40,7 +40,7 @@ namespace FossPDF.Previewer
         {
             PagesProperty.Changed.Subscribe(x =>
             {
-                InteractiveCanvas.Pages = x.NewValue.Value;
+                InteractiveCanvas.Pages = x.NewValue.Value ?? (ICollection<PreviewPage>)Array.Empty<PreviewPage>();
                 InvalidateVisual();
             });
 

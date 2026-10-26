@@ -31,7 +31,7 @@ namespace FossPDF.Elements
         public ContentDirection ContentDirection { get; set; }
         
         public List<InlinedElement> Elements { get; internal set; } = new List<InlinedElement>();
-        private Queue<InlinedElement> ChildrenQueue { get; set; }
+        private Queue<InlinedElement> ChildrenQueue { get; set; } = new();
 
         internal float VerticalSpacing { get; set; }
         internal float HorizontalSpacing { get; set; }

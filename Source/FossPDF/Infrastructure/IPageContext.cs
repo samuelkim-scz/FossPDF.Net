@@ -5,7 +5,7 @@ namespace FossPDF.Infrastructure
 {
     internal class DocumentLocation
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int PageStart { get; set; }
         public int PageEnd { get; set; }
         public int Length => PageEnd - PageStart + 1;

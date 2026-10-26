@@ -11,8 +11,8 @@ namespace FossPDF.Drawing.Proxy
 {
     internal class DebuggingState
     {
-        private DebugStackItem Root { get; set; }
-        private Stack<DebugStackItem> Stack { get; set; }
+        private DebugStackItem? Root { get; set; }
+        private Stack<DebugStackItem> Stack { get; } = new();
 
         public DebuggingState()
         {
@@ -22,7 +22,7 @@ namespace FossPDF.Drawing.Proxy
         public void Reset()
         {
             Root = null;
-            Stack = new Stack<DebugStackItem>();
+            Stack.Clear();
         }
         
         public void RegisterMeasure(IElement element, Size availableSpace)
@@ -62,7 +62,8 @@ namespace FossPDF.Drawing.Proxy
             var builder = new StringBuilder();
             var nestingLevel = 0;
 
-            Traverse(Root);
+            if (Root != null)
+                Traverse(Root);
             return builder.ToString();
 
             void Traverse(DebugStackItem item)
@@ -113,7 +114,7 @@ namespace FossPDF.Drawing.Proxy
                     .Where(x => !(x.Value is TextStyle))
                     .Select(x => $"{x.Property}: {FormatValue(x.Value)}");
 
-                string FormatValue(object value)
+                string FormatValue(object? value)
                 {
                     const int maxLength = 100;
                     

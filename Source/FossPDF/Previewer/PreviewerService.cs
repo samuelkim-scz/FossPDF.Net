@@ -61,7 +61,8 @@ namespace FossPDF.Previewer
         private async Task<Version> GetPreviewerVersion()
         {
             using var result = await HttpClient.GetAsync("/version");
-            return await result.Content.ReadFromJsonAsync<Version>();
+            return await result.Content.ReadFromJsonAsync<Version>()
+                ?? throw new InvalidOperationException("The previewer did not return a version.");
         }
 
         private void StartPreviewer()
@@ -142,8 +143,8 @@ namespace FossPDF.Previewer
 
                 pages.Add(page);
 
-                var pictureStream = picture.Picture.Serialize().AsStream();
-                multipartContent.Add(new StreamContent(pictureStream), page.Id, page.Id);
+                using var pictureData = picture.Picture.Serialize();
+                multipartContent.Add(new ByteArrayContent(pictureData.ToArray()), page.Id, page.Id);
             }
 
             var command = new PreviewerRefreshCommand

@@ -5,7 +5,7 @@ namespace FossPDF.Elements
 {
     internal class SectionLink : ContainerElement
     {
-        public string SectionName { get; set; }
+        public string SectionName { get; set; } = string.Empty;
         
         internal override void Draw(Size availableSpace)
         {

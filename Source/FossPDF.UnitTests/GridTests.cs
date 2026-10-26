@@ -6,6 +6,8 @@ using FossPDF.UnitTests.TestEngine;
 
 namespace FossPDF.UnitTests
 {
+    // These tests intentionally exercise the deprecated Grid API for compatibility.
+    #pragma warning disable CS0618
     [TestFixture]
     public class GridTests
     {
@@ -248,4 +250,5 @@ namespace FossPDF.UnitTests
         
         #endregion
     }
+    #pragma warning restore CS0618
 }

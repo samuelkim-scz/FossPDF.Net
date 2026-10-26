@@ -49,6 +49,8 @@ namespace FossPDF.Drawing
 
             if (picture != null && CurrentPageSize.HasValue)
                 Pictures.Add(new PreviewerPicture(picture, CurrentPageSize.Value));
+            else
+                picture?.Dispose();
 
             PictureRecorder?.Dispose();
             Canvas?.Dispose();
@@ -60,7 +62,7 @@ namespace FossPDF.Drawing
             Canvas?.Dispose();
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             if (_disposed)
             {
@@ -68,6 +70,8 @@ namespace FossPDF.Drawing
             }
 
             PictureRecorder?.Dispose();
+            Canvas?.Dispose();
+            Canvas = null;
             _disposed = true;
         }
 

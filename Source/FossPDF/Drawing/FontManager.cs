@@ -28,7 +28,7 @@ namespace FossPDF.Drawing
             RegisterLibraryDefaultFonts();
         }
 
-        public static void RegisterSubsetCallback(Action<DocumentSpecificFontManager, IEnumerable<FontToBeSubset>> callback)
+        public static void RegisterSubsetCallback(Action<DocumentSpecificFontManager, IEnumerable<FontToBeSubset>>? callback)
         {
             _subsetCallback = callback;
         }
@@ -104,7 +104,8 @@ namespace FossPDF.Drawing
             {
                 var filePath = $"FossPDF.Resources.DefaultFont.{fileName}";
 
-                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filePath);
+                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filePath)
+                    ?? throw new InvalidOperationException($"Embedded font '{filePath}' was not found.");
                 RegisterFont(stream);
             }
         }

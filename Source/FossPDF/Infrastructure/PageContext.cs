@@ -12,7 +12,7 @@ namespace FossPDF.Infrastructure
         private List<DocumentLocation> Locations { get; } = new();
         public int CurrentPage { get; private set; }
 
-        public DocumentSpecificFontManager FontManager { get; set; }
+        public DocumentSpecificFontManager FontManager { get; set; } = null!; // Set by DocumentGenerator.
 
         internal void SetPageNumber(int number)
         {

@@ -6,6 +6,7 @@ using FossPDF.Helpers;
 
 namespace FossPDF.Examples
 {
+    [System.Obsolete("Benchmarks the legacy Grid API. Use TableBenchmark for the current API.")]
     public class GridBenchmark
     {
         [Test]

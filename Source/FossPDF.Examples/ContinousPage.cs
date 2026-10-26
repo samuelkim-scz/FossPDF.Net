@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using NUnit.Framework;
 using FossPDF.Drawing;
 using FossPDF.Examples.Engine;
@@ -40,7 +39,7 @@ namespace FossPDF.Examples
         {
             var path = "example.pdf";
             new ContinuousPageDocument().GeneratePdf(path);
-            Process.Start(PlatformUtils.PlatformUtils.GetFileExplorerForPlatform(), path);
+            PlatformUtils.PlatformUtils.OpenFile(path);
         }
     }
 }

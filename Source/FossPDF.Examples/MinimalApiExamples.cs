@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using FossPDF.Examples.Engine;
 using FossPDF.Fluent;
 using FossPDF.Helpers;
@@ -47,7 +46,7 @@ namespace FossPDF.Examples
                 })
                 .GeneratePdf("hello.pdf");
 
-            Process.Start(PlatformUtils.PlatformUtils.GetFileExplorerForPlatform(), "hello.pdf");
+            PlatformUtils.PlatformUtils.OpenFile("hello.pdf");
         }
     }
 }

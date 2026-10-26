@@ -20,9 +20,10 @@ namespace FossPDF.Elements.Text
 
         public class FallbackOption
         {
-            public TextStyle Style { get; set; }
-            public SKFont Font { get; set; }
-            public SKTypeface Typeface { get; set; }
+            public TextStyle Style { get; set; } = TextStyle.Default;
+            // Assigned by GetFallbackOptions; owned by the document font manager.
+            public SKFont Font { get; set; } = null!;
+            public SKTypeface Typeface { get; set; } = null!;
         }
 
         private static SKFontManager FontManager => SKFontManager.Default;

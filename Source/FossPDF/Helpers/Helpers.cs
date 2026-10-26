@@ -18,7 +18,8 @@ namespace FossPDF.Helpers
         
         internal static byte[] LoadEmbeddedResource(string resourceName)
         {
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
+                ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' was not found.");
             using var reader = new BinaryReader(stream);
             
             return reader.ReadBytes((int) stream.Length);
@@ -50,7 +51,7 @@ namespace FossPDF.Helpers
             return Regex.Replace(text, @"([a-z])([A-Z])", "$1 $2", RegexOptions.Compiled);
         }
 
-        internal static void VisitChildren(this Element? element, Action<Element?> handler)
+        internal static void VisitChildren(this Element? element, Action<Element> handler)
         {
             if (element == null)
                 return;

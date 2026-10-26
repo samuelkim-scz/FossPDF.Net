@@ -25,7 +25,7 @@ namespace FossPDF.Elements
 
     internal class RowItemRenderingCommand
     {
-        public RowItem RowItem { get; set; }
+        public RowItem RowItem { get; set; } = null!; // Supplied by the layout planner.
         public SpacePlan Measurement { get; set; }
         public Size Size { get; set; }
         public Position Offset { get; set; }

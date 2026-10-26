@@ -90,7 +90,7 @@ namespace FossPDF.Examples
                                 .Cell().ColumnSpan(5)
                                 .AlignRight()
                                 .PaddingTop(10)
-                                .Text($"Subtotal: {total}$", TextStyle.Default.Bold());
+                                .Text($"Subtotal: {total}$").Bold();
                         });
                         
                         foreach (var index in Enumerable.Range(State.ShownItemsCount, itemsToDisplay))
@@ -137,7 +137,7 @@ namespace FossPDF.Examples
                         .Decoration(decoration =>
                         {
                             decoration
-                                .Header()
+                                .Before()
                                 .PaddingBottom(5)
                                 .Text(text =>
                                 {

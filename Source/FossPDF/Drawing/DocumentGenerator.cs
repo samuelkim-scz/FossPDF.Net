@@ -26,7 +26,7 @@ namespace FossPDF.Drawing
             CheckIfStreamIsCompatible(stream);
 
             var metadata = document.GetMetadata();
-            var canvas = new PdfCanvas(stream, metadata);
+            using var canvas = new PdfCanvas(stream, metadata);
             return RenderDocument(canvas, document);
         }
 
@@ -35,7 +35,7 @@ namespace FossPDF.Drawing
             CheckIfStreamIsCompatible(stream);
 
             var metadata = document.GetMetadata();
-            var canvas = new XpsCanvas(stream, metadata);
+            using var canvas = new XpsCanvas(stream, metadata);
             RenderDocument(canvas, document);
         }
 
@@ -51,7 +51,7 @@ namespace FossPDF.Drawing
         internal static ICollection<byte[]> GenerateImages(IDocument document)
         {
             var metadata = document.GetMetadata();
-            var canvas = new ImageCanvas(metadata);
+            using var canvas = new ImageCanvas(metadata);
             RenderDocument(canvas, document);
 
             return canvas.Images;
@@ -67,7 +67,7 @@ namespace FossPDF.Drawing
 
         internal static ICollection<PreviewerPicture> GeneratePreviewerPictures(IDocument document)
         {
-            var canvas = new SkiaPictureCanvas();
+            using var canvas = new SkiaPictureCanvas();
             RenderDocument(canvas, document);
             return canvas.Pictures;
         }
@@ -87,35 +87,40 @@ namespace FossPDF.Drawing
                 ApplyCaching(content);
 
             var documentSpecificFontManager = FontManager.MakeDocumentSpecific();
-            documentSpecificFontManager.Tag = document.GetMetadata().Title ?? string.Empty;
-            var pageContext = new PageContext
+            try
             {
-                FontManager = documentSpecificFontManager
-            };
-            RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
+                documentSpecificFontManager.Tag = document.GetMetadata().Title ?? string.Empty;
+                var pageContext = new PageContext
+                {
+                    FontManager = documentSpecificFontManager
+                };
+                RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
 
-            // interrogate all TextBlockSpans
-            var allMyFuckingGlyphs = new Dictionary<Font, HashSet<uint>>();
-            var typeFaceToGlyphs = new Dictionary<SKTypeface, HashSet<uint>>();
-            var typeFaceToShaperFont = new Dictionary<SKTypeface, Font>();
+                // interrogate all TextBlockSpans
+                var allMyFuckingGlyphs = new Dictionary<Font, HashSet<uint>>();
+                var typeFaceToGlyphs = new Dictionary<SKTypeface, HashSet<uint>>();
+                var typeFaceToShaperFont = new Dictionary<SKTypeface, Font>();
 
-            content.VisitChildren(el =>
+                content.VisitChildren(el =>
+                {
+                    ProcessElementPrepareForSubsetting(el, allMyFuckingGlyphs, typeFaceToGlyphs, typeFaceToShaperFont, pageContext.FontManager);
+                });
+
+                var reqs = typeFaceToGlyphs.Select(entry => new FontToBeSubset
+                {
+                    Glyphs = entry.Value, Typeface = entry.Key,
+                    ShaperFont = typeFaceToShaperFont[entry.Key]
+                }).ToList();
+                pageContext.FontManager.FireSubsetCallback(reqs);
+                RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
+
+                RenderPass(pageContext, canvas, content, debuggingState);
+                return pageContext.GetPageNumbers();
+            }
+            finally
             {
-                ProcessElementPrepareForSubsetting(el, allMyFuckingGlyphs, typeFaceToGlyphs, typeFaceToShaperFont, pageContext.FontManager);
-            });
-
-            var reqs = typeFaceToGlyphs.Select(entry => new FontToBeSubset
-            {
-                Glyphs = entry.Value, Typeface = entry.Key,
-                ShaperFont = typeFaceToShaperFont[entry.Key]
-            }).ToList();
-            pageContext.FontManager.FireSubsetCallback(reqs);
-            RenderPass(pageContext, new FreeCanvas(), content, debuggingState);
-
-            RenderPass(pageContext, canvas, content, debuggingState);
-            pageContext.FontManager.DisposeDocumentSpecificObjects();
-
-            return pageContext.GetPageNumbers();
+                documentSpecificFontManager.DisposeDocumentSpecificObjects();
+            }
         }
 
         private static void ProcessElementPrepareForSubsetting(Element? el,
@@ -245,7 +250,7 @@ namespace FossPDF.Drawing
             content.VisitChildren(x =>
             {
                 if (x is ICacheable)
-                    x.CreateProxy(y => new CacheProxy(y));
+                    x.CreateProxy(y => y == null ? null : new CacheProxy(y));
             });
         }
 
@@ -255,7 +260,7 @@ namespace FossPDF.Drawing
 
             content.VisitChildren(x =>
             {
-                x.CreateProxy(y => new DebuggingProxy(debuggingState, y));
+                x.CreateProxy(y => y == null ? null : new DebuggingProxy(debuggingState, y));
             });
 
             return debuggingState;

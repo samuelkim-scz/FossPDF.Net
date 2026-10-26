@@ -4,26 +4,34 @@ using Avalonia.ReactiveUI;
 using FossPDF.Previewer;
 
 var applicationPort = GetCommunicationPort();
-CommunicationService.Instance.Start(applicationPort);
+var communicationTask = CommunicationService.Instance.Start(applicationPort);
 
-if(Application.Current?.ApplicationLifetime is ClassicDesktopStyleApplicationLifetime desktop)
+try
 {
-    desktop.MainWindow = new PreviewerWindow()
+    if(Application.Current?.ApplicationLifetime is ClassicDesktopStyleApplicationLifetime desktop)
     {
-        DataContext = new PreviewerWindowViewModel()
-    };
+        desktop.MainWindow = new PreviewerWindow()
+        {
+            DataContext = new PreviewerWindowViewModel()
+        };
                 
-    desktop.MainWindow.Show();
-    desktop.Start(Array.Empty<string>());
+        desktop.MainWindow.Show();
+        desktop.Start(Array.Empty<string>());
                 
-    return;
-}
+        return;
+    }
 
-AppBuilder
-    .Configure(() => new PreviewerApp())
-    .UsePlatformDetect()    
-    .UseReactiveUI()
-    .StartWithClassicDesktopLifetime(Array.Empty<string>());
+    AppBuilder
+        .Configure(() => new PreviewerApp())
+        .UsePlatformDetect()
+        .UseReactiveUI()
+        .StartWithClassicDesktopLifetime(Array.Empty<string>());
+}
+finally
+{
+    await CommunicationService.Instance.Stop();
+    await communicationTask;
+}
 
 static int GetCommunicationPort()
 {

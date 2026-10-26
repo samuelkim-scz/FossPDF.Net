@@ -5,7 +5,7 @@ namespace FossPDF.Drawing.Proxy
 {
     public class DebugStackItem
     {
-        public IElement Element { get; internal set; }
+        public IElement Element { get; internal set; } = null!; // Assigned by DebuggingState.RegisterMeasure.
         public Size AvailableSpace { get; internal set; }
         public SpacePlan SpacePlan { get; internal set; }
 

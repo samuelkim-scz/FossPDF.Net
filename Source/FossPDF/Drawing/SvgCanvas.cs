@@ -16,10 +16,12 @@ namespace FossPDF.Drawing
         {
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Canvas?.Dispose();
+            Canvas = null;
             Stream?.Dispose();
+            Stream = null;
         }
 
         public override void BeginDocument()
@@ -29,8 +31,7 @@ namespace FossPDF.Drawing
 
         public override void EndDocument()
         {
-            Canvas?.Dispose();
-            Stream?.Dispose();
+            Dispose();
         }
 
         public override void BeginPage(Size size)
@@ -43,8 +44,9 @@ namespace FossPDF.Drawing
 
         public override void EndPage()
         {
-            Canvas.Save();
-            Canvas.Dispose();
+            ActiveCanvas.Save();
+            Canvas?.Dispose();
+            Canvas = null;
 
             if (Stream != null)
             {
