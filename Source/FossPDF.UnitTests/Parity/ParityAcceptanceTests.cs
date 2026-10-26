@@ -24,6 +24,7 @@ namespace FossPDF.UnitTests.Parity
             {
                 ["PAG-001"] = RunExplicitPagination,
                 ["PAG-002"] = RunOverflowPagination,
+                ["PAG-105"] = RunPageControls,
                 ["TXT-001"] = RunStyledText,
                 ["IMG-001"] = RunRasterImage,
                 ["OUT-001"] = RunRasterDpi,
@@ -193,6 +194,198 @@ namespace FossPDF.UnitTests.Parity
                             .Background(color.GetString());
                 });
             }), fixture);
+
+        private static void RunPageControls(ParityFixture fixture)
+        {
+            var margin = fixture.Input.GetProperty("margin").GetInt32();
+            var prefixHeight = fixture.Input.GetProperty("prefix_height").GetInt32();
+            var groupHeights = FixtureCatalog.ReadArray(fixture.Input, "group_heights")
+                .Select(x => x.GetInt32()).ToArray();
+            var marker = fixture.Input.GetProperty("repeat_marker").GetString();
+
+            Assert.That(groupHeights.Length, Is.GreaterThanOrEqualTo(2),
+                "PAG-105 requires two group heights.");
+            Assert.That(marker, Is.Not.Null.And.Not.Empty);
+
+            AssertPreventPageBreak(fixture, margin, prefixHeight, groupHeights);
+            AssertRepeat(fixture, margin, marker);
+            AssertPageAwareShowIf(fixture, margin);
+        }
+
+        private static void AssertPreventPageBreak(ParityFixture fixture, int margin, int prefixHeight, int[] groupHeights)
+        {
+            var document = CreatePage(fixture, page => page.Content().Column(column =>
+            {
+                column.Item().Height(prefixHeight).Background("#808080");
+                column.Item().PreventPageBreak().Column(group =>
+                {
+                    group.Item().Height(groupHeights[0]).Background("#ff0000");
+                    group.Item().Height(groupHeights[1]).Background("#0000ff");
+                });
+            }));
+
+            var pages = RenderScenario(document, "prevent-page-break", 2);
+
+            try
+            {
+                var centerX = margin + 40;
+
+                Assert.That(pages[0].GetPixel(centerX, margin + 5), Is.EqualTo(SKColor.Parse("#808080")),
+                    "The prefix must render on the first page.");
+                Assert.That(pages[0].GetPixel(centerX, margin + prefixHeight + 5), Is.EqualTo(SKColors.White),
+                    "The group must not start on the first page when the remainder is too small.");
+                Assert.That(CountPixels(pages[0], IsRed), Is.EqualTo(0), "The group must not be split onto the first page.");
+
+                Assert.That(pages[1].GetPixel(centerX, margin + 5), Is.EqualTo(SKColor.Parse("#ff0000")),
+                    "The first group item must start the next page.");
+                Assert.That(pages[1].GetPixel(centerX, margin + groupHeights[0] + 5), Is.EqualTo(SKColor.Parse("#0000ff")),
+                    "The group must remain contiguous on the next page.");
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertRepeat(ParityFixture fixture, int margin, string marker)
+        {
+            var document = CreatePage(fixture, page => page.Content().Row(row =>
+            {
+                row.ConstantItem(20)
+                    .Repeat()
+                    .Height(20)
+                    .Background("#ff0000")
+                    .AlignCenter()
+                    .Text(text => text.Span(marker).FontColor("#ffffff").FontSize(10));
+
+                row.RelativeItem().Column(column =>
+                {
+                    for (var index = 0; index < 8; index++)
+                        column.Item().Height(15).Background("#0000ff");
+                });
+            }));
+
+            var pages = RenderScenario(document, "repeat", 2);
+            var repeated = RenderScenario(document, "repeat-second-generation", 2);
+
+            try
+            {
+                foreach (var page in pages)
+                {
+                    Assert.That(CountPixels(page, IsRed), Is.GreaterThan(100),
+                        "The repeated marker must render on every page the row spans.");
+                    Assert.That(CountPixels(page, IsBlue), Is.GreaterThan(1000),
+                        "The continuing content must render on every page the row spans.");
+                }
+
+                for (var index = 0; index < pages.Length; index++)
+                {
+                    Assert.That(CountPixels(repeated[index], IsRed), Is.EqualTo(CountPixels(pages[index], IsRed)),
+                        "Generating again must not consume or duplicate repeated content.");
+                    Assert.That(CountPixels(repeated[index], IsBlue), Is.EqualTo(CountPixels(pages[index], IsBlue)),
+                        "Repeated measurement passes must not alter content.");
+                }
+
+                Assert.That(pages[0].GetPixel(margin + 5, margin + 5), Is.EqualTo(SKColor.Parse("#ff0000")),
+                    "The repeated marker belongs in the leading row cell.");
+            }
+            finally
+            {
+                DisposePages(pages);
+                DisposePages(repeated);
+            }
+        }
+
+        private static void AssertPageAwareShowIf(ParityFixture fixture, int margin)
+        {
+            var contexts = new List<(int Page, int? TotalPages)>();
+
+            var document = CreatePage(fixture, page => page.Content().Column(column =>
+            {
+                column.Item().PageBreak();
+                column.Item()
+                    .ShowIf(context =>
+                    {
+                        contexts.Add((context.PageNumber, context.TotalPages));
+                        return context.PageNumber % 2 == 0 && context.TotalPages == 2;
+                    })
+                    .Height(20)
+                    .Background("#00ff00");
+                column.Item().Height(20).Background("#0000ff");
+            }));
+
+            var pages = RenderScenario(document, "show-if", 2);
+
+            try
+            {
+                var centerX = margin + 40;
+
+                Assert.That(pages[0].GetPixel(centerX, margin + 5), Is.EqualTo(SKColors.White),
+                    "The predicate must hide content on odd pages.");
+                Assert.That(pages[1].GetPixel(centerX, margin + 5), Is.EqualTo(SKColor.Parse("#00ff00")),
+                    "The predicate must show content on even pages.");
+                Assert.That(pages[1].GetPixel(centerX, margin + 25), Is.EqualTo(SKColor.Parse("#0000ff")),
+                    "Conditional content must not shift the following content.");
+
+                Assert.That(contexts, Does.Contain((2, (int?)null)),
+                    "The initial pass must expose an unknown total page count.");
+                Assert.That(contexts, Does.Contain((2, (int?)2)),
+                    "The final pass must expose the resolved total page count.");
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static SKBitmap[] RenderScenario(IDocument document, string scenario, int expectedPages)
+        {
+            var pdf = document.GeneratePdf(out var count);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(count, Is.EqualTo(expectedPages), scenario + " PDF page count");
+            Assert.That(images.Length, Is.EqualTo(expectedPages), scenario + " raster page count");
+
+            SaveArtifact("PAG-105", scenario + "/document.pdf", pdf);
+
+            var pages = new SKBitmap[images.Length];
+
+            for (var index = 0; index < images.Length; index++)
+            {
+                SaveArtifact("PAG-105", $"{scenario}/page-{index + 1}.png", images[index]);
+                pages[index] = SKBitmap.Decode(images[index]);
+                Assert.That(pages[index], Is.Not.Null, "Raster output could not be decoded.");
+            }
+
+            return pages;
+        }
+
+        private static void DisposePages(IEnumerable<SKBitmap> pages)
+        {
+            foreach (var page in pages)
+                page.Dispose();
+        }
+
+        private static bool IsRed(SKColor color) =>
+            color.Red > 200 && color.Green < 80 && color.Blue < 80;
+
+        private static bool IsBlue(SKColor color) =>
+            color.Blue > 200 && color.Red < 80 && color.Green < 80;
+
+        private static int CountPixels(SKBitmap bitmap, Func<SKColor, bool> predicate)
+        {
+            var count = 0;
+
+            for (var y = 0; y < bitmap.Height; y++)
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                if (predicate(bitmap.GetPixel(x, y)))
+                    count++;
+            }
+
+            return count;
+        }
 
         private static void RunRasterDpi(ParityFixture fixture) =>
             RenderAndCheck(CreatePage(fixture, page =>
@@ -408,8 +601,8 @@ namespace FossPDF.UnitTests.Parity
         private static void SaveArtifact(string fixtureId, string name, byte[] bytes)
         {
             var directory = Path.Combine(AppContext.BaseDirectory, "parity-artifacts", fixtureId);
-            Directory.CreateDirectory(directory);
             var path = Path.Combine(directory, name);
+            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? directory);
             File.WriteAllBytes(path, bytes);
             TestContext.AddTestAttachment(path);
         }

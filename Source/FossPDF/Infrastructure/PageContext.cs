@@ -12,6 +12,9 @@ namespace FossPDF.Infrastructure
         private List<DocumentLocation> Locations { get; } = new();
         public int CurrentPage { get; private set; }
 
+        public bool IsInitialRenderingPhase { get; set; } = true;
+        public int DocumentLength { get; set; }
+
         public DocumentSpecificFontManager FontManager { get; set; } = null!; // Set by DocumentGenerator.
         public bool CheckIfAllTextGlyphsAreAvailable { get; set; }
 
@@ -48,7 +51,7 @@ namespace FossPDF.Infrastructure
 
         public int GetPageNumbers()
         {
-            return Locations.Max(x => x.PageEnd);
+            return Locations.Count == 0 ? 0 : Locations.Max(x => x.PageEnd);
         }
     }
 }

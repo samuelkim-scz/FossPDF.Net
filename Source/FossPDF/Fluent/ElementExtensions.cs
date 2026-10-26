@@ -100,6 +100,25 @@ namespace FossPDF.Fluent
             });
         }
 
+        /// <summary>
+        /// Attempts to keep the content together on the first page where it appears. If the content
+        /// does not fit entirely, it is moved to the next page. Content longer than one page
+        /// continues normally on subsequent pages.
+        /// </summary>
+        public static IContainer PreventPageBreak(this IContainer element)
+        {
+            return element.Element(new PreventPageBreak());
+        }
+
+        /// <summary>
+        /// Repeats the content on every page where the surrounding layout is still being rendered.
+        /// Use it for labels or keys that should remain visible while adjacent content continues.
+        /// </summary>
+        public static IContainer Repeat(this IContainer element)
+        {
+            return element.Element(new RepeatContent());
+        }
+
         public static void PageBreak(this IContainer element)
         {
             element.Element(new PageBreak());
@@ -155,6 +174,22 @@ namespace FossPDF.Fluent
         public static IContainer ShowIf(this IContainer element, bool condition)
         {
             return condition ? element : new Container();
+        }
+
+        /// <summary>
+        /// Conditionally draws the content based on the current page context.
+        /// The total page count is <c>null</c> during the initial layout pass, so predicates
+        /// must handle that case. Changing content size between passes can produce unstable layouts.
+        /// </summary>
+        public static IContainer ShowIf(this IContainer element, Predicate<ShowIfContext> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return element.Element(new ShowIf
+            {
+                VisibilityPredicate = predicate
+            });
         }
         
         public static void Canvas(this IContainer element, DrawOnCanvas handler)

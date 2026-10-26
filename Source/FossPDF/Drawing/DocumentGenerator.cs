@@ -98,9 +98,11 @@ namespace FossPDF.Drawing
                 var pageContext = new PageContext
                 {
                     FontManager = documentSpecificFontManager,
-                    CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs
+                    CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs,
+                    IsInitialRenderingPhase = true
                 };
-                RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
+                pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
+                pageContext.IsInitialRenderingPhase = false;
 
                 // interrogate all TextBlockSpans
                 var allMyFuckingGlyphs = new Dictionary<Font, HashSet<uint>>();
@@ -118,10 +120,10 @@ namespace FossPDF.Drawing
                     ShaperFont = typeFaceToShaperFont[entry.Key]
                 }).ToList();
                 pageContext.FontManager.FireSubsetCallback(reqs);
-                RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
+                pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
 
-                RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
-                return pageContext.GetPageNumbers();
+                pageContext.DocumentLength = RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
+                return pageContext.DocumentLength;
             }
             finally
             {
@@ -175,7 +177,7 @@ namespace FossPDF.Drawing
             }
         }
 
-        internal static void RenderPass<TCanvas>(PageContext pageContext, TCanvas canvas, Container content, DebuggingState? debuggingState, int pageLimit)
+        internal static int RenderPass<TCanvas>(PageContext pageContext, TCanvas canvas, Container content, DebuggingState? debuggingState, int pageLimit)
             where TCanvas : ICanvas, IRenderingCanvas
         {
             InjectDependencies(content, pageContext, canvas);
@@ -224,6 +226,7 @@ namespace FossPDF.Drawing
             }
 
             canvas.EndDocument();
+            return currentPage;
 
             void ThrowLayoutException()
             {
