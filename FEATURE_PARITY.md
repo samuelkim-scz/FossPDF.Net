@@ -14,6 +14,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The versioned baseline manifest](docs/feature-parity/baseline-2026.9.1.json) records the initial assessment, work definitions and issue identifiers. **GitHub issues are the source of truth for ownership, discussion, blockers and completion.** Baseline assessments below describe the starting code, not live implementation status.
 
+[The acceptance specification](docs/feature-parity/ACCEPTANCE.md) defines public behavioral contracts, stable fixture IDs, expected outcomes, visual tolerances and commands for running the shared corpus.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |

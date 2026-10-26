@@ -1,6 +1,9 @@
 #if NET9_0_OR_GREATER
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using FossPDF.Drawing;
 using FossPDF.FontSubset.Glue;
 using FossPDF.Infrastructure;
@@ -36,7 +39,8 @@ namespace FossPDF.UnitTests
                 var expectedStyles = requests.Select(request =>
                 {
                     using var style = request.Typeface.FontStyle;
-                    return (Family: request.Typeface.FamilyName, style.Weight, style.Width, style.Slant);
+                    return (Family: request.Typeface.FamilyName, style.Weight, style.Width, style.Slant,
+                        Names: ReadTypographicNames(request.Typeface));
                 }).ToArray();
                 var enumerations = 0;
 
@@ -65,12 +69,37 @@ namespace FossPDF.UnitTests
                     using var actualStyle = typeface.FontStyle;
                     Assert.That(actualStyle.Weight, Is.EqualTo(targetStyle.Weight));
                     Assert.That(actualStyle.Slant, Is.EqualTo(targetStyle.Slant));
+                    Assert.That(ReadTypographicNames(typeface), Is.EquivalentTo(style.Names),
+                        "Subsetting must retain typographic family/subfamily names for consistent font selection across platforms.");
                 }
             }
             finally
             {
                 fontManager.DisposeDocumentSpecificObjects();
             }
+        }
+
+        private static Dictionary<ushort, string> ReadTypographicNames(SKTypeface typeface)
+        {
+            // OpenType 'name' table: inspect the English Unicode records retained by HarfBuzz.
+            var data = typeface.GetTableData(0x6e616d65);
+            var count = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(2, 2));
+            var stringsOffset = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(4, 2));
+            var names = new Dictionary<ushort, string>();
+            for (var index = 0; index < count; index++)
+            {
+                var record = data.AsSpan(6 + index * 12, 12);
+                var platform = BinaryPrimitives.ReadUInt16BigEndian(record);
+                var language = BinaryPrimitives.ReadUInt16BigEndian(record.Slice(4, 2));
+                var nameId = BinaryPrimitives.ReadUInt16BigEndian(record.Slice(6, 2));
+                if (platform != 3 || language != 0x0409 || (nameId != 16 && nameId != 17))
+                    continue;
+
+                var length = BinaryPrimitives.ReadUInt16BigEndian(record.Slice(8, 2));
+                var offset = BinaryPrimitives.ReadUInt16BigEndian(record.Slice(10, 2));
+                names[nameId] = Encoding.BigEndianUnicode.GetString(data, stringsOffset + offset, length);
+            }
+            return names;
         }
     }
 }

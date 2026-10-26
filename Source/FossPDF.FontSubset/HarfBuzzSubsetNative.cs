@@ -11,6 +11,12 @@ using hb_subset_input_t = System.IntPtr;
 
 internal static partial class HarfBuzzSubsetNative
 {
+    internal enum SubsetSet
+    {
+        // HB_SUBSET_SETS_NAME_ID in hb-subset.h.
+        NameId = 4
+    }
+
 #if __IOS__ || __TVOS__
     private const string HARFBUZZ = "@rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp";
 #else
@@ -22,6 +28,9 @@ internal static partial class HarfBuzzSubsetNative
 
     [LibraryImport(HARFBUZZ)]
     internal static partial hb_set_t hb_subset_input_glyph_set(hb_subset_input_t input);
+
+    [LibraryImport(HARFBUZZ)]
+    internal static partial hb_set_t hb_subset_input_set(hb_subset_input_t input, SubsetSet setType);
 
     [LibraryImport(HARFBUZZ)]
     internal static partial void hb_set_add(hb_set_t set, uint value);
