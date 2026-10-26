@@ -11,6 +11,37 @@ namespace FossPDF.Examples
     public class DocumentSettingsExamples
     {
         [Test]
+        public void ExportPageImagesInAllFormats()
+        {
+            var document = Document.Create(container =>
+            {
+                foreach (var color in new[] { "#ff0000", "#0000ff" })
+                    container.Page(page =>
+                    {
+                        page.Size(120, 80);
+                        page.Margin(10);
+                        page.Content().Height(20).Background(color);
+                    });
+            });
+            var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "settings-example", "image-exports");
+            Directory.CreateDirectory(directory);
+            foreach (var format in new[] { ImageOutputFormat.Png, ImageOutputFormat.Jpeg, ImageOutputFormat.Webp })
+            {
+                var options = new ImageGenerationSettings { Format = format, RasterDpi = 144, CompressionQuality = 90 };
+                var extension = format.ToString().ToLowerInvariant();
+                document.GenerateImages(index => Path.Combine(directory, $"page-{index + 1}.{extension}"), options);
+
+                using var first = new MemoryStream();
+                using var second = new MemoryStream();
+                document.GenerateImagesToStreams(index => index == 0 ? first : second, options);
+                Assert.That(first.CanWrite && second.CanWrite, Is.True);
+                using var image = SKBitmap.Decode(first.ToArray());
+                Assert.That(image.Width, Is.EqualTo(240));
+                Assert.That(image.Height, Is.EqualTo(160));
+            }
+        }
+
+        [Test]
         public void PerDocumentSettings()
         {
             var metadata = new DocumentMetadata { Title = "Settings example", RasterDpi = 72 };
