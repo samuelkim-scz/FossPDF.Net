@@ -17,5 +17,6 @@ namespace FossPDF.Infrastructure
         void SetSectionPage(string name);
         DocumentLocation? GetLocation(string name);
         DocumentSpecificFontManager FontManager { get; }
+        bool CheckIfAllTextGlyphsAreAvailable { get; }
     }
 }

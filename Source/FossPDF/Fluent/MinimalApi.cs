@@ -6,7 +6,7 @@ using FossPDF.Helpers;
 
 namespace FossPDF.Fluent
 {
-    public class Document : IDocument
+    public class Document : IDocument, IDocumentSettingsProvider
     {
         static Document()
         {
@@ -15,6 +15,7 @@ namespace FossPDF.Fluent
         
         private Action<IDocumentContainer> ContentSource { get; }
         private DocumentMetadata Metadata { get; set; } = DocumentMetadata.Default;
+        private DocumentSettings? Configuration { get; set; }
 
         private Document(Action<IDocumentContainer> contentSource)
         {
@@ -35,7 +36,14 @@ namespace FossPDF.Fluent
         #region IDocument
 
         public DocumentMetadata GetMetadata() => Metadata;
+        DocumentSettings? IDocumentSettingsProvider.GetSettings() => Configuration;
         public void Compose(IDocumentContainer container) => ContentSource(container);
+
+        public Document WithSettings(DocumentSettings settings)
+        {
+            Configuration = settings ?? throw new ArgumentNullException(nameof(settings));
+            return this;
+        }
 
         #endregion
     }

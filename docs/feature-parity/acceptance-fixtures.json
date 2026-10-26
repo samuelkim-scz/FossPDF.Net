@@ -582,6 +582,46 @@
       }
     },
     {
+      "id": "SET-004",
+      "title": "Document settings override legacy DPI without mutation",
+      "work_items": [
+        "FP-004"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "legacy_dpi": 36,
+        "document_dpi": 144,
+        "block_height": 20,
+        "color": "#ff0000"
+      },
+      "expected": [
+        "PDF reports one page and PNG output is 240x200 pixels, using the document DPI override.",
+        "The red rectangle occupies (20,20,200,40). The caller metadata retains its original 36 DPI.",
+        "A one-page document succeeds with a page limit of one."
+      ],
+      "raster": {
+        "width": 240,
+        "height": 200,
+        "dpi": 144,
+        "pages": [
+          [
+            {
+              "x": 20,
+              "y": 20,
+              "width": 200,
+              "height": 40,
+              "color": "#ff0000"
+            }
+          ]
+        ]
+      }
+    },
+    {
       "id": "FAIL-001",
       "title": "Malformed image produces a composition error",
       "work_items": [

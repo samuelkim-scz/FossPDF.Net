@@ -8,7 +8,7 @@ namespace FossPDF.Elements
 {
     internal class Page : IComponent
     {
-        public ContentDirection ContentDirection { get; set; }
+        public ContentDirection? ContentDirection { get; set; }
         public TextStyle DefaultTextStyle { get; set; } = TextStyle.Default;
         
         public Size MinSize { get; set; } = PageSizes.A4;
@@ -30,8 +30,11 @@ namespace FossPDF.Elements
 
         public void Compose(IContainer container)
         {
-            container
-                .ContentDirection(ContentDirection)
+            var pageContainer = ContentDirection.HasValue
+                ? container.ContentDirection(ContentDirection.Value)
+                : container;
+
+            pageContainer
                 .Background(BackgroundColor)
                 .Layers(layers =>
                 {

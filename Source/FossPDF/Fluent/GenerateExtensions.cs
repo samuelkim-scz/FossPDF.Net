@@ -68,13 +68,26 @@ namespace FossPDF.Fluent
         {
             return DocumentGenerator.GenerateImages(document);
         }
+
+        public static IEnumerable<byte[]> GenerateImages(this IDocument document, ImageGenerationSettings settings)
+        {
+            if (settings == null)
+                throw new ArgumentNullException(nameof(settings));
+            return DocumentGenerator.GenerateImages(document, settings);
+        }
         
         /// <param name="filePath">Method should return fileName for given index</param>
         public static void GenerateImages(this IDocument document, Func<int, string> filePath)
         {
+            document.GenerateImages(filePath, ImageGenerationSettings.Default);
+        }
+
+        /// <summary>Exports all pages with one output configuration. File indices start at zero.</summary>
+        public static void GenerateImages(this IDocument document, Func<int, string> filePath, ImageGenerationSettings settings)
+        {
             var index = 0;
             
-            foreach (var imageData in document.GenerateImages())
+            foreach (var imageData in document.GenerateImages(settings))
             {
                 var path = filePath(index);
                 

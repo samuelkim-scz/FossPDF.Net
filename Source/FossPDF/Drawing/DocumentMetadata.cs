@@ -41,5 +41,7 @@ namespace FossPDF.Drawing
         }
 
         public static DocumentMetadata Default => new DocumentMetadata();
+
+        internal DocumentMetadata Snapshot() => (DocumentMetadata)MemberwiseClone();
     }
 }

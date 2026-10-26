@@ -29,7 +29,7 @@ namespace FossPDF.Elements.Text
         private static SKFontManager FontManager => SKFontManager.Default;
 
         public static IEnumerable<TextRun> SplitWithFontFallback(this string text, TextStyle textStyle,
-            DocumentSpecificFontManager fontManager)
+            DocumentSpecificFontManager fontManager, bool checkIfAllTextGlyphsAreAvailable)
         {
             var fallbackOptions = GetFallbackOptions(textStyle, fontManager).ToArray();
 
@@ -39,7 +39,7 @@ namespace FossPDF.Elements.Text
             for (var i = 0; i < text.Length; i += char.IsSurrogatePair(text, i) ? 2 : 1)
             {
                 var codepoint = char.ConvertToUtf32(text, i);
-                var newFallbackOption = MatchFallbackOption(fallbackOptions, codepoint);
+                var newFallbackOption = MatchFallbackOption(fallbackOptions, codepoint, checkIfAllTextGlyphsAreAvailable);
 
                 if (newFallbackOption == spanFallbackOption)
                     continue;
@@ -81,7 +81,7 @@ namespace FossPDF.Elements.Text
                 }
             }
 
-            static FallbackOption MatchFallbackOption(ICollection<FallbackOption> fallbackOptions, int codepoint)
+            static FallbackOption MatchFallbackOption(ICollection<FallbackOption> fallbackOptions, int codepoint, bool checkGlyphs)
             {
                 foreach (var fallbackOption in fallbackOptions)
                 {
@@ -89,7 +89,7 @@ namespace FossPDF.Elements.Text
                         return fallbackOption;
                 }
 
-                if (Settings.CheckIfAllTextGlyphsAreAvailable)
+                if (checkGlyphs)
                     throw CreateNotMatchingFontException(codepoint);
 
                 return fallbackOptions.First();
@@ -109,7 +109,8 @@ namespace FossPDF.Elements.Text
                     $"Possible solutions: " +
                     $"1) Use one of the listed fonts as the primary font in your document. " +
                     $"2) Configure the fallback TextStyle using the 'TextStyle.Fallback' method with one of the listed fonts. " +
-                    $"You can disable this check by setting the 'Settings.CheckIfAllTextGlyphsAreAvailable' option to 'false'. " +
+                    $"You can disable this check through DocumentSettings.CheckIfAllTextGlyphsAreAvailable " +
+                    $"or the Settings.CheckIfAllTextGlyphsAreAvailable process default. " +
                     $"However, this may result with text glyphs being incorrectly rendered without any warning.");
             }
 
@@ -117,11 +118,12 @@ namespace FossPDF.Elements.Text
             {
                 var fontManager = SKFontManager.Default;
 
-                return fontManager
-                    .GetFontFamilies()
-                    .Select(fontManager.MatchFamily)
-                    .Where(x => x.ContainsGlyph(codepoint))
-                    .Select(x => x.FamilyName);
+                foreach (var family in fontManager.GetFontFamilies())
+                {
+                    using var typeface = fontManager.MatchFamily(family);
+                    if (typeface != null && typeface.ContainsGlyph(codepoint))
+                        yield return typeface.FamilyName;
+                }
             }
         }
 
@@ -136,13 +138,14 @@ namespace FossPDF.Elements.Text
                 }
                 else if (textBlockItem is TextBlockSpan textBlockSpan)
                 {
-                    if (!Settings.CheckIfAllTextGlyphsAreAvailable && textBlockSpan.Style.Fallback == null)
+                    if (!pageContext.CheckIfAllTextGlyphsAreAvailable && textBlockSpan.Style.Fallback == null)
                     {
                         yield return textBlockSpan;
                         continue;
                     }
 
-                    var textRuns = textBlockSpan.Text.SplitWithFontFallback(textBlockSpan.Style, pageContext.FontManager);
+                    var textRuns = textBlockSpan.Text.SplitWithFontFallback(textBlockSpan.Style, pageContext.FontManager,
+                        pageContext.CheckIfAllTextGlyphsAreAvailable);
 
                     foreach (var textRun in textRuns)
                     {

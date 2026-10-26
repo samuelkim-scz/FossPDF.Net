@@ -16,6 +16,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The acceptance specification](docs/feature-parity/ACCEPTANCE.md) defines public behavioral contracts, stable fixture IDs, expected outcomes, visual tolerances and commands for running the shared corpus.
 
+[The settings contract](docs/feature-parity/SETTINGS.md) defines document/output defaults, compatibility mappings, concurrency and ownership rules for dependent feature work.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
