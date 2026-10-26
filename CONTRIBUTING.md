@@ -2,6 +2,8 @@
 
 Start with the [feature-parity roadmap](FEATURE_PARITY.md) and its linked GitHub issues. The current target is QuestPDF 2026.9.1; the main consumer target is .NET 9, with netstandard2.1 core compatibility and .NET 8/.NET 9 tests retained.
 
+Use the [acceptance specification and fixture catalog](docs/feature-parity/ACCEPTANCE.md) to define observable behavior and reuse stable fixture IDs. Planned/skipped contracts are visible backlog, not evidence of implemented parity. Feature PRs should activate relevant fixtures and include the required semantic/visual evidence.
+
 ## Claim and coordinate work
 
 - Find an open `feature-parity` issue and check its native blockers, milestone, acceptance criteria and linked PRs.

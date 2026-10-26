@@ -1,0 +1,1361 @@
+{
+  "schema_version": 1,
+  "target": {
+    "questpdf": "2026.9.1",
+    "fosspdf_baseline_commit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e"
+  },
+  "contract_policy": "Behavioral contracts are normative; API spellings are proposed until FP-004 reviews them. Existing equivalent APIs are acceptable when documented.",
+  "visual_policy": {
+    "geometry_tolerance_points": 0.25,
+    "solid_channel_tolerance": 2,
+    "max_changed_pixel_fraction": 0.002,
+    "text_review": "Use bundled Lato and record runtime/native versions. Check placement/order/colors; approve reviewed platform-specific text goldens in FP-003 before introducing pixel-perfect text comparison.",
+    "semantic_policy": "Page counts/order, Unicode/metadata/structure and expected failure categories are exact. PDF byte identity, timestamps, object IDs, compression and font-subset prefixes are not acceptance criteria."
+  },
+  "capabilities": [
+    {
+      "work_item": "FP-101",
+      "baseline_status": "missing",
+      "current_capability": "Basic left/center/right alignment and styled spans exist.",
+      "public_contract": "Expose paragraph justification, logical start/end alignment, first-line indentation and word spacing with direction-aware layout.",
+      "fixture_ids": [
+        "TXT-101"
+      ]
+    },
+    {
+      "work_item": "FP-102",
+      "baseline_status": "missing",
+      "current_capability": "No line-clamp API exists.",
+      "public_contract": "Limit paragraphs to a configured line count and render a custom ellipsis within the same width.",
+      "fixture_ids": [
+        "TXT-102"
+      ]
+    },
+    {
+      "work_item": "FP-103",
+      "baseline_status": "missing",
+      "current_capability": "Basic underline/strikethrough and font styles exist.",
+      "public_contract": "Allow explicit OpenType feature selection and configurable text-decoration style, color and thickness.",
+      "fixture_ids": [
+        "TXT-103"
+      ]
+    },
+    {
+      "work_item": "FP-104",
+      "baseline_status": "missing",
+      "current_capability": "Column is a vertical stack; Row can place independent columns.",
+      "public_contract": "Flow a single content stream through multiple columns with balancing and separator content.",
+      "fixture_ids": [
+        "LAY-104"
+      ]
+    },
+    {
+      "work_item": "FP-105",
+      "baseline_status": "partial",
+      "current_capability": "ShowIf(bool), ShowEntire, EnsureSpace, ShowOnce, SkipOnce and PageBreak exist.",
+      "public_contract": "Provide PreventPageBreak, repeating content and page-context conditional composition.",
+      "fixture_ids": [
+        "PAG-105"
+      ]
+    },
+    {
+      "work_item": "FP-106",
+      "baseline_status": "missing",
+      "current_capability": "The pipeline supports existing rendering caches but has no lazy composition API.",
+      "public_contract": "Defer composition and optionally cache lazy content with explicit invalidation and ownership.",
+      "fixture_ids": [
+        "LAY-106"
+      ]
+    },
+    {
+      "work_item": "FP-107",
+      "baseline_status": "partial",
+      "current_capability": "MinimalBox shrinks both axes; Layers provides ordered layer composition.",
+      "public_contract": "Support independent-axis shrinking, general element stacking order and inline vertical alignment.",
+      "fixture_ids": [
+        "LAY-107"
+      ]
+    },
+    {
+      "work_item": "FP-108",
+      "baseline_status": "missing",
+      "current_capability": "PageContext provides page numbering without a geometry capture API.",
+      "public_contract": "Capture stable element identifiers and per-page fragment positions/sizes for callers and tooling.",
+      "fixture_ids": [
+        "LAY-108"
+      ]
+    },
+    {
+      "work_item": "FP-109",
+      "baseline_status": "validation required",
+      "current_capability": "HarfBuzz shaping, RTL and fallback already exist; edge-case parity is unverified.",
+      "public_contract": "Qualify mixed-script shaping, bidi ordering, CJK wrapping and fallback; fix only reproduced gaps.",
+      "fixture_ids": [
+        "TXT-109"
+      ]
+    },
+    {
+      "work_item": "FP-201",
+      "baseline_status": "partial",
+      "current_capability": "SVG output and external SVG/Canvas integration already exist.",
+      "public_contract": "Accept SVG strings/bytes/streams and reusable preloaded SVG images through supported fluent APIs.",
+      "fixture_ids": [
+        "IMG-201"
+      ]
+    },
+    {
+      "work_item": "FP-202",
+      "baseline_status": "partial",
+      "current_capability": "Shared images and document-wide RasterDpi/ImageQuality exist.",
+      "public_contract": "Control raster resolution/resampling and compression quality per image with document defaults.",
+      "fixture_ids": [
+        "IMG-202"
+      ]
+    },
+    {
+      "work_item": "FP-203",
+      "baseline_status": "partial",
+      "current_capability": "PNG page export exists.",
+      "public_contract": "Export every page as configurable PNG, JPEG or WebP with stable ordering and DPI.",
+      "fixture_ids": [
+        "OUT-203"
+      ]
+    },
+    {
+      "work_item": "FP-204",
+      "baseline_status": "partial",
+      "current_capability": "Solid rectangular backgrounds and per-side borders exist.",
+      "public_contract": "Render rounded corners, aligned borders and gradients as fluent container styles.",
+      "fixture_ids": [
+        "GFX-204"
+      ]
+    },
+    {
+      "work_item": "FP-205",
+      "baseline_status": "missing",
+      "current_capability": "Basic solid line elements exist.",
+      "public_contract": "Expose line dash patterns/phase, gradient line styles and container shadows.",
+      "fixture_ids": [
+        "GFX-205"
+      ]
+    },
+    {
+      "work_item": "FP-301",
+      "baseline_status": "missing",
+      "current_capability": "IDocument generation exists without a merged-document contract.",
+      "public_contract": "Merge generated documents with original or continuous page numbering.",
+      "fixture_ids": [
+        "PDF-301"
+      ]
+    },
+    {
+      "work_item": "FP-302",
+      "baseline_status": "missing",
+      "current_capability": "Only newly composed PDF generation is exposed.",
+      "public_contract": "Load/save existing PDFs and select, reorder, extract and merge their pages.",
+      "fixture_ids": [
+        "PDF-302"
+      ]
+    },
+    {
+      "work_item": "FP-303",
+      "baseline_status": "missing",
+      "current_capability": "Composition Layers is available only during new-document generation.",
+      "public_contract": "Apply existing-PDF overlays and underlays to declared page ranges with documented placement.",
+      "fixture_ids": [
+        "PDF-303"
+      ]
+    },
+    {
+      "work_item": "FP-304",
+      "baseline_status": "missing",
+      "current_capability": "No PDF security operation API exists.",
+      "public_contract": "Encrypt/decrypt PDFs and configure supported password/security permissions.",
+      "fixture_ids": [
+        "PDF-304"
+      ]
+    },
+    {
+      "work_item": "FP-305",
+      "baseline_status": "missing",
+      "current_capability": "PDF metadata exists, without attachments or extensible XMP.",
+      "public_contract": "Embed attachments with associated-file relationships and extensible XMP metadata.",
+      "fixture_ids": [
+        "PDF-305"
+      ]
+    },
+    {
+      "work_item": "FP-306",
+      "baseline_status": "partial",
+      "current_capability": "The rendering backend already performs ordinary PDF compression.",
+      "public_contract": "Expose explicit extra compression and PDF linearization controls with documented interactions.",
+      "fixture_ids": [
+        "PDF-306"
+      ]
+    },
+    {
+      "work_item": "FP-401",
+      "baseline_status": "missing",
+      "current_capability": "The current canvas has no semantic tagging contract.",
+      "public_contract": "Expose semantic roles, language, reading order, alternative text and artifacts in tagged PDF.",
+      "fixture_ids": [
+        "ACC-401"
+      ]
+    },
+    {
+      "work_item": "FP-402",
+      "baseline_status": "partial",
+      "current_capability": "A PdfA boolean exists; selectable validated profiles do not.",
+      "public_contract": "Select and validate all six PDF/A-2/3 conformance levels with profile-aware metadata/font/color rules.",
+      "fixture_ids": [
+        "ACC-402"
+      ]
+    },
+    {
+      "work_item": "FP-403",
+      "baseline_status": "missing",
+      "current_capability": "Tagged PDF and universal-accessibility output are missing.",
+      "public_contract": "Generate PDF/UA-1 output with machine validation and recorded human accessibility review.",
+      "fixture_ids": [
+        "ACC-403"
+      ]
+    },
+    {
+      "work_item": "FP-404",
+      "baseline_status": "missing",
+      "current_capability": "Invoice rendering is possible; structured e-invoice packaging is absent.",
+      "public_contract": "Package invoice XML and required XMP/associated-file metadata for explicitly supported e-invoice profiles.",
+      "fixture_ids": [
+        "ACC-404"
+      ]
+    },
+    {
+      "work_item": "FP-501",
+      "baseline_status": "partial",
+      "current_capability": "The previewer already transfers pictures and refreshes documents.",
+      "public_contract": "Expose optional versioned inspection/source-mapping data while preserving existing preview clients.",
+      "fixture_ids": [
+        "DEV-501"
+      ]
+    },
+    {
+      "work_item": "FP-502",
+      "baseline_status": "partial",
+      "current_capability": "Pan/zoom, export and hot reload already exist.",
+      "public_contract": "Provide interactive hierarchy inspection, measurement, search, source navigation and diagnostics.",
+      "fixture_ids": [
+        "DEV-502"
+      ]
+    },
+    {
+      "work_item": "FP-503",
+      "baseline_status": "validation required",
+      "current_capability": "Deployment parity is unverified; compilation alone does not establish support.",
+      "public_contract": "Qualify supported trimmed/NativeAOT consumers and native assets by publishing and executing them.",
+      "fixture_ids": [
+        "RUN-503"
+      ]
+    }
+  ],
+  "existing_equivalences": [
+    {
+      "capability": "Page composition, page breaks, overflow and repeated headers/footers",
+      "evidence": [
+        "PAG-001",
+        "PAG-002"
+      ]
+    },
+    {
+      "capability": "Styled spans and bundled fonts",
+      "evidence": [
+        "TXT-001"
+      ]
+    },
+    {
+      "capability": "Raster input and PNG page output with document DPI",
+      "evidence": [
+        "IMG-001",
+        "OUT-001"
+      ]
+    },
+    {
+      "capability": "SVG output (distinct from SVG input)",
+      "evidence": [
+        "Source/FossPDF.UnitTests/DocumentGenerationTests.cs:GenerateSvg_RendersEveryPage"
+      ]
+    },
+    {
+      "capability": "Both-axis shrinking equivalent to Shrink",
+      "evidence": [
+        "Source/FossPDF/Elements/MinimalBox.cs",
+        "Source/FossPDF/Fluent/ElementExtensions.cs:MinimalBox"
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "PAG-001",
+      "title": "Explicit page break preserves marker order",
+      "work_items": [
+        "FP-001",
+        "FP-105"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "blocks": [
+          {
+            "color": "#ff0000",
+            "height": 20
+          },
+          "PageBreak",
+          {
+            "color": "#0000ff",
+            "height": 20
+          }
+        ]
+      },
+      "expected": [
+        "PDF reports exactly two pages; raster export has two 120x100 pages.",
+        "A red 100x20 block starts at (10,10) on page 1; a blue block occupies the same rectangle on page 2."
+      ],
+      "raster": {
+        "width": 120,
+        "height": 100,
+        "dpi": 72,
+        "pages": [
+          [
+            {
+              "x": 10,
+              "y": 10,
+              "width": 100,
+              "height": 20,
+              "color": "#ff0000"
+            }
+          ],
+          [
+            {
+              "x": 10,
+              "y": 10,
+              "width": 100,
+              "height": 20,
+              "color": "#0000ff"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "PAG-002",
+      "title": "Overflow keeps ordered blocks and repeated header/footer",
+      "work_items": [
+        "FP-001",
+        "FP-105"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "header_height": 5,
+        "footer_height": 5,
+        "block_height": 30,
+        "block_colors": [
+          "#ff0000",
+          "#00ff00",
+          "#0000ff"
+        ]
+      },
+      "expected": [
+        "Two pages are produced; red and green blocks fit on page 1, blue continues on page 2.",
+        "A black header occupies (10,10,100,5) and a gray footer (10,85,100,5) on both pages."
+      ],
+      "raster": {
+        "width": 120,
+        "height": 100,
+        "dpi": 72,
+        "pages": [
+          [
+            {
+              "x": 10,
+              "y": 10,
+              "width": 100,
+              "height": 5,
+              "color": "#000000"
+            },
+            {
+              "x": 10,
+              "y": 15,
+              "width": 100,
+              "height": 30,
+              "color": "#ff0000"
+            },
+            {
+              "x": 10,
+              "y": 45,
+              "width": 100,
+              "height": 30,
+              "color": "#00ff00"
+            },
+            {
+              "x": 10,
+              "y": 85,
+              "width": 100,
+              "height": 5,
+              "color": "#808080"
+            }
+          ],
+          [
+            {
+              "x": 10,
+              "y": 10,
+              "width": 100,
+              "height": 5,
+              "color": "#000000"
+            },
+            {
+              "x": 10,
+              "y": 15,
+              "width": 100,
+              "height": 30,
+              "color": "#0000ff"
+            },
+            {
+              "x": 10,
+              "y": 85,
+              "width": 100,
+              "height": 5,
+              "color": "#808080"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "TXT-001",
+      "title": "Styled spans retain color and left-to-right placement",
+      "work_items": [
+        "FP-001",
+        "FP-103"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          240,
+          100
+        ],
+        "margin": 10,
+        "font": "Lato",
+        "font_size": 20,
+        "spans": [
+          {
+            "text": "Amber ",
+            "color": "#ff0000",
+            "bold": true
+          },
+          {
+            "text": "Birch",
+            "color": "#0000ff",
+            "italic": true
+          }
+        ]
+      },
+      "expected": [
+        "Exactly one PDF/raster page is produced.",
+        "Red and blue glyph pixels both exist; the red run precedes the blue run and both stay inside the 10-point margins.",
+        "This is a styled-rendering baseline, not a Unicode-extraction or bidi conformance claim."
+      ]
+    },
+    {
+      "id": "IMG-001",
+      "title": "Raster quadrant input preserves aspect ratio and order",
+      "work_items": [
+        "FP-001",
+        "FP-201",
+        "FP-202"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "image": [
+          32,
+          16
+        ],
+        "display_width": 80,
+        "quadrants": [
+          "#ff0000",
+          "#00ff00",
+          "#0000ff",
+          "#ffff00"
+        ]
+      },
+      "expected": [
+        "Exactly one 120x100 page is produced.",
+        "The image occupies (10,10,80,40), with red/green above blue/yellow and white outside."
+      ],
+      "raster": {
+        "width": 120,
+        "height": 100,
+        "dpi": 72,
+        "pages": [
+          [
+            {
+              "x": 10,
+              "y": 10,
+              "width": 40,
+              "height": 20,
+              "color": "#ff0000"
+            },
+            {
+              "x": 50,
+              "y": 10,
+              "width": 40,
+              "height": 20,
+              "color": "#00ff00"
+            },
+            {
+              "x": 10,
+              "y": 30,
+              "width": 40,
+              "height": 20,
+              "color": "#0000ff"
+            },
+            {
+              "x": 50,
+              "y": 30,
+              "width": 40,
+              "height": 20,
+              "color": "#ffff00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "OUT-001",
+      "title": "Document DPI scales page and marker dimensions",
+      "work_items": [
+        "FP-001",
+        "FP-004",
+        "FP-203"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "dpi": 144,
+        "block_height": 20,
+        "color": "#ff0000"
+      },
+      "expected": [
+        "The PDF has one page; raster export is 240x200 pixels at 144 DPI.",
+        "The red rectangle becomes (20,20,200,40) without changing page content coordinates."
+      ],
+      "raster": {
+        "width": 240,
+        "height": 200,
+        "dpi": 144,
+        "pages": [
+          [
+            {
+              "x": 20,
+              "y": 20,
+              "width": 200,
+              "height": 40,
+              "color": "#ff0000"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "FAIL-001",
+      "title": "Malformed image produces a composition error",
+      "work_items": [
+        "FP-001",
+        "FP-201"
+      ],
+      "execution": "active",
+      "input": {
+        "image_bytes_hex": "00010203"
+      },
+      "expected": [
+        "Rendering throws DocumentComposeException; no valid PDF output is returned."
+      ]
+    },
+    {
+      "id": "FAIL-002",
+      "title": "Impossible fixed-size content produces a layout error",
+      "work_items": [
+        "FP-001",
+        "FP-104"
+      ],
+      "execution": "active",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "content": [
+          200,
+          200
+        ]
+      },
+      "expected": [
+        "Rendering throws DocumentLayoutException instead of silently clipping or returning a completed PDF."
+      ]
+    },
+    {
+      "id": "RES-001",
+      "title": "Caller-owned PDF output stream stays open",
+      "work_items": [
+        "FP-001",
+        "FP-302"
+      ],
+      "execution": "active",
+      "input": {
+        "source": "PAG-001",
+        "output": "caller-owned MemoryStream"
+      },
+      "expected": [
+        "The stream contains a PDF header after rendering and remains readable, seekable and writable.",
+        "Appending data after generation succeeds; the fixture disposes its own stream."
+      ]
+    },
+    {
+      "id": "TXT-101",
+      "title": "Add paragraph justification, logical alignment, indentation and word spacing",
+      "work_items": [
+        "FP-101"
+      ],
+      "execution": "planned",
+      "input": {
+        "text": "Amber birch cedar dogwood elm fir maple oak.",
+        "width": 180,
+        "font": "Lato",
+        "font_size": 12,
+        "alignment": "justify",
+        "first_line_indent": 12,
+        "word_spacing": 2,
+        "direction": "LTR and RTL"
+      },
+      "expected": [
+        "Only the first line is indented by 12 points; continuation lines retain the paragraph origin.",
+        "Non-final justified lines fill the available width without stretching glyphs.",
+        "Start/end follow paragraph direction, and the configured spacing contributes to line breaking."
+      ]
+    },
+    {
+      "id": "TXT-102",
+      "title": "Add text line clamping and custom ellipses",
+      "work_items": [
+        "FP-102"
+      ],
+      "execution": "planned",
+      "input": {
+        "text": "One two three four five six seven eight nine ten.",
+        "width": 80,
+        "font": "Lato",
+        "font_size": 12,
+        "max_lines": 2,
+        "ellipsis": "[more]"
+      },
+      "expected": [
+        "At most two lines render; the final visible line includes [more] without overflow.",
+        "An already-short paragraph has no ellipsis; zero/invalid limits have documented behavior."
+      ]
+    },
+    {
+      "id": "TXT-103",
+      "title": "Add OpenType controls and richer text decorations",
+      "work_items": [
+        "FP-103"
+      ],
+      "execution": "planned",
+      "input": {
+        "text": "office ffi AV 0123456789",
+        "font": "Lato",
+        "features": {
+          "liga": 0,
+          "kern": 0
+        },
+        "decorations": {
+          "underline": "dashed",
+          "color": "#cc0000",
+          "thickness": 1.5
+        }
+      },
+      "expected": [
+        "Feature settings reach shaping, with enabled/disabled ligature fixtures producing the expected glyph sequences.",
+        "Decoration geometry, dash pattern and color match the requested style without affecting text advance."
+      ]
+    },
+    {
+      "id": "LAY-104",
+      "title": "Implement newspaper-style multi-column flow and balancing",
+      "work_items": [
+        "FP-104"
+      ],
+      "execution": "planned",
+      "input": {
+        "paragraphs": [
+          "Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha ",
+          "Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta Beta ",
+          "Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma Gamma "
+        ],
+        "page": [
+          240,
+          180
+        ],
+        "columns": 2,
+        "gap": 12,
+        "balance": true,
+        "separator": {
+          "width": 1,
+          "color": "#808080"
+        }
+      },
+      "expected": [
+        "Reading order continues down the first column and then down the second; no paragraph is lost or duplicated.",
+        "Balanced column heights differ by at most one line; a separator occupies the declared gap.",
+        "Multi-page flow and an oversized unbreakable child have deterministic results."
+      ]
+    },
+    {
+      "id": "PAG-105",
+      "title": "Add PreventPageBreak, Repeat and page-aware conditional rendering",
+      "work_items": [
+        "FP-105"
+      ],
+      "execution": "planned",
+      "input": {
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10,
+        "prefix_height": 60,
+        "group_heights": [
+          15,
+          15
+        ],
+        "repeat_marker": "R",
+        "predicate": "page number is even"
+      },
+      "expected": [
+        "The 30-point group moves intact from the 20-point remainder to the next page.",
+        "Repeat renders one marker per applicable page, and the predicate sees the final page context.",
+        "Repeated measurement and total-page passes do not consume or duplicate content."
+      ]
+    },
+    {
+      "id": "LAY-106",
+      "title": "Implement Lazy and LazyWithCache composition",
+      "work_items": [
+        "FP-106"
+      ],
+      "execution": "planned",
+      "input": {
+        "items": 1000,
+        "item_height": 12,
+        "cache_modes": [
+          "off",
+          "Lazy",
+          "LazyWithCache"
+        ],
+        "page": [
+          240,
+          180
+        ]
+      },
+      "expected": [
+        "All cache modes produce the same pages, order and geometry.",
+        "Composition counters and peak retained resources demonstrate deferred work; refresh/failure releases native resources.",
+        "Repeated rendering does not reuse stale content or disposed resources."
+      ]
+    },
+    {
+      "id": "LAY-107",
+      "title": "Complete layout helpers and inline-element alignment",
+      "work_items": [
+        "FP-107"
+      ],
+      "execution": "planned",
+      "input": {
+        "available": [
+          100,
+          80
+        ],
+        "child": [
+          20,
+          10
+        ],
+        "shrink_axes": [
+          "horizontal",
+          "vertical",
+          "both"
+        ],
+        "z_order": [
+          2,
+          0,
+          1
+        ],
+        "inline_alignments": [
+          "top",
+          "middle",
+          "bottom",
+          "baseline"
+        ]
+      },
+      "expected": [
+        "Horizontal-only shrinking retains allocated height; vertical-only shrinking retains allocated width.",
+        "Overlapping color markers follow numeric stacking order consistently.",
+        "Inline markers align to their requested text reference without changing logical order."
+      ]
+    },
+    {
+      "id": "LAY-108",
+      "title": "Add content-position capture and dynamic geometry access",
+      "work_items": [
+        "FP-108"
+      ],
+      "execution": "planned",
+      "input": {
+        "element_id": "invoice-lines",
+        "items": 12,
+        "item_height": 20,
+        "page": [
+          120,
+          100
+        ],
+        "margin": 10
+      },
+      "expected": [
+        "Captured rectangles use documented units/origins and match independently measured marker geometry within 0.25 point.",
+        "All occurrences/fragments are reported with correct page numbers and IDs.",
+        "Repeated rendering produces stable captures without leaking previous-document state."
+      ]
+    },
+    {
+      "id": "TXT-109",
+      "title": "Qualify complex-script, mixed-direction and CJK behavior",
+      "work_items": [
+        "FP-109"
+      ],
+      "execution": "planned",
+      "input": {
+        "samples": [
+          "Invoice رقم 123 (USD)",
+          "العربية 42 English",
+          "漢字かなカナ 123"
+        ],
+        "width": 160,
+        "font_policy": "explicit licensed fixtures with coverage",
+        "directions": [
+          "LTR",
+          "RTL"
+        ]
+      },
+      "expected": [
+        "Compare expected Unicode logical order and independently reviewed visual reading order for every sample.",
+        "CJK line breaks avoid prohibited starts/ends and no supported glyph is missing.",
+        "Record fonts, licenses, runtime and platform; report unsupported combinations explicitly."
+      ]
+    },
+    {
+      "id": "IMG-201",
+      "title": "Add first-class SVG input and preloading",
+      "work_items": [
+        "FP-201"
+      ],
+      "execution": "planned",
+      "input": {
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"40\" viewBox=\"0 0 80 40\"><rect width=\"40\" height=\"40\" fill=\"#ff0000\"/><rect x=\"40\" width=\"40\" height=\"40\" fill=\"#0000ff\"/></svg>",
+        "size": [
+          80,
+          40
+        ],
+        "reuse_count": 3
+      },
+      "expected": [
+        "Intrinsic dimensions, viewBox and aspect ratio preserve the red-left/blue-right geometry.",
+        "Preloaded reuse produces identical output with documented ownership.",
+        "Malformed input and unsupported external resources fail predictably without leaking streams/native objects."
+      ]
+    },
+    {
+      "id": "IMG-202",
+      "title": "Add per-image DPI, resampling and compression quality controls",
+      "work_items": [
+        "FP-202"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "IMG-001 quadrant pattern rendered at 800x400",
+        "display_size": [
+          80,
+          40
+        ],
+        "dpi": [
+          72,
+          144
+        ],
+        "quality": [
+          40,
+          90
+        ]
+      },
+      "expected": [
+        "Per-image overrides are independent and do not mutate caller-owned shared images.",
+        "Decoded output preserves aspect ratio, quadrant order and alpha within declared lossy tolerances.",
+        "Independent PDF inspection confirms expected embedded image dimensions and encoding."
+      ]
+    },
+    {
+      "id": "OUT-203",
+      "title": "Add JPEG and WebP page export settings",
+      "work_items": [
+        "FP-203"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "PAG-001",
+        "formats": [
+          "PNG",
+          "JPEG",
+          "WebP"
+        ],
+        "dpi": 144,
+        "quality": 90
+      },
+      "expected": [
+        "Each format decodes into two pages of 240x200 pixels, in red-then-blue order.",
+        "PNG preserves alpha where supported; JPEG transparency compositing follows a documented background policy.",
+        "Invalid format/quality/DPI settings fail before partial output is accepted."
+      ]
+    },
+    {
+      "id": "GFX-204",
+      "title": "Add rounded containers, border alignment and gradients",
+      "work_items": [
+        "FP-204"
+      ],
+      "execution": "planned",
+      "input": {
+        "box": [
+          20,
+          20,
+          80,
+          40
+        ],
+        "radius": 8,
+        "border_width": 4,
+        "border_alignments": [
+          "inside",
+          "center",
+          "outside"
+        ],
+        "gradient": {
+          "from": "#ff0000",
+          "to": "#0000ff",
+          "direction": "horizontal"
+        }
+      },
+      "expected": [
+        "Corner cutouts, border extents and clipping follow the requested radius/alignment within 0.25 point.",
+        "Gradient endpoints and midpoint interpolate correctly in the declared color space.",
+        "Nested/transformed containers preserve clipping and styling in PDF, PNG and SVG output."
+      ]
+    },
+    {
+      "id": "GFX-205",
+      "title": "Add advanced line styles and shadows",
+      "work_items": [
+        "FP-205"
+      ],
+      "execution": "planned",
+      "input": {
+        "line": {
+          "from": [
+            10,
+            20
+          ],
+          "to": [
+            110,
+            20
+          ],
+          "width": 2,
+          "dash": [
+            6,
+            3
+          ],
+          "phase": 2
+        },
+        "shadow": {
+          "offset": [
+            3,
+            4
+          ],
+          "blur": 5,
+          "color": "#80000000"
+        }
+      },
+      "expected": [
+        "Dash intervals and phase match the requested units and remain stable under transforms.",
+        "Shadow extent, offset, blur and alpha match independent reference geometry.",
+        "Output backends have documented equivalents/fallbacks and dispose temporary surfaces."
+      ]
+    },
+    {
+      "id": "PDF-301",
+      "title": "Add generated-document merging and page-number strategies",
+      "work_items": [
+        "FP-301"
+      ],
+      "execution": "planned",
+      "input": {
+        "documents": [
+          "PAG-001",
+          "PAG-001"
+        ],
+        "numbering": [
+          "original",
+          "continuous"
+        ],
+        "footer": "CurrentPageNumber / TotalPages on each source document"
+      },
+      "expected": [
+        "The result has four pages with marker order red, blue, red, blue.",
+        "Original numbering yields 1,2,1,2; continuous numbering yields 1,2,3,4 with final totals.",
+        "Metadata/settings inheritance and input ownership follow documented rules."
+      ]
+    },
+    {
+      "id": "PDF-302",
+      "title": "Implement existing-PDF loading, saving, page selection and merging",
+      "work_items": [
+        "FP-302"
+      ],
+      "execution": "planned",
+      "input": {
+        "documents": [
+          "PAG-001",
+          "PAG-002"
+        ],
+        "first_selection": [
+          2,
+          1
+        ],
+        "second_selection": [
+          1
+        ]
+      },
+      "expected": [
+        "The result has three selected pages in blue, red, then first-overflow-page order.",
+        "Original page boxes, links and metadata are preserved according to the operation contract.",
+        "Malformed/encrypted input and out-of-range pages fail clearly; source streams remain usable as documented."
+      ]
+    },
+    {
+      "id": "PDF-303",
+      "title": "Add existing-PDF overlays and underlays",
+      "work_items": [
+        "FP-303"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "PAG-001",
+        "overlay": {
+          "rect": [
+            15,
+            15,
+            20,
+            20
+          ],
+          "color": "#00ff00"
+        },
+        "underlay": {
+          "rect": [
+            0,
+            0,
+            120,
+            100
+          ],
+          "color": "#ffff00"
+        },
+        "pages": [
+          1
+        ]
+      },
+      "expected": [
+        "Only page 1 changes; the overlay covers underlying red content in its rectangle.",
+        "Underlay appears through transparent regions and remains behind original content.",
+        "Dimensions, rotation and page-range handling follow documented placement rules."
+      ]
+    },
+    {
+      "id": "PDF-304",
+      "title": "Add PDF encryption, decryption and permissions",
+      "work_items": [
+        "FP-304"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "PAG-001",
+        "user_password": "fixture-reader",
+        "owner_password": "fixture-owner",
+        "permissions": {
+          "print": false,
+          "copy": false
+        }
+      },
+      "expected": [
+        "An independent reader requires the user password and decodes the original two pages with the correct password.",
+        "Wrong passwords fail without partial plaintext output.",
+        "Encryption type and permission flags match independent inspection; decrypting preserves page content."
+      ]
+    },
+    {
+      "id": "PDF-305",
+      "title": "Add attachments, associated-file relationships and XMP extensions",
+      "work_items": [
+        "FP-305"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "PAG-001",
+        "attachment": {
+          "name": "readme.txt",
+          "media_type": "text/plain",
+          "utf8": "FossPDF parity fixture\n",
+          "relationship": "Data"
+        },
+        "xmp": {
+          "namespace": "urn:fosspdf:parity:1",
+          "key": "fixture",
+          "value": "PDF-305"
+        }
+      },
+      "expected": [
+        "Independent extraction returns the exact UTF-8 attachment bytes, name and media type.",
+        "Associated-file relationship and declared XMP namespace/value are present and well-formed.",
+        "Unicode filenames, duplicate-name policy and stream ownership are documented and tested."
+      ]
+    },
+    {
+      "id": "PDF-306",
+      "title": "Add explicit PDF compression and linearization controls",
+      "work_items": [
+        "FP-306"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "PAG-001",
+        "options": {
+          "additional_compression": true,
+          "linearize": true
+        }
+      },
+      "expected": [
+        "Independent PDF tools confirm linearization and successful complete rendering.",
+        "Optimized and original documents have equivalent page content/links/metadata.",
+        "Unsupported or incompatible option combinations fail clearly; size improvements are measured rather than assumed."
+      ]
+    },
+    {
+      "id": "ACC-401",
+      "title": "Implement semantic structure and tagged PDF",
+      "work_items": [
+        "FP-401"
+      ],
+      "execution": "planned",
+      "input": {
+        "language": "en-US",
+        "title": "Accessible fixture",
+        "content": [
+          {
+            "role": "H1",
+            "text": "Quarterly totals"
+          },
+          {
+            "role": "P",
+            "text": "Revenue is twelve units."
+          },
+          {
+            "role": "Figure",
+            "source": "IMG-001",
+            "alt": "Four colored quadrants."
+          },
+          {
+            "role": "Artifact",
+            "text": "Decorative rule"
+          }
+        ]
+      },
+      "expected": [
+        "The structure tree has H1, P and Figure in logical order with document language/title.",
+        "Figure alternative text is exact and decorative content is marked as an artifact.",
+        "Tags/marked content remain valid across page breaks and reusable components."
+      ]
+    },
+    {
+      "id": "ACC-402",
+      "title": "Add selectable PDF/A-2 and PDF/A-3 conformance levels",
+      "work_items": [
+        "FP-402"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "ACC-401",
+        "levels": [
+          "PDF/A-2a",
+          "PDF/A-2b",
+          "PDF/A-2u",
+          "PDF/A-3a",
+          "PDF/A-3b",
+          "PDF/A-3u"
+        ],
+        "attachment": "PDF-305 only for PDF/A-3"
+      },
+      "expected": [
+        "An independent validator reports compliance for each exact declared level.",
+        "Unicode mapping and semantic structure meet U/A-level requirements; PDF/A-2 rejects incompatible attachments.",
+        "Invalid encryption/font/metadata combinations fail before a compliance claim is emitted."
+      ]
+    },
+    {
+      "id": "ACC-403",
+      "title": "Implement PDF/UA-1 accessibility conformance",
+      "work_items": [
+        "FP-403"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "ACC-401",
+        "standard": "PDF/UA-1",
+        "negative_cases": [
+          "missing figure alt",
+          "unmapped glyph",
+          "invalid reading order"
+        ]
+      },
+      "expected": [
+        "An independent accessibility validator passes and a human review records heading order, figure alternatives and reading order.",
+        "Declared PDF/UA metadata agrees with actual structure, language and Unicode mapping.",
+        "Negative cases are rejected or clearly diagnosed without a false compliance claim."
+      ]
+    },
+    {
+      "id": "ACC-404",
+      "title": "Add validated ZUGFeRD and Factur-X packaging workflows",
+      "work_items": [
+        "FP-404"
+      ],
+      "execution": "planned",
+      "input": {
+        "invoice": {
+          "id": "FP-2026-001",
+          "currency": "EUR",
+          "quantity": 2,
+          "unit_price": "6.00",
+          "net_total": "12.00"
+        },
+        "profiles": [
+          "one explicitly declared ZUGFeRD profile",
+          "one explicitly declared Factur-X profile"
+        ],
+        "pdf_profile": "PDF/A-3"
+      },
+      "expected": [
+        "Independently authored XML is validated against the exact selected version/profile schema and business rules.",
+        "The packaged PDF passes its PDF/A profile, and XML can be extracted unchanged with the required filename/relationship/XMP.",
+        "Unsupported profile/version combinations fail clearly; this does not promise general invoice business validation."
+      ]
+    },
+    {
+      "id": "DEV-501",
+      "title": "Add previewer element-inspection transport and source mapping",
+      "work_items": [
+        "FP-501"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "LAY-108",
+        "protocol_clients": [
+          "existing preview client",
+          "inspection client"
+        ],
+        "refresh_count": 20
+      },
+      "expected": [
+        "Transport describes stable IDs, hierarchy, per-occurrence geometry and source coordinates.",
+        "Existing clients remain usable or get an explicit compatibility response.",
+        "Refresh, malformed requests and disconnects do not retain obsolete documents/resources."
+      ]
+    },
+    {
+      "id": "DEV-502",
+      "title": "Add interactive inspection, measurement, search and source navigation",
+      "work_items": [
+        "FP-502"
+      ],
+      "execution": "planned",
+      "input": {
+        "source": "DEV-501",
+        "actions": [
+          "select repeated element",
+          "search Revenue",
+          "measure width",
+          "open source",
+          "inspect layout error"
+        ]
+      },
+      "expected": [
+        "Selection highlights every intended occurrence and exposes the captured geometry/configuration.",
+        "Measurements agree with LAY-108 within 0.25 point and source navigation opens the recorded location.",
+        "Search/error navigation and refresh remain responsive and usable with keyboard/accessibility controls."
+      ]
+    },
+    {
+      "id": "RUN-503",
+      "title": "Qualify NativeAOT, trimming and runtime asset support",
+      "work_items": [
+        "FP-503"
+      ],
+      "execution": "planned",
+      "input": {
+        "framework": "net9.0",
+        "publish_modes": [
+          "trimmed",
+          "NativeAOT"
+        ],
+        "fixtures": [
+          "TXT-001",
+          "IMG-001",
+          "IMG-201",
+          "PDF-302"
+        ],
+        "platforms": "only explicitly claimed OS/architecture combinations"
+      },
+      "expected": [
+        "Each claimed combination publishes, runs and produces the same semantic fixture outcomes.",
+        "Font registration/subsetting, SVG and applicable PDF operations load their packaged resources/native libraries.",
+        "Reports retain exact SDK/runtime, platform, publish logs and unsupported combinations."
+      ]
+    }
+  ]
+}

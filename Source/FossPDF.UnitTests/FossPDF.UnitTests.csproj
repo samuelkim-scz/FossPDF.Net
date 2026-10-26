@@ -25,6 +25,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="..\..\docs\feature-parity\acceptance-fixtures.json" Link="Parity\acceptance-fixtures.json" CopyToOutputDirectory="PreserveNewest" />
+      <Content Include="..\..\docs\feature-parity\baseline-2026.9.1.json" Link="Parity\baseline-2026.9.1.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Content Include="Resources\FontContent.ttf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
