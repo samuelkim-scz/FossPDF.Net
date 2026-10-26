@@ -2,7 +2,7 @@
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
-The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The nine active fixtures cover the initial eight baseline scenarios plus FP-004 settings isolation. The remaining 27 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
+The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. The ten active fixtures cover the initial eight baseline scenarios plus FP-004 settings isolation and FP-105 page controls. The remaining 26 contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
 
 ## Public-contract and equivalence rules
 
@@ -21,6 +21,7 @@ Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-
 | --- | --- |
 | `PAG-001` — Explicit page break preserves marker order | PDF reports exactly two pages; raster export has two 120x100 pages. A red 100x20 block starts at (10,10) on page 1; a blue block occupies the same rectangle on page 2. |
 | `PAG-002` — Overflow keeps ordered blocks and repeated header/footer | Two pages are produced; red and green blocks fit on page 1, blue continues on page 2. A black header occupies (10,10,100,5) and a gray footer (10,85,100,5) on both pages. |
+| `PAG-105` — Page controls keep groups, repeat markers and page-aware predicates | A 30-point group moves intact from the 20-point remainder to page 2. A repeated marker renders once on each page its row spans, and a `ShowIf` predicate sees a null total-page count during the initial pass and the resolved count during the final pass. Regenerating the document neither consumes nor duplicates content. |
 | `TXT-001` — Styled spans retain color and left-to-right placement | Exactly one PDF/raster page is produced. Red and blue glyph pixels both exist; the red run precedes the blue run and both stay inside the 10-point margins. This is a styled-rendering baseline, not a Unicode-extraction or bidi conformance claim. |
 | `IMG-001` — Raster quadrant input preserves aspect ratio and order | Exactly one 120x100 page is produced. The image occupies (10,10,80,40), with red/green above blue/yellow and white outside. |
 | `OUT-001` — Document DPI scales page and marker dimensions | The PDF has one page; raster export is 240x200 pixels at 144 DPI. The red rectangle becomes (20,20,200,40) without changing page content coordinates. |
@@ -92,7 +93,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains nine executable scenarios, one catalog/traceability check, four raster-comparison checks, and 27 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains ten executable scenarios, one catalog/traceability check, four raster-comparison checks, and 26 explicitly planned/skipped contracts.
 
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 

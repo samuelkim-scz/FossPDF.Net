@@ -14,6 +14,13 @@ namespace FossPDF.Infrastructure
     internal interface IPageContext
     {
         int CurrentPage { get; }
+
+        /// <summary>True until the first layout pass has produced the document length.</summary>
+        bool IsInitialRenderingPhase { get; }
+
+        /// <summary>Page count reported by the most recently completed render pass.</summary>
+        int DocumentLength { get; }
+
         void SetSectionPage(string name);
         DocumentLocation? GetLocation(string name);
         DocumentSpecificFontManager FontManager { get; }
