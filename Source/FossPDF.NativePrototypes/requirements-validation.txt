@@ -1,0 +1,2 @@
+# Independent PDF structure/content inspector, validation only (BSD-3-Clause).
+pypdf==6.21.2

@@ -1,0 +1,2 @@
+# Preserve upstream notice bytes so package/notice SHA-256 checks are portable.
+docs/feature-parity/notices/*.txt -text
