@@ -93,7 +93,7 @@ Define testable contracts, compatible settings, native-backend decisions, and re
 
 ### [Parity M1 - Text and layout](https://github.com/samuelkim-scz/FossPDF.Net/milestone/2)
 
-Deliver paragraph, typography, pagination, multi-column, lazy, geometry, and layout API parity.
+Deliver paragraph, typography, pagination, multi-column, lazy, geometry, and layout API parity. Line clamping and custom ellipsis behavior are documented in [docs/feature-parity/TEXT_CLAMPING.md](docs/feature-parity/TEXT_CLAMPING.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

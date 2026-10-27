@@ -139,7 +139,7 @@ namespace FossPDF.Drawing
 
         private static float GetTextScale(TextStyle style)
         {
-            return style.FontPosition switch
+            return (style.FontPosition ?? FontPosition.Normal) switch
             {
                 FontPosition.Normal => 1f,
                 FontPosition.Subscript => 0.625f,

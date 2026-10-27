@@ -313,7 +313,7 @@ namespace FossPDF.Elements.Text.Items
             if (Style.HasStrikethrough ?? false)
             {
                 var strikeoutThickness = fontMetrics.StrikeoutThickness;
-                strikeoutThickness *= Style.FontPosition == FontPosition.Normal ? 1f : 0.625f;
+                strikeoutThickness *= (Style.FontPosition ?? FontPosition.Normal) == FontPosition.Normal ? 1f : 0.625f;
 
                 DrawLine(fontMetrics.StrikeoutPosition + glyphOffsetY, strikeoutThickness);
             }
@@ -327,7 +327,7 @@ namespace FossPDF.Elements.Text.Items
             {
                 var fontSize = Style.Size ?? 12f;
 
-                var offsetFactor = Style.FontPosition switch
+                var offsetFactor = (Style.FontPosition ?? FontPosition.Normal) switch
                 {
                     FontPosition.Normal => 0,
                     FontPosition.Subscript => 0.1f,
