@@ -92,6 +92,16 @@ tolerance:
 Running `--update-visual-baseline` on a non-reference platform creates that override automatically.
 The default metrics remain measured on the reference platform (`win-x64` at the time of writing).
 
+The committed `linux-x64` and `osx-arm64` references were qualified on October 26, 2026 from
+[unchanged main `e9bee81`](https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40416655346).
+All four scenarios, font hashes and SkiaSharp 3.119.4/HarfBuzzSharp 8.3.1.5 pins match the
+[FP-002 implementation run](https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40428515254)
+exactly. The typography captures were visually inspected: page geometry and text layout agree,
+while platform rasterization changes text pixel density/color buckets. The initial baseline had
+no platform references and compared those outputs against Windows. Adding their measured references
+retains the Windows baseline, font pins, exact page counts/dimensions and all global tolerances;
+it does not widen tolerances or change rendering code.
+
 ## Performance measurements
 
 The tool records four scenarios:
