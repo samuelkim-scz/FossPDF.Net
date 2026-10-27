@@ -33,6 +33,14 @@ dotnet run --project FossPDF.Quality/FossPDF.Quality.csproj -c Release -- --mode
 
 It records the runtime/font pins, semantic visual metrics, performance budgets and optional validator output. Update `docs/feature-parity/baselines/` only with reviewed artifacts and an explanation; see [QUALITY.md](docs/feature-parity/QUALITY.md).
 
+When changing native backends or evaluating SVG/PDF/tagging dependencies, run the isolated FP-002 prototypes from `Source`:
+
+```powershell
+dotnet run --project FossPDF.NativePrototypes/FossPDF.NativePrototypes.csproj -c Release -- --output ../artifacts/fp-002
+```
+
+The prototype project is outside `FossPDF.sln`, is not packed, and must not become a production dependency. See [ADR-0001](docs/feature-parity/decisions/ADR-0001-native-backends.md) and [NATIVE_DEPENDENCIES.md](docs/feature-parity/NATIVE_DEPENDENCIES.md).
+
 ## Pull requests
 
 Use the PR template and link the work item. `Closes #<number>` is appropriate when the PR completes the entire issue; `Refs #<number>` tracks partial work. Preserve existing FossPDF APIs/namespaces and document supported frameworks and migration paths for additions. Record licenses/notices and runtime assets for new dependencies.

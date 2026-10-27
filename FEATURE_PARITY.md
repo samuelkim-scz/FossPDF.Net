@@ -82,7 +82,7 @@ Each issue carries its acceptance checklist, validation requirements, likely tou
 
 ### [Parity M0 - Baseline and architecture](https://github.com/samuelkim-scz/FossPDF.Net/milestone/1)
 
-Define testable contracts, compatible settings, native-backend decisions, and reproducible quality baselines. The runnable baseline tool, tolerances, performance budgets and CI artifacts are documented in [docs/feature-parity/QUALITY.md](docs/feature-parity/QUALITY.md).
+Define testable contracts, compatible settings, native-backend decisions, and reproducible quality baselines. The runnable baseline tool, tolerances, performance budgets and CI artifacts are documented in [docs/feature-parity/QUALITY.md](docs/feature-parity/QUALITY.md). The native-backend decision, dependency/licence inventory and prototypes are in [ADR-0001](docs/feature-parity/decisions/ADR-0001-native-backends.md), [NATIVE_DEPENDENCIES.md](docs/feature-parity/NATIVE_DEPENDENCIES.md) and [fp-002-windows.md](docs/feature-parity/evidence/fp-002-windows.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |
