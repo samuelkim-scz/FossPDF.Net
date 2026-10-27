@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
@@ -10,6 +11,20 @@ namespace FossPDF.Drawing
     {
         internal SKCanvas? Canvas { get; set; }
         protected SKCanvas ActiveCanvas => Canvas ?? throw new InvalidOperationException("No page is being rendered.");
+
+        public Matrix4x4 Transform
+        {
+            get
+            {
+                var matrix = ActiveCanvas.TotalMatrix;
+
+                return new Matrix4x4(
+                    matrix.ScaleX, matrix.SkewY, 0, 0,
+                    matrix.SkewX, matrix.ScaleY, 0, 0,
+                    0, 0, 1, 0,
+                    matrix.TransX, matrix.TransY, 0, 1);
+            }
+        }
 
         public abstract void Dispose();
 

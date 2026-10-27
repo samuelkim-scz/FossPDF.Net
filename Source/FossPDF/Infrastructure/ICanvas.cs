@@ -1,3 +1,4 @@
+using System.Numerics;
 using FossPDF.Drawing;
 using SkiaSharp;
 
@@ -5,6 +6,8 @@ namespace FossPDF.Infrastructure
 {
     internal interface ICanvas
     {
+        Matrix4x4 Transform { get; }
+
         void Translate(Position vector);
 
         void DrawRectangle(Position vector, Size size, string color);

@@ -880,7 +880,7 @@
       "work_items": [
         "FP-108"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "element_id": "invoice-lines",
         "items": 12,

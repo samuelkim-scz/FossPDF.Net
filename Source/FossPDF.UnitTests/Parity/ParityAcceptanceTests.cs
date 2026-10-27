@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -469,6 +470,85 @@ namespace FossPDF.UnitTests.Parity
             public DocumentSpecificFontManager Manager { get; } = FontManager.MakeDocumentSpecific();
             public void Dispose() => Manager.DisposeDocumentSpecificObjects();
         }
+
+        [ParityFixtureRunner("LAY-108")]
+        private static void RunContentPositions(ParityFixture fixture)
+        {
+            var id = fixture.Input.GetProperty("element_id").GetString();
+            var items = fixture.Input.GetProperty("items").GetInt32();
+            var itemHeight = fixture.Input.GetProperty("item_height").GetInt32();
+            var pageSize = fixture.Input.GetProperty("page");
+            var pageWidth = pageSize[0].GetInt32();
+            var pageHeight = pageSize[1].GetInt32();
+            var margin = fixture.Input.GetProperty("margin").GetInt32();
+            var contentHeight = pageHeight - 2 * margin;
+            var itemsPerPage = Math.Max(1, contentHeight / itemHeight);
+            var expectedPages = (items + itemsPerPage - 1) / itemsPerPage;
+
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(pageWidth, pageHeight);
+                page.Margin(margin);
+                page.PageColor("#ffffff");
+
+                page.Content().Column(column =>
+                {
+                    for (var index = 0; index < items; index++)
+                    {
+                        column.Item()
+                            .CaptureContentPosition(id)
+                            .Height(itemHeight)
+                            .Background(index % 2 == 0 ? "#eeeeee" : "#cccccc");
+                    }
+                });
+            }));
+
+            var pdf = document.GeneratePdf(out var count);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(count, Is.EqualTo(expectedPages));
+            Assert.That(images, Has.Length.EqualTo(expectedPages));
+
+            SaveArtifact("LAY-108", "document.pdf", pdf);
+
+            for (var index = 0; index < images.Length; index++)
+                SaveArtifact("LAY-108", $"page-{index + 1}.png", images[index]);
+
+            var positions = document.ContentPositions
+                .Where(x => x.Id == id)
+                .OrderBy(x => x.PageNumber)
+                .ThenBy(x => x.Y)
+                .ToArray();
+
+            Assert.That(positions, Has.Length.EqualTo(items));
+
+            for (var index = 0; index < items; index++)
+            {
+                var expectedPage = index / itemsPerPage + 1;
+                var expectedY = margin + index % itemsPerPage * itemHeight;
+                var position = positions[index];
+
+                Assert.That(position.PageNumber, Is.EqualTo(expectedPage), $"page of item {index}");
+                Assert.That(position.X, Is.EqualTo(margin).Within(0.25), $"X of item {index}");
+                Assert.That(position.Y, Is.EqualTo(expectedY).Within(0.25), $"Y of item {index}");
+                Assert.That(position.Width, Is.EqualTo(pageWidth - 2 * margin).Within(0.25), $"width of item {index}");
+                Assert.That(position.Height, Is.EqualTo(itemHeight).Within(0.25), $"height of item {index}");
+            }
+
+            document.GeneratePdf(out _);
+            var repeated = document.ContentPositions
+                .Where(x => x.Id == id)
+                .OrderBy(x => x.PageNumber)
+                .ThenBy(x => x.Y)
+                .ToArray();
+
+            Assert.That(repeated, Has.Length.EqualTo(items), "Repeated generation must replace, not append, captures.");
+            Assert.That(
+                repeated.Select(x => (x.PageNumber, x.X, x.Y, x.Width, x.Height)),
+                Is.EqualTo(positions.Select(x => (x.PageNumber, x.X, x.Y, x.Width, x.Height))));
+        }
+
         [ParityFixtureRunner("PAG-105")]
 
         private static void RunPageControls(ParityFixture fixture)
@@ -1309,6 +1389,8 @@ namespace FossPDF.UnitTests.Parity
             public float Bottom { get; private set; } = float.MinValue;
 
             public bool HasInk => Right > Left;
+
+            public Matrix4x4 Transform => Matrix4x4.CreateTranslation(_offsetX, _offsetY, 0);
 
             public void Translate(Position vector)
             {

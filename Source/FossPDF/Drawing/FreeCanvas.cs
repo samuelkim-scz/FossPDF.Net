@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 
@@ -5,11 +7,13 @@ namespace FossPDF.Drawing
 {
     internal class FreeCanvas : ICanvas, IRenderingCanvas
     {
+        private Matrix4x4 CurrentTransform { get; set; } = Matrix4x4.Identity;
+
         #region IRenderingCanvas
 
         public void BeginDocument()
         {
-
+            CurrentTransform = Matrix4x4.Identity;
         }
 
         public void EndDocument()
@@ -19,7 +23,7 @@ namespace FossPDF.Drawing
 
         public void BeginPage(Size size)
         {
-
+            CurrentTransform = Matrix4x4.Identity;
         }
 
         public void EndPage()
@@ -31,9 +35,13 @@ namespace FossPDF.Drawing
 
         #region ICanvas
 
+        public Matrix4x4 Transform => CurrentTransform;
+
         public void Translate(Position vector)
         {
-
+            CurrentTransform = Matrix4x4.Multiply(
+                Matrix4x4.CreateTranslation(vector.X, vector.Y, 0),
+                CurrentTransform);
         }
 
         public void DrawRectangle(Position vector, Size size, string color)
@@ -98,12 +106,16 @@ namespace FossPDF.Drawing
 
         public void Rotate(float angle)
         {
-
+            CurrentTransform = Matrix4x4.Multiply(
+                Matrix4x4.CreateRotationZ((float) (angle * Math.PI / 180.0)),
+                CurrentTransform);
         }
 
         public void Scale(float scaleX, float scaleY)
         {
-
+            CurrentTransform = Matrix4x4.Multiply(
+                Matrix4x4.CreateScale(scaleX, scaleY, 1),
+                CurrentTransform);
         }
 
         #endregion

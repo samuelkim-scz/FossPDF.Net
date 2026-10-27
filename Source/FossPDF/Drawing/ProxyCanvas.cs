@@ -1,3 +1,4 @@
+using System.Numerics;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 
@@ -11,6 +12,8 @@ namespace FossPDF.Drawing
     internal class ProxyCanvas : ICanvas
     {
         internal ICanvas Target { get; set; } = null!;
+
+        public Matrix4x4 Transform => Target.Transform;
 
         public void Translate(Position vector)
         {

@@ -99,6 +99,10 @@ namespace FossPDF.Drawing
                 pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
 
                 pageContext.DocumentLength = RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
+
+                if (document is IContentPositionSink positionsSink)
+                    positionsSink.SetContentPositions(pageContext.GetContentCapturedPositions());
+
                 return pageContext.DocumentLength;
             }
             finally

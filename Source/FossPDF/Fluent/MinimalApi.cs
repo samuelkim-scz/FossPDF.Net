@@ -6,7 +6,7 @@ using FossPDF.Helpers;
 
 namespace FossPDF.Fluent
 {
-    public class Document : IDocument, IDocumentSettingsProvider
+    public class Document : IDocument, IDocumentSettingsProvider, IContentPositionSink
     {
         static Document()
         {
@@ -45,6 +45,18 @@ namespace FossPDF.Fluent
         public static MergedDocument Merge(params IDocument[] documents)
         {
             return new MergedDocument(documents);
+        }
+
+        /// <summary>
+        /// Positions captured by <c>CaptureContentPosition</c> during the most recent generation.
+        /// Each element occurrence has its own page number, position, size and transform.
+        /// </summary>
+        public IReadOnlyCollection<PageElementLocation> ContentPositions { get; private set; } =
+            Array.Empty<PageElementLocation>();
+
+        void IContentPositionSink.SetContentPositions(IReadOnlyCollection<PageElementLocation> positions)
+        {
+            ContentPositions = positions;
         }
 
         public Document WithMetadata(DocumentMetadata metadata)

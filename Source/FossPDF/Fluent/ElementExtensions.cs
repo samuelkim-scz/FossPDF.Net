@@ -193,6 +193,22 @@ namespace FossPDF.Fluent
             });
         }
         
+        /// <summary>
+        /// Records the element's page, position, size and canvas transform during layout. All
+        /// occurrences are available through <see cref="FossPDF.Infrastructure.PageElementLocation"/>
+        /// on the generated <see cref="Document"/> or from a dynamic component.
+        /// </summary>
+        public static IContainer CaptureContentPosition(this IContainer element, string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("The content position identifier cannot be null or whitespace.", nameof(id));
+
+            return element.Element(new ElementPositionLocator
+            {
+                Id = id
+            });
+        }
+
         public static void Canvas(this IContainer element, DrawOnCanvas handler)
         {
             element.Element(new Canvas
