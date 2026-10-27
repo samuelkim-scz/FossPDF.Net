@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -1087,6 +1088,10 @@ namespace FossPDF.UnitTests.Parity
             }
 
             public void DrawRectangle(Position vector, Size size, string color) { }
+            public void DrawRectangle(Position vector, Size size, RectangleStyle style) { }
+            public void SaveState() { }
+            public void RestoreState() { }
+            public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius) { }
             public void DrawImage(SKImage image, Position position, Size size) { }
             public void DrawHyperlink(string url, Size size) { }
             public void DrawSectionLink(string sectionName, Size size) { }
@@ -2391,6 +2396,50 @@ namespace FossPDF.UnitTests.Parity
             Directory.CreateDirectory(Path.GetDirectoryName(path) ?? directory);
             File.WriteAllBytes(path, bytes);
             TestContext.AddTestAttachment(path);
+        }
+
+        private static string DecodePdfStreams(byte[] pdf)
+        {
+            var raw = Encoding.Latin1.GetString(pdf);
+            var result = new StringBuilder();
+            var index = 0;
+
+            while ((index = raw.IndexOf("stream", index, StringComparison.Ordinal)) >= 0)
+            {
+                var start = index + "stream".Length;
+
+                if (start < raw.Length && raw[start] == '\r')
+                    start++;
+
+                if (start < raw.Length && raw[start] == '\n')
+                    start++;
+
+                var end = raw.IndexOf("endstream", start, StringComparison.Ordinal);
+
+                if (end < 0)
+                    break;
+
+                var length = end - start;
+                var bytes = new byte[length];
+                Array.Copy(pdf, start, bytes, 0, length);
+
+                try
+                {
+                    using var compressed = new MemoryStream(bytes, writable: false);
+                    using var zlib = new ZLibStream(compressed, CompressionMode.Decompress);
+                    using var output = new MemoryStream();
+                    zlib.CopyTo(output);
+                    result.Append(Encoding.Latin1.GetString(output.ToArray()));
+                }
+                catch (InvalidDataException)
+                {
+                    result.Append(Encoding.Latin1.GetString(bytes));
+                }
+
+                index = end + "endstream".Length;
+            }
+
+            return result.ToString();
         }
     }
 }

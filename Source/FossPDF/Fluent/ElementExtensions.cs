@@ -62,11 +62,12 @@ namespace FossPDF.Fluent
         public static IContainer Background(this IContainer element, string color)
         {
             ColorValidator.Validate(color);
-            
-            return element.Element(new Background
-            {
-                Color = color
-            });
+
+            // Reuse an existing decoration so corner radii and the border share one rectangle.
+            var background = element as RectangleDecoration ?? element.Element(new Background());
+            background.FillColor = color;
+
+            return background;
         }
 
         public static void Placeholder(this IContainer element, string? text = null)

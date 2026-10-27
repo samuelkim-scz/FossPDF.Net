@@ -1,7 +1,6 @@
 #if NET9_0
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using FossPDF.Drawing;
@@ -139,7 +138,7 @@ namespace FossPDF.UnitTests.Parity
             Assert.That(pdfText, Does.Not.Contain("/Subtype /Image"),
                 "IMG-201: vector replay must not embed an image XObject.");
 
-            var content = DecodePdfContentStreams(pdf);
+            var content = DecodePdfStreams(pdf);
             Assert.That(content, Does.Contain(" re"), "IMG-201: the SVG rectangles are replayed as paths.");
             Assert.That(content, Does.Contain(" rg"), "IMG-201: SVG fills are replayed as vector paint.");
         }
@@ -278,50 +277,6 @@ namespace FossPDF.UnitTests.Parity
                 CreationDate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 ModifiedDate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
-        }
-
-        private static string DecodePdfContentStreams(byte[] pdf)
-        {
-            var raw = Encoding.Latin1.GetString(pdf);
-            var result = new StringBuilder();
-            var index = 0;
-
-            while ((index = raw.IndexOf("stream", index, StringComparison.Ordinal)) >= 0)
-            {
-                var start = index + "stream".Length;
-
-                if (start < raw.Length && raw[start] == '\r')
-                    start++;
-
-                if (start < raw.Length && raw[start] == '\n')
-                    start++;
-
-                var end = raw.IndexOf("endstream", start, StringComparison.Ordinal);
-
-                if (end < 0)
-                    break;
-
-                var length = end - start;
-                var bytes = new byte[length];
-                Array.Copy(pdf, start, bytes, 0, length);
-
-                try
-                {
-                    using var compressed = new MemoryStream(bytes, writable: false);
-                    using var zlib = new ZLibStream(compressed, CompressionMode.Decompress);
-                    using var output = new MemoryStream();
-                    zlib.CopyTo(output);
-                    result.Append(Encoding.Latin1.GetString(output.ToArray()));
-                }
-                catch (InvalidDataException)
-                {
-                    result.Append(Encoding.Latin1.GetString(bytes));
-                }
-
-                index = end + "endstream".Length;
-            }
-
-            return result.ToString();
         }
     }
 }

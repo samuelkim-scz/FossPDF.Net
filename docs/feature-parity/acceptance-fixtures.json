@@ -1115,8 +1115,14 @@
       "work_items": [
         "FP-204"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
+        "page": [
+          160,
+          120
+        ],
+        "margin": 0,
+        "dpi": 288,
         "box": [
           20,
           20,
