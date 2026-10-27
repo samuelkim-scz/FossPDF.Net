@@ -15,6 +15,12 @@ namespace FossPDF.Elements.Text.Calculation
 
         public float LineHeight { get; set; }
 
+        /// <summary>
+        /// Number of space glyphs rendered by this measurement. Used to distribute
+        /// justification across the line.
+        /// </summary>
+        public int SpaceCount { get; set; }
+
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
         public int NextIndex { get; set; }

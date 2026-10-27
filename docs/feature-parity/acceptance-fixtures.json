@@ -682,16 +682,19 @@
       "work_items": [
         "FP-101"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "text": "Amber birch cedar dogwood elm fir maple oak.",
+        "page": [200, 160],
+        "margin": 10,
         "width": 180,
         "font": "Lato",
         "font_size": 12,
         "alignment": "justify",
         "first_line_indent": 12,
         "word_spacing": 2,
-        "direction": "LTR and RTL"
+        "direction": "LTR and RTL",
+        "scenarios": ["ltr_justify", "rtl_start", "narrow", "word_spacing", "multipage"]
       },
       "expected": [
         "Only the first line is indented by 12 points; continuation lines retain the paragraph origin.",

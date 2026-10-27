@@ -50,7 +50,8 @@ namespace FossPDF.Fluent
     {
         private ICollection<TextBlock> TextBlocks { get; } = new List<TextBlock>();
         private TextStyle? DefaultStyle { get; set; }
-        internal HorizontalAlignment? Alignment { get; set; }
+        internal TextHorizontalAlignment? Alignment { get; set; }
+        private float FirstLineIndentation { get; set; } = 0f;
         private float Spacing { get; set; } = 0f;
 
         public void DefaultTextStyle(TextStyle style)
@@ -65,17 +66,61 @@ namespace FossPDF.Fluent
 
         public void AlignLeft()
         {
-            Alignment = HorizontalAlignment.Left;
+            Alignment = TextHorizontalAlignment.Left;
         }
 
         public void AlignCenter()
         {
-            Alignment = HorizontalAlignment.Center;
+            Alignment = TextHorizontalAlignment.Center;
         }
 
         public void AlignRight()
         {
-            Alignment = HorizontalAlignment.Right;
+            Alignment = TextHorizontalAlignment.Right;
+        }
+
+        /// <summary>
+        /// Aligns text to the logical start edge: the left edge for left-to-right content
+        /// and the right edge for right-to-left content.
+        /// </summary>
+        public void AlignStart()
+        {
+            Alignment = TextHorizontalAlignment.Start;
+        }
+
+        /// <summary>
+        /// Aligns text to the logical end edge: the right edge for left-to-right content
+        /// and the left edge for right-to-left content.
+        /// </summary>
+        public void AlignEnd()
+        {
+            Alignment = TextHorizontalAlignment.End;
+        }
+
+        /// <summary>
+        /// Stretches every line except the last one in each paragraph to the full available
+        /// width by expanding the spaces between words. Glyphs themselves are not stretched.
+        /// </summary>
+        public void Justify()
+        {
+            Alignment = TextHorizontalAlignment.Justify;
+        }
+
+        /// <summary>
+        /// Indents the first line of every paragraph. The indentation is applied at the
+        /// logical start edge and does not apply to lines that continue a paragraph.
+        /// </summary>
+        public void ParagraphFirstLineIndentation(float value, Unit unit = Unit.Point)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+                throw new ArgumentOutOfRangeException(nameof(value), "Indentation must be a finite number.");
+
+            var points = value.ToPoints(unit);
+
+            if (points < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Indentation cannot be negative.");
+
+            FirstLineIndentation = points;
         }
 
         public void ParagraphSpacing(float value, Unit unit = Unit.Point)
@@ -254,7 +299,11 @@ namespace FossPDF.Fluent
 
         internal void Compose(IContainer container)
         {
-            TextBlocks.ToList().ForEach(x => x.Alignment ??= Alignment);
+            TextBlocks.ToList().ForEach(x =>
+            {
+                x.Alignment ??= Alignment;
+                x.FirstLineIndentation = FirstLineIndentation;
+            });
 
             if (DefaultStyle != null)
                 container = container.DefaultTextStyle(DefaultStyle);
@@ -282,7 +331,15 @@ namespace FossPDF.Fluent
             var descriptor = new TextDescriptor();
 
             if (element is Alignment alignment)
-                descriptor.Alignment = alignment.Horizontal;
+            {
+                descriptor.Alignment = alignment.Horizontal switch
+                {
+                    HorizontalAlignment.Left => TextHorizontalAlignment.Left,
+                    HorizontalAlignment.Center => TextHorizontalAlignment.Center,
+                    HorizontalAlignment.Right => TextHorizontalAlignment.Right,
+                    _ => null
+                };
+            }
 
             content?.Invoke(descriptor);
             descriptor.Compose(element);

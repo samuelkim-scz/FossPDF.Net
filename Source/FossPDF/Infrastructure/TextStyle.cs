@@ -11,6 +11,7 @@ namespace FossPDF.Infrastructure
         internal float? Size { get; set; }
         internal float? LineHeight { get; set; }
         internal float? LetterSpacing { get; set; }
+        internal float? WordSpacing { get; set; }
         internal FontWeight? FontWeight { get; set; }
         internal FontPosition? FontPosition { get; set; }
         internal bool? IsItalic { get; set; }
@@ -30,6 +31,7 @@ namespace FossPDF.Infrastructure
             Size = 12,
             LineHeight = 1.2f,
             LetterSpacing = 0,
+            WordSpacing = 0,
             FontWeight = Infrastructure.FontWeight.Normal,
             FontPosition = Infrastructure.FontPosition.Normal,
             IsItalic = false,

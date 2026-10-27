@@ -70,6 +70,18 @@ namespace FossPDF.Fluent
             return descriptor;
         }
 
+        /// <summary>
+        /// Word spacing controls space between words, i.e. the width of space characters
+        /// (U+0020). Value 0 corresponds to normal spacing defined by a font. Positive values
+        /// create additional space, whereas negative values reduce space between words.
+        /// Added / reduced space is relative to the font size.
+        /// </summary>
+        public static T WordSpacing<T>(this T descriptor, float value) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.WordSpacing(value));
+            return descriptor;
+        }
+
         public static T Italic<T>(this T descriptor, bool value = true) where T : TextSpanDescriptor
         {
             descriptor.MutateTextStyle(x => x.Italic(value));
