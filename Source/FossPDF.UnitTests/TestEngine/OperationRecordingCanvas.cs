@@ -19,6 +19,9 @@ namespace FossPDF.UnitTests.TestEngine
 
         public void DrawRectangle(Position vector, Size size, RectangleStyle style) => Operations.Add(new CanvasDrawRectangleStyleOperation(vector, size, style));
 
+        public void DrawLine(Position start, Position end, LineStyle style) => Operations.Add(new CanvasDrawLineOperation(start, end, style));
+        public void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow) => Operations.Add(new CanvasDrawShadowOperation(vector, size, cornerRadius, shadow));
+
         public void SaveState() => Operations.Add(new CanvasSaveStateOperation());
         public void RestoreState() => Operations.Add(new CanvasRestoreStateOperation());
         public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius) => Operations.Add(new CanvasClipRectangleOperation(vector, size, cornerRadius));

@@ -109,8 +109,8 @@ clip in PDF, PNG and SVG output.
   non-center alignment switches to one even-odd ring path.
 - `BorderColor` and `Background` still accept any validated color string, including transparent
   colors.
-- Two-stop linear gradients only; multi-stop gradients, dashed borders and shadows belong to
-  FP-205.
+- Container gradients are two-stop only; multi-stop line gradients, dashed lines and shadows are
+  provided by [FP-205](LINE_STYLES_SHADOWS.md).
 - The decoration paints after measuring, so changing styles during the render pass does not affect
   layout.
 

@@ -9,6 +9,15 @@ namespace FossPDF.Infrastructure
 
         void DrawRectangle(Position vector, Size size, string color);
 
+        /// <summary>Strokes a line with the given width, paint, gradient and dash pattern.</summary>
+        void DrawLine(Position start, Position end, LineStyle style);
+
+        /// <summary>
+        /// Paints a blurred box shadow behind the given rectangle. The shadow shape follows the
+        /// corner radii and is offset, spread and blurred according to the style.
+        /// </summary>
+        void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow);
+
         /// <summary>
         /// Draws a decorated rectangle (fill and/or border) with optional rounded corners. This is
         /// the shared graphics contract used by backgrounds, borders and future decorations.

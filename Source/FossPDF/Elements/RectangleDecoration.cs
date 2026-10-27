@@ -24,11 +24,15 @@ namespace FossPDF.Elements
 
         public BorderRadius CornerRadius { get; set; }
         public BorderAlignment BorderAlignment { get; set; } = BorderAlignment.Center;
+        public BoxShadowStyle? Shadow { get; set; }
 
         public bool ClipContent { get; set; }
 
         internal override void Draw(Size availableSpace)
         {
+            if (Shadow != null)
+                Canvas.DrawShadow(Position.Zero, availableSpace, CornerRadius, Shadow);
+
             DrawFill(availableSpace);
 
             if (ClipContent)
