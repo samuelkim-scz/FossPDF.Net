@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using FossPDF.Drawing;
@@ -158,6 +158,8 @@ namespace FossPDF.Elements.Text
                         ? cursor
                         : cursor - itemWidth;
 
+                    var isInjectedElement = item.Item is TextBlockElement;
+
                     var textDrawingRequest = new TextDrawingRequest
                     {
                         Canvas = Canvas,
@@ -166,10 +168,13 @@ namespace FossPDF.Elements.Text
                         StartIndex = item.Measurement.StartIndex,
                         EndIndex = item.Measurement.EndIndex,
 
-                        TextSize = new Size(itemWidth, line.LineHeight),
+                        TextSize = new Size(
+                            itemWidth,
+                            isInjectedElement ? item.Measurement.Height : line.LineHeight),
                         TotalAscent = line.Ascent,
 
-                        AdditionalWordSpacing = additionalWordSpacing
+                        AdditionalWordSpacing = additionalWordSpacing,
+                        InjectedElementTop = item.InjectedElementTop
                     };
 
                     var canvasOffset = new Position(itemOffsetX, topOffset - line.Ascent);

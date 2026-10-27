@@ -18,6 +18,7 @@ namespace FossPDF.Drawing
 
         public override void Dispose()
         {
+            DisposeZIndexLayers();
             Canvas?.Dispose();
             Canvas = null;
             Stream?.Dispose();
@@ -81,10 +82,12 @@ namespace FossPDF.Drawing
             Stream = new MemoryStream();
             Canvas?.Dispose(); // belt and braces
             Canvas = SKSvgCanvas.Create(SKRect.Create(size.Width, size.Height), Stream);
+            BeginZIndexLayers(size);
         }
 
         public override void EndPage()
         {
+            EndZIndexLayers();
             ActiveCanvas.Save();
             Canvas?.Dispose();
             Canvas = null;

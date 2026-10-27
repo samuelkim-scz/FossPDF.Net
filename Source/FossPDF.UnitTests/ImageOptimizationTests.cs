@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -339,6 +339,9 @@ namespace FossPDF.UnitTests
             public void DrawSection(string sectionName) { }
             public void Rotate(float angle) { }
             public void Scale(float scaleX, float scaleY) { }
+
+        public int GetZIndex() => 0;
+        public void SetZIndex(int index) { }
         }
     }
 }

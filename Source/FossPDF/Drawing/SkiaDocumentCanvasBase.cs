@@ -19,6 +19,7 @@ namespace FossPDF.Drawing
             if (Disposed)
                 return;
 
+            DisposeZIndexLayers();
             Canvas?.Dispose();
             Canvas = null;
             Document.Dispose();
@@ -40,10 +41,12 @@ namespace FossPDF.Drawing
         {
             Canvas?.Dispose();
             Canvas = Document.BeginPage(size.Width, size.Height);
+            BeginZIndexLayers(size);
         }
 
         public override void EndPage()
         {
+            EndZIndexLayers();
             Document.EndPage();
             Canvas?.Dispose();
             Canvas = null;

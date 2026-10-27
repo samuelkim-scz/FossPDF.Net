@@ -8,7 +8,8 @@ namespace FossPDF.Elements.Text.Items
     internal class TextBlockElement : ITextBlockItem
     {
         public Element Element { get; set; } = Empty.Instance;
-        
+        public TextInjectedElementAlignment Alignment { get; set; } = TextInjectedElementAlignment.AboveBaseline;
+
         public TextMeasurementResult? Measure(TextMeasurementRequest request)
         {
             Element.VisitChildren(x => (x as IStateResettable)?.ResetState());
@@ -30,7 +31,9 @@ namespace FossPDF.Elements.Text.Items
                 
                 StartIndex = 0,
                 EndIndex = 0,
-                TotalIndex = 0
+                TotalIndex = 0,
+
+                InjectedElementAlignment = Alignment
             };
         }
 
@@ -38,10 +41,11 @@ namespace FossPDF.Elements.Text.Items
         {
             Element.VisitChildren(x => (x as IStateResettable)?.ResetState());
             Element.InjectDependencies(request.PageContext, request.Canvas);
-            
-            request.Canvas.Translate(new Position(0, request.TotalAscent));
-            Element.Draw(new Size(request.TextSize.Width, -request.TotalAscent));
-            request.Canvas.Translate(new Position(0, -request.TotalAscent));
+
+            var offset = request.InjectedElementTop;
+            request.Canvas.Translate(new Position(0, offset));
+            Element.Draw(request.TextSize);
+            request.Canvas.Translate(new Position(0, -offset));
         }
     }
 }

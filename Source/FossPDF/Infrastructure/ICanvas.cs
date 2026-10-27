@@ -42,5 +42,8 @@ namespace FossPDF.Infrastructure
 
         void Rotate(float angle);
         void Scale(float scaleX, float scaleY);
+
+        int GetZIndex();
+        void SetZIndex(int index);
     }
 }

@@ -41,10 +41,12 @@ namespace FossPDF.Drawing
             PictureRecorder = new SKPictureRecorder();
             Canvas?.Dispose();
             Canvas = PictureRecorder.BeginRecording(new SKRect(0, 0, size.Width, size.Height));
+            BeginZIndexLayers(size);
         }
 
         public override void EndPage()
         {
+            EndZIndexLayers();
             var picture = PictureRecorder?.EndRecording();
 
             if (picture != null && CurrentPageSize.HasValue)
@@ -69,6 +71,7 @@ namespace FossPDF.Drawing
                 return;
             }
 
+            DisposeZIndexLayers();
             PictureRecorder?.Dispose();
             Canvas?.Dispose();
             Canvas = null;

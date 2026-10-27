@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 
@@ -83,6 +83,16 @@ namespace FossPDF.Drawing
         public void Rotate(float angle)
         {
             Target.Rotate(angle);
+        }
+
+        public int GetZIndex()
+        {
+            return Target.GetZIndex();
+        }
+
+        public void SetZIndex(int index)
+        {
+            Target.SetZIndex(index);
         }
 
         public void Scale(float scaleX, float scaleY)

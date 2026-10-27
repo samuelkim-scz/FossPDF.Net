@@ -1,4 +1,4 @@
-using FossPDF.Drawing;
+﻿using FossPDF.Drawing;
 using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements
@@ -8,7 +8,7 @@ namespace FossPDF.Elements
     /// useful when the parent provides more space than the content needs, for example when a
     /// height-balanced multi-column layout must not claim the full page height.
     /// </summary>
-    internal sealed class Shrink : ContainerElement, IContentDirectionAware
+    internal class Shrink : ContainerElement, IContentDirectionAware
     {
         public bool Vertical { get; set; }
         public bool Horizontal { get; set; }

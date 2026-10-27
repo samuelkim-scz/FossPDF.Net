@@ -118,6 +118,16 @@ namespace FossPDF.Drawing
                 CurrentTransform);
         }
 
+        public int GetZIndex()
+        {
+            return 0;
+        }
+
+        public void SetZIndex(int index)
+        {
+
+        }
+
         #endregion
     }
 }
