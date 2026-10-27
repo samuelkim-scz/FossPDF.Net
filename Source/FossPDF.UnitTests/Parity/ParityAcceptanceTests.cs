@@ -1955,6 +1955,135 @@ namespace FossPDF.UnitTests.Parity
             };
         }
 
+        [ParityFixtureRunner("TXT-103")]
+        private static void RunFontFeaturesAndDecorations(ParityFixture fixture)
+        {
+            var text = fixture.Input.GetProperty("text").GetString()!;
+            var font = fixture.Input.GetProperty("font").GetString()!;
+            var features = fixture.Input.GetProperty("features");
+            var decorations = fixture.Input.GetProperty("decorations");
+            var color = decorations.GetProperty("color").GetString()!;
+            var thickness = decorations.GetProperty("thickness").GetSingle();
+            var styleName = decorations.GetProperty("underline").GetString()!;
+
+            var baseStyle = TextStyle.LibraryDefault
+                .FontFamily(font)
+                .FontSize(24);
+
+            foreach (var feature in features.EnumerateObject())
+                baseStyle = feature.Value.GetInt32() == 0
+                    ? baseStyle.DisableFontFeature(feature.Name)
+                    : baseStyle.EnableFontFeature(feature.Name);
+
+            var decoratedStyle = baseStyle
+                .Underline()
+                .DecorationColor(color)
+                .DecorationThickness(thickness);
+
+            decoratedStyle = styleName.ToLowerInvariant() switch
+            {
+                "solid" => decoratedStyle.DecorationSolid(),
+                "double" => decoratedStyle.DecorationDouble(),
+                "dotted" => decoratedStyle.DecorationDotted(),
+                "dashed" => decoratedStyle.DecorationDashed(),
+                "wavy" => decoratedStyle.DecorationWavy(),
+                _ => throw new InvalidOperationException($"Unknown decoration style: {styleName}")
+            };
+
+            var fontManager = FontManager.MakeDocumentSpecific();
+            try
+            {
+                var shapedOff = new TextShaper(baseStyle, fontManager).Shape("office");
+                var shapedOn = new TextShaper(baseStyle.EnableFontFeature("liga"), fontManager).Shape("office");
+                var decoratedShape = new TextShaper(decoratedStyle, fontManager).Shape("office");
+
+                Assert.That(shapedOff.Length, Is.EqualTo(6),
+                    "The liga=0 fixture must produce separate o, f, f, i, c, e glyphs.");
+                Assert.That(shapedOn.Length, Is.EqualTo(5),
+                    "Enabling liga must combine the ffi sequence.");
+                Assert.That(decoratedShape.Length, Is.EqualTo(shapedOff.Length),
+                    "Decoration settings must not change shaping.");
+
+                var kernOffWidth = new TextShaper(baseStyle, fontManager).Shape("AV").MeasureWidth(0, 1).Width;
+                var kernOnWidth = new TextShaper(baseStyle.EnableFontFeature("kern"), fontManager).Shape("AV").MeasureWidth(0, 1).Width;
+                Assert.That(kernOnWidth, Is.Not.EqualTo(kernOffWidth).Within(0.01),
+                    "The kern feature must reach shaping and affect advance.");
+            }
+            finally
+            {
+                fontManager.DisposeDocumentSpecificObjects();
+            }
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page => RenderDecoratedText(page, decoratedStyle));
+                container.Page(page => RenderDecoratedText(page, baseStyle));
+            });
+
+            var pdf = document.GeneratePdf(out var pageCount);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(pageCount, Is.EqualTo(2));
+            Assert.That(images, Has.Length.EqualTo(2));
+
+            SaveArtifact("TXT-103", "document.pdf", pdf);
+            SaveArtifact("TXT-103", "page-1-decorated.png", images[0]);
+            SaveArtifact("TXT-103", "page-2-plain.png", images[1]);
+
+            using var decorated = SKBitmap.Decode(images[0]);
+            using var plain = SKBitmap.Decode(images[1]);
+
+            var decoratedText = FindDarkBounds(decorated);
+            var plainText = FindDarkBounds(plain);
+
+            Assert.That(decoratedText, Is.Not.Null);
+            Assert.That(plainText, Is.Not.Null);
+            Assert.That(decoratedText!.Value.Left, Is.EqualTo(plainText!.Value.Left));
+            Assert.That(decoratedText.Value.Top, Is.EqualTo(plainText.Value.Top));
+            Assert.That(decoratedText.Value.Right, Is.EqualTo(plainText.Value.Right),
+                "Decorations must not change text advance or wrapping.");
+
+            var target = SKColor.Parse(color);
+            var underlinedColumns = new bool[decorated.Width];
+            var closest = double.MaxValue;
+
+            for (var y = 0; y < decorated.Height; y++)
+            for (var x = 0; x < decorated.Width; x++)
+            {
+                var pixel = decorated.GetPixel(x, y);
+                if (pixel.Red > pixel.Green + 20 && pixel.Red > pixel.Blue + 20 && pixel.Red > 80)
+                    underlinedColumns[x] = true;
+
+                var distance = Math.Pow(pixel.Red - target.Red, 2) +
+                               Math.Pow(pixel.Green - target.Green, 2) +
+                               Math.Pow(pixel.Blue - target.Blue, 2);
+                closest = Math.Min(closest, distance);
+            }
+
+            var runs = 0;
+            for (var x = 0; x < underlinedColumns.Length; x++)
+            {
+                if (underlinedColumns[x] && (x == 0 || !underlinedColumns[x - 1]))
+                    runs++;
+            }
+
+            Assert.That(runs, Is.GreaterThanOrEqualTo(2),
+                "A dashed decoration must contain multiple painted runs separated by gaps.");
+            Assert.That(Math.Sqrt(closest), Is.LessThan(100),
+                "The decoration must use the requested color.");
+        }
+
+        private static void RenderDecoratedText(PageDescriptor page, TextStyle style)
+        {
+            page.Size(360, 80);
+            page.Margin(10);
+            page.PageColor("#ffffff");
+            page.DefaultTextStyle(x => x.FontFamily(style.FontFamily!).FontSize(24));
+
+            page.Content().Text(text => text.Span("office ffi AV 0123456789").Style(style));
+        }
+
         [ParityFixtureRunner("TXT-001")]
         private static void RunStyledText(ParityFixture fixture)
         {

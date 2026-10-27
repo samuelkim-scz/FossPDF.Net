@@ -24,6 +24,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The deferred composition guide](docs/feature-parity/LAZY_COMPOSITION.md) covers Lazy/LazyWithCache lifecycle, cache trade-offs, failure rules and resource ownership.
 
+[The text features guide](docs/feature-parity/TEXT_FEATURES.md) covers OpenType feature toggles and underline/overline/strikethrough color, thickness and style controls.
+
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
 ## Confirmed gaps and capabilities to validate
