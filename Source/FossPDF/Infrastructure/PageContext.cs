@@ -11,12 +11,18 @@ namespace FossPDF.Infrastructure
 
         private List<DocumentLocation> Locations { get; } = new();
         public int CurrentPage { get; private set; }
+        public int? CurrentDocumentId { get; private set; }
 
         public bool IsInitialRenderingPhase { get; set; } = true;
         public int DocumentLength { get; set; }
 
         public DocumentSpecificFontManager FontManager { get; set; } = null!; // Set by DocumentGenerator.
         public bool CheckIfAllTextGlyphsAreAvailable { get; set; }
+
+        internal void SetDocumentId(int documentId)
+        {
+            CurrentDocumentId = documentId;
+        }
 
         internal void SetPageNumber(int number)
         {
@@ -32,6 +38,7 @@ namespace FossPDF.Infrastructure
             {
                 location = new DocumentLocation
                 {
+                    DocumentId = CurrentDocumentId,
                     Name = name,
                     PageStart = CurrentPage,
                     PageEnd = CurrentPage
@@ -46,7 +53,14 @@ namespace FossPDF.Infrastructure
 
         public DocumentLocation? GetLocation(string name)
         {
-            return Locations.Find(x => x.Name == name);
+            return Locations.Find(x => x.DocumentId == CurrentDocumentId && x.Name == name);
+        }
+
+        public string GetDocumentLocationName(string locationName)
+        {
+            return CurrentDocumentId.HasValue
+                ? $"{CurrentDocumentId}:{locationName}"
+                : locationName;
         }
 
         public int GetPageNumbers()

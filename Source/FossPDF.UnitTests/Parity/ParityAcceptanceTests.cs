@@ -222,6 +222,119 @@ namespace FossPDF.UnitTests.Parity
                 });
             }), fixture);
 
+        [ParityFixtureRunner("PDF-301")]
+        private static void RunMergedDocuments(ParityFixture fixture)
+        {
+            var modes = FixtureCatalog.ReadArray(fixture.Input, "numbering")
+                .Select(x => x.GetString())
+                .Where(x => x != null)
+                .ToArray();
+
+            Assert.That(modes, Is.Not.Empty, "PDF-301 requires at least one numbering mode.");
+
+            foreach (var mode in modes)
+            {
+                var firstRecords = new List<(int Page, int? Total)>();
+                var secondRecords = new List<(int Page, int? Total)>();
+
+                var first = CreateMergedSource((page, total) => firstRecords.Add((page, total)));
+                var second = CreateMergedSource((page, total) => secondRecords.Add((page, total)));
+
+                var merged = Document.Merge(first, second)
+                    .WithMetadata(new DocumentMetadata { Title = "FossPDF merged parity fixture PDF-301" })
+                    .WithSettings(new DocumentSettings { DocumentLayoutExceptionThreshold = 4 });
+
+                if (mode == "continuous")
+                    merged.UseContinuousPageNumbers();
+                else
+                    merged.UseOriginalPageNumbers();
+
+                var pdf = merged.GeneratePdf(out var count);
+                var images = merged.GenerateImages().ToArray();
+
+                Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+                Assert.That(count, Is.EqualTo(4), mode + " PDF page count");
+                Assert.That(images.Length, Is.EqualTo(4), mode + " raster page count");
+
+                SaveArtifact("PDF-301", mode + "/document.pdf", pdf);
+
+                var pages = new SKBitmap[images.Length];
+
+                try
+                {
+                    for (var index = 0; index < images.Length; index++)
+                    {
+                        SaveArtifact("PDF-301", $"{mode}/page-{index + 1}.png", images[index]);
+                        pages[index] = SKBitmap.Decode(images[index]);
+                        Assert.That(pages[index], Is.Not.Null, "Raster output could not be decoded.");
+                    }
+
+                    Assert.That(pages[0].GetPixel(50, 15), Is.EqualTo(SKColor.Parse("#ff0000")));
+                    Assert.That(pages[1].GetPixel(50, 15), Is.EqualTo(SKColor.Parse("#0000ff")));
+                    Assert.That(pages[2].GetPixel(50, 15), Is.EqualTo(SKColor.Parse("#ff0000")));
+                    Assert.That(pages[3].GetPixel(50, 15), Is.EqualTo(SKColor.Parse("#0000ff")));
+
+                    var expectedFirst = mode == "continuous"
+                        ? new[] { "1/4", "2/4" }
+                        : new[] { "1/2", "2/2" };
+                    var expectedSecond = mode == "continuous"
+                        ? new[] { "3/4", "4/4" }
+                        : new[] { "1/2", "2/2" };
+
+                    Assert.That(FormatPageNumbers(firstRecords), Is.EqualTo(expectedFirst), mode + " first source numbering");
+                    Assert.That(FormatPageNumbers(secondRecords), Is.EqualTo(expectedSecond), mode + " second source numbering");
+                }
+                finally
+                {
+                    DisposePages(pages);
+                }
+            }
+        }
+
+        private static Document CreateMergedSource(Action<int, int?> record)
+        {
+            return Document.Create(container => container.Page(page =>
+            {
+                page.Size(120, 100);
+                page.Margin(10);
+                page.PageColor("#ffffff");
+
+                page.Content().Column(column =>
+                {
+                    column.Item().Height(20).Background("#ff0000");
+                    column.Item().PageBreak();
+                    column.Item().Height(20).Background("#0000ff");
+                });
+
+                page.Footer().Height(20).Column(column =>
+                {
+                    column.Item().Text(text =>
+                    {
+                        text.CurrentPageNumber();
+                        text.Span(" / ");
+                        text.TotalPages();
+                    });
+
+                    column.Item()
+                        .ShowIf(context =>
+                        {
+                            record(context.PageNumber, context.TotalPages);
+                            return false;
+                        })
+                        .Height(0);
+                });
+            }));
+        }
+
+        private static string[] FormatPageNumbers(IEnumerable<(int Page, int? Total)> records)
+        {
+            return records
+                .Where(x => x.Total.HasValue)
+                .Distinct()
+                .OrderBy(x => x.Page)
+                .Select(x => $"{x.Page}/{x.Total}")
+                .ToArray();
+        }
         [ParityFixtureRunner("PAG-105")]
 
         private static void RunPageControls(ParityFixture fixture)

@@ -27,7 +27,7 @@ namespace FossPDF.Elements
         {
             if (!IsRendered)
             {
-                Canvas.DrawSection(LocationName);
+                Canvas.DrawSection(PageContext.GetDocumentLocationName(LocationName));
                 IsRendered = true;
             }
             

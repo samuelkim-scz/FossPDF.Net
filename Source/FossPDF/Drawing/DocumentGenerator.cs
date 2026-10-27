@@ -80,46 +80,22 @@ namespace FossPDF.Drawing
         internal static int RenderDocument<TCanvas>(TCanvas canvas, IDocument document, GenerationConfiguration configuration)
             where TCanvas : ICanvas, IRenderingCanvas
         {
-            var container = new DocumentContainer();
-            document.Compose(container);
-            var content = container.Compose();
-            ApplyInheritedAndGlobalTexStyle(content, TextStyle.Default);
-            ApplyContentDirection(content, configuration.ContentDirection);
+            if (document is MergedDocument mergedDocument)
+                return RenderMergedDocument(canvas, mergedDocument, configuration);
 
-            var debuggingState = configuration.EnableDebugging ? ApplyDebugging(content) : null;
-
-            if (configuration.EnableCaching)
-                ApplyCaching(content);
+            var debuggingState = configuration.EnableDebugging ? new DebuggingState() : null;
+            var content = ComposeContent(document, configuration, debuggingState);
 
             var documentSpecificFontManager = FontManager.MakeDocumentSpecific();
             try
             {
                 documentSpecificFontManager.Tag = configuration.Metadata.Title ?? string.Empty;
-                var pageContext = new PageContext
-                {
-                    FontManager = documentSpecificFontManager,
-                    CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs,
-                    IsInitialRenderingPhase = true
-                };
+                var pageContext = CreatePageContext(documentSpecificFontManager, configuration);
                 pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
                 pageContext.IsInitialRenderingPhase = false;
 
-                // interrogate all TextBlockSpans
-                var allMyFuckingGlyphs = new Dictionary<Font, HashSet<uint>>();
-                var typeFaceToGlyphs = new Dictionary<SKTypeface, HashSet<uint>>();
-                var typeFaceToShaperFont = new Dictionary<SKTypeface, Font>();
-
-                content.VisitChildren(el =>
-                {
-                    ProcessElementPrepareForSubsetting(el, allMyFuckingGlyphs, typeFaceToGlyphs, typeFaceToShaperFont, pageContext.FontManager);
-                });
-
-                var reqs = typeFaceToGlyphs.Select(entry => new FontToBeSubset
-                {
-                    Glyphs = entry.Value, Typeface = entry.Key,
-                    ShaperFont = typeFaceToShaperFont[entry.Key]
-                }).ToList();
-                pageContext.FontManager.FireSubsetCallback(reqs);
+                var subsets = PrepareSubsetting(new[] { content }, documentSpecificFontManager);
+                documentSpecificFontManager.FireSubsetCallback(subsets);
                 pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
 
                 pageContext.DocumentLength = RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
@@ -131,63 +107,271 @@ namespace FossPDF.Drawing
             }
         }
 
+        private sealed class MergedPart
+        {
+            public int Index { get; init; }
+            public Container Content { get; init; } = null!;
+            public PageContext PageContext { get; init; } = null!;
+            public int StartPage { get; set; }
+            public int PageCount { get; set; }
+        }
+
+        private static int RenderMergedDocument<TCanvas>(TCanvas canvas, MergedDocument document, GenerationConfiguration configuration)
+            where TCanvas : ICanvas, IRenderingCanvas
+        {
+            var debuggingState = configuration.EnableDebugging ? new DebuggingState() : null;
+            var documentSpecificFontManager = FontManager.MakeDocumentSpecific();
+
+            try
+            {
+                documentSpecificFontManager.Tag = configuration.Metadata.Title ?? string.Empty;
+
+                var useContinuousNumbering = document.PageNumberStrategy == MergedDocumentPageNumberStrategy.Continuous;
+                PageContext? sharedPageContext = null;
+                var parts = new List<MergedPart>(document.Documents.Count);
+
+                for (var index = 0; index < document.Documents.Count; index++)
+                {
+                    var content = ComposeContent(document.Documents[index], configuration, debuggingState);
+                    var pageContext = useContinuousNumbering
+                        ? sharedPageContext ??= CreatePageContext(documentSpecificFontManager, configuration)
+                        : CreatePageContext(documentSpecificFontManager, configuration);
+
+                    parts.Add(new MergedPart
+                    {
+                        Index = index,
+                        Content = content,
+                        PageContext = pageContext
+                    });
+                }
+
+                if (useContinuousNumbering)
+                    sharedPageContext!.IsInitialRenderingPhase = true;
+
+                var totalPages = 0;
+
+                foreach (var part in parts)
+                {
+                    part.PageContext.SetDocumentId(part.Index);
+
+                    if (!useContinuousNumbering)
+                        part.PageContext.IsInitialRenderingPhase = true;
+
+                    part.StartPage = useContinuousNumbering ? totalPages + 1 : 1;
+                    var lastPage = RenderPass(
+                        part.PageContext,
+                        new FreeCanvas(),
+                        part.Content,
+                        debuggingState,
+                        configuration.PageLimit,
+                        part.StartPage);
+
+                    part.PageCount = lastPage - part.StartPage + 1;
+                    totalPages += part.PageCount;
+
+                    if (!useContinuousNumbering)
+                        part.PageContext.DocumentLength = part.PageCount;
+
+                    if (totalPages > configuration.PageLimit)
+                        ThrowLayoutException(configuration.PageLimit, debuggingState);
+                }
+
+                if (useContinuousNumbering)
+                {
+                    sharedPageContext!.DocumentLength = totalPages;
+                    sharedPageContext.IsInitialRenderingPhase = false;
+                }
+                else
+                {
+                    foreach (var part in parts)
+                        part.PageContext.IsInitialRenderingPhase = false;
+                }
+
+                var subsets = PrepareSubsetting(parts.Select(x => x.Content), documentSpecificFontManager);
+                documentSpecificFontManager.FireSubsetCallback(subsets);
+
+                var secondPassTotal = 0;
+
+                foreach (var part in parts)
+                {
+                    part.PageContext.SetDocumentId(part.Index);
+                    var lastPage = RenderPass(
+                        part.PageContext,
+                        new FreeCanvas(),
+                        part.Content,
+                        debuggingState,
+                        configuration.PageLimit,
+                        part.StartPage);
+
+                    part.PageCount = lastPage - part.StartPage + 1;
+                    secondPassTotal += part.PageCount;
+
+                    if (!useContinuousNumbering)
+                        part.PageContext.DocumentLength = part.PageCount;
+                }
+
+                if (useContinuousNumbering)
+                {
+                    sharedPageContext!.DocumentLength = secondPassTotal;
+
+                    var nextPage = 1;
+                    foreach (var part in parts)
+                    {
+                        part.StartPage = nextPage;
+                        nextPage += part.PageCount;
+                    }
+                }
+
+                totalPages = secondPassTotal;
+
+                if (totalPages > configuration.PageLimit)
+                    ThrowLayoutException(configuration.PageLimit, debuggingState);
+
+                canvas.BeginDocument();
+
+                try
+                {
+                    foreach (var part in parts)
+                    {
+                        part.PageContext.SetDocumentId(part.Index);
+                        RenderPass(
+                            part.PageContext,
+                            canvas,
+                            part.Content,
+                            debuggingState,
+                            configuration.PageLimit,
+                            part.StartPage,
+                            beginDocument: false,
+                            endDocument: false);
+                    }
+                }
+                catch
+                {
+                    canvas.EndDocument();
+                    throw;
+                }
+
+                canvas.EndDocument();
+                return totalPages;
+            }
+            finally
+            {
+                documentSpecificFontManager.DisposeDocumentSpecificObjects();
+            }
+        }
+
+        private static Container ComposeContent(IDocument document, GenerationConfiguration configuration, DebuggingState? debuggingState)
+        {
+            var container = new DocumentContainer();
+            document.Compose(container);
+            var content = container.Compose();
+
+            ApplyInheritedAndGlobalTexStyle(content, TextStyle.Default);
+            ApplyContentDirection(content, configuration.ContentDirection);
+
+            if (debuggingState != null)
+                ApplyDebugging(content, debuggingState);
+
+            if (configuration.EnableCaching)
+                ApplyCaching(content);
+
+            return content;
+        }
+
+        private static PageContext CreatePageContext(DocumentSpecificFontManager fontManager, GenerationConfiguration configuration)
+        {
+            return new PageContext
+            {
+                FontManager = fontManager,
+                CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs,
+                IsInitialRenderingPhase = true
+            };
+        }
+
+        private static List<FontToBeSubset> PrepareSubsetting(IEnumerable<Container> contents, DocumentSpecificFontManager fontManager)
+        {
+            var typeFaceToGlyphs = new Dictionary<SKTypeface, HashSet<uint>>();
+            var typeFaceToShaperFont = new Dictionary<SKTypeface, Font>();
+
+            foreach (var content in contents)
+            {
+                content.VisitChildren(el =>
+                {
+                    ProcessElementPrepareForSubsetting(el, typeFaceToGlyphs, typeFaceToShaperFont, fontManager);
+                });
+            }
+
+            return typeFaceToGlyphs.Select(entry => new FontToBeSubset
+            {
+                Glyphs = entry.Value,
+                Typeface = entry.Key,
+                ShaperFont = typeFaceToShaperFont[entry.Key]
+            }).ToList();
+        }
+
         private static void ProcessElementPrepareForSubsetting(Element? el,
-            IDictionary<Font, HashSet<uint>> allMyFuckingGlyphs,
             IDictionary<SKTypeface, HashSet<uint>> typeFaceToGlyphs, Dictionary<SKTypeface, Font> typeFaceToShaperFont,
             DocumentSpecificFontManager fontManager)
         {
             if (el is DynamicHost dh)
             {
-                // these are rather annoying "black boxes", but we can reach
-                // inside them and use the TextBlocks cached on the DynamicHost
+                // Dynamic components keep their generated TextBlocks internally.
                 foreach (var textBlock in dh.GetTextBlocks())
                 {
-                    ProcessElementPrepareForSubsetting(textBlock, allMyFuckingGlyphs, typeFaceToGlyphs, typeFaceToShaperFont, fontManager);
+                    ProcessElementPrepareForSubsetting(textBlock, typeFaceToGlyphs, typeFaceToShaperFont, fontManager);
                 }
             }
-            if (el is not TextBlock tb) return;
+
+            if (el is not TextBlock tb)
+                return;
+
             foreach (var textBlockItem in tb.Items)
             {
-                if (textBlockItem is not TextBlockSpan span) continue;
+                if (textBlockItem is not TextBlockSpan span)
+                    continue;
+
                 var glyphCodepoints = span.GetGlyphCodepoints();
-                if (glyphCodepoints == null) continue;
+                if (glyphCodepoints == null)
+                    continue;
 
                 var shaperFont = fontManager.ToShaperFont(span.Style);
-                typeFaceToShaperFont[fontManager.ToFont(span.Style).Typeface] = shaperFont;
-                var existingList = allMyFuckingGlyphs.TryGetValue(shaperFont, out var glyphList)
-                    ? glyphList
-                    : new HashSet<uint>();
-                foreach (var glyphCodepoint in glyphCodepoints)
+                var typeface = fontManager.ToFont(span.Style).Typeface;
+
+                typeFaceToShaperFont[typeface] = shaperFont;
+
+                if (!typeFaceToGlyphs.TryGetValue(typeface, out var glyphs))
                 {
-                    existingList.Add(glyphCodepoint);
+                    glyphs = new HashSet<uint>();
+                    typeFaceToGlyphs[typeface] = glyphs;
                 }
 
-                var existingTfList = typeFaceToGlyphs.TryGetValue(fontManager.ToFont(span.Style).Typeface, out var glyphListTf)
-                    ? glyphListTf
-                    : new HashSet<uint>();
                 foreach (var glyphCodepoint in glyphCodepoints)
-                {
-                    existingTfList.Add(glyphCodepoint);
-                }
+                    glyphs.Add(glyphCodepoint);
 
-                typeFaceToGlyphs[fontManager.ToFont(span.Style).Typeface] = existingTfList;
                 span.ClearTextShapingResult();
-
-                allMyFuckingGlyphs[shaperFont] = existingList;
             }
         }
 
-        internal static int RenderPass<TCanvas>(PageContext pageContext, TCanvas canvas, Container content, DebuggingState? debuggingState, int pageLimit)
+        internal static int RenderPass<TCanvas>(
+            PageContext pageContext,
+            TCanvas canvas,
+            Container content,
+            DebuggingState? debuggingState,
+            int pageLimit,
+            int startPage = 1,
+            bool beginDocument = true,
+            bool endDocument = true)
             where TCanvas : ICanvas, IRenderingCanvas
         {
             InjectDependencies(content, pageContext, canvas);
             content.VisitChildren(x => (x as IStateResettable)?.ResetState());
 
-            canvas.BeginDocument();
+            if (beginDocument)
+                canvas.BeginDocument();
 
-            var currentPage = 1;
+            var currentPage = startPage;
 
-            while(true)
+            while (true)
             {
                 pageContext.SetPageNumber(currentPage);
                 debuggingState?.Reset();
@@ -196,8 +380,10 @@ namespace FossPDF.Drawing
 
                 if (spacePlan.Type == SpacePlanType.Wrap)
                 {
-                    canvas.EndDocument();
-                    ThrowLayoutException();
+                    if (endDocument)
+                        canvas.EndDocument();
+
+                    ThrowLayoutException(pageLimit, debuggingState);
                 }
 
                 try
@@ -207,7 +393,9 @@ namespace FossPDF.Drawing
                 }
                 catch (Exception exception)
                 {
-                    canvas.EndDocument();
+                    if (endDocument)
+                        canvas.EndDocument();
+
                     throw new DocumentDrawingException("An exception occured during document drawing.", exception);
                 }
 
@@ -218,29 +406,33 @@ namespace FossPDF.Drawing
 
                 if (currentPage >= pageLimit)
                 {
-                    canvas.EndDocument();
-                    ThrowLayoutException();
+                    if (endDocument)
+                        canvas.EndDocument();
+
+                    ThrowLayoutException(pageLimit, debuggingState);
                 }
 
                 currentPage++;
             }
 
-            canvas.EndDocument();
+            if (endDocument)
+                canvas.EndDocument();
+
             return currentPage;
+        }
 
-            void ThrowLayoutException()
-            {
-                var message = $"Composed layout generates infinite document. This may happen in two cases. " +
-                              $"1) Your document and its layout configuration is correct but the content takes more than {pageLimit} pages. " +
-                              $"In this case, increase DocumentSettings.DocumentLayoutExceptionThreshold for this document " +
-                              $"or the {nameof(FossPDF)}.{nameof(Settings)}.{nameof(Settings.DocumentLayoutExceptionThreshold)} process default. " +
-                              $"2) The layout configuration of your document is invalid. Some of the elements require more space than is provided." +
-                              $"Please analyze your documents structure to detect this element and fix its size constraints.";
+        internal static void ThrowLayoutException(int pageLimit, DebuggingState? debuggingState)
+        {
+            var message = $"Composed layout generates infinite document. This may happen in two cases. " +
+                          $"1) Your document and its layout configuration is correct but the content takes more than {pageLimit} pages. " +
+                          $"In this case, increase DocumentSettings.DocumentLayoutExceptionThreshold for this document " +
+                          $"or the {nameof(FossPDF)}.{nameof(Settings)}.{nameof(Settings.DocumentLayoutExceptionThreshold)} process default. " +
+                          $"2) The layout configuration of your document is invalid. Some of the elements require more space than is provided." +
+                          $"Please analyze your documents structure to detect this element and fix its size constraints.";
 
-                var elementTrace = debuggingState?.BuildTrace() ?? "Debug trace is available only in the DEBUG mode.";
+            var elementTrace = debuggingState?.BuildTrace() ?? "Debug trace is available only in the DEBUG mode.";
 
-                throw new DocumentLayoutException(message, elementTrace);
-            }
+            throw new DocumentLayoutException(message, elementTrace);
         }
 
         internal static void InjectDependencies(this Element content, IPageContext pageContext, ICanvas canvas)
@@ -264,16 +456,12 @@ namespace FossPDF.Drawing
             });
         }
 
-        private static DebuggingState ApplyDebugging(Container content)
+        private static void ApplyDebugging(Container content, DebuggingState debuggingState)
         {
-            var debuggingState = new DebuggingState();
-
             content.VisitChildren(x =>
             {
                 x.CreateProxy(y => y == null ? null : new DebuggingProxy(debuggingState, y));
             });
-
-            return debuggingState;
         }
 
         internal static void ApplyContentDirection(this Element? content, ContentDirection direction)

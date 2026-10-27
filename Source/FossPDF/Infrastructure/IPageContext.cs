@@ -5,6 +5,7 @@ namespace FossPDF.Infrastructure
 {
     internal class DocumentLocation
     {
+        public int? DocumentId { get; set; }
         public string Name { get; set; } = string.Empty;
         public int PageStart { get; set; }
         public int PageEnd { get; set; }
@@ -23,6 +24,10 @@ namespace FossPDF.Infrastructure
 
         void SetSectionPage(string name);
         DocumentLocation? GetLocation(string name);
+
+        /// <summary>Returns the canvas destination name, scoped to the current source document when merged.</summary>
+        string GetDocumentLocationName(string locationName);
+
         DocumentSpecificFontManager FontManager { get; }
         bool CheckIfAllTextGlyphsAreAvailable { get; }
     }
