@@ -38,4 +38,9 @@
       </EmbeddedResource>
     </ItemGroup>
 
+    <ItemGroup>
+      <!-- Subset Noto fonts used by the complex-script corpus; see Resources/ComplexScripts/README.md. -->
+      <EmbeddedResource Include="Resources\ComplexScripts\*.ttf" />
+    </ItemGroup>
+
 </Project>

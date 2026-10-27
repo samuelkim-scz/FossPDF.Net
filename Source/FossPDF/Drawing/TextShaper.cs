@@ -29,7 +29,9 @@ namespace FossPDF.Drawing
         {
             using var buffer = new Buffer();
 
-            buffer.AddUtf8(text);
+            // UTF-16 input makes HarfBuzz report clusters as UTF-16 character offsets,
+            // which line breaking needs in order to inspect the original characters.
+            buffer.AddUtf16(text, 0, text.Length);
             buffer.GuessSegmentProperties();
 
             if (TextStyle.Direction == TextDirection.LeftToRight)
@@ -54,7 +56,6 @@ namespace FossPDF.Drawing
             var lastCluster = glyphInfos.LastOrDefault().Cluster;
             var letterSpacing = (TextStyle.LetterSpacing ?? 0) * (TextStyle.Size ?? 16);
             var wordSpacing = (TextStyle.WordSpacing ?? 0) * (TextStyle.Size ?? 16);
-            var spaceGlyph = SkiaFont.Typeface.GetGlyphs(" ")[0];
 
             var glyphs = new ShapedGlyph[length];
 
@@ -75,13 +76,17 @@ namespace FossPDF.Drawing
                 }
 
                 // word spacing expands the advance of space glyphs, so it contributes to
-                // line breaking and measurement in the same way as the configured spacing
-                var isSpace = glyphInfos[i].Codepoint == spaceGlyph;
+                // line breaking and measurement in the same way as the configured spacing.
+                // The source character decides, not the glyph id: some fonts map ignorable
+                // characters (for example emoji variation selectors) to the space glyph.
+                var cluster = (int)glyphInfos[i].Cluster;
+                var isSpace = cluster >= 0 && cluster < text.Length && text[cluster] == ' ';
                 var advance = glyphPositions[i].XAdvance * scaleX + (isSpace ? wordSpacing : 0);
 
                 glyphs[i] = new ShapedGlyph
                 {
                     Codepoint = (ushort)glyphInfos[i].Codepoint,
+                    Cluster = (int)glyphInfos[i].Cluster,
                     Position = new SKPoint(xOffset + glyphPositions[i].XOffset * scaleX,
                         yOffset - glyphPositions[i].YOffset * scaleY),
                     Width = advance,
@@ -111,6 +116,13 @@ namespace FossPDF.Drawing
     public struct ShapedGlyph
     {
         public ushort Codepoint;
+
+        /// <summary>
+        /// UTF-16 offset of the first character that produced this glyph. Glyphs that belong to
+        /// the same grapheme cluster share the cluster value.
+        /// </summary>
+        public int Cluster;
+
         public SKPoint Position;
         public float Width;
         public float? RBearing { get; set; }
@@ -131,6 +143,8 @@ namespace FossPDF.Drawing
         public float ScaleY { get; }
 
         public int Length => Glyphs.Length;
+
+        public bool IsRightToLeft => Direction == Direction.RightToLeft;
 
         private DocumentSpecificFontManager FontManager { get; }
 

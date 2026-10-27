@@ -1232,6 +1232,478 @@ namespace FossPDF.UnitTests.Parity
             public int SecondColumnCenter => GapRight + ColumnWidth / 2;
         }
 
+        [ParityFixtureRunner("TXT-109")]
+
+        private static void RunComplexScripts(ParityFixture fixture)
+        {
+            ComplexScriptFonts.Register();
+
+            var input = fixture.Input;
+            var fontSize = input.GetProperty("font_size").GetInt32();
+            var width = input.GetProperty("width").GetInt32();
+            var fonts = input.GetProperty("fonts");
+
+            var samples = FixtureCatalog.ReadArray(input, "samples")
+                .Select(x => x.GetString()!)
+                .ToArray();
+
+            var directions = FixtureCatalog.ReadArray(input, "directions")
+                .Select(x => x.GetString()!)
+                .ToArray();
+
+            Assert.That(samples, Is.Not.Empty, "The fixture must declare complex-script samples.");
+            CollectionAssert.AreEquivalent(new[] { "LTR", "RTL" }, directions);
+
+            var style = CreateComplexScriptStyle(fonts, fontSize);
+
+            foreach (var direction in directions)
+            {
+                var contentDirection = direction == "RTL"
+                    ? ContentDirection.RightToLeft
+                    : ContentDirection.LeftToRight;
+
+                foreach (var sample in samples)
+                    AssertComplexScriptSample(sample, style, contentDirection, width);
+            }
+
+            AssertFontPolicy(fonts);
+            AssertCjkLineBreaking(input, fontSize);
+            AssertCombiningMarksStayWithBase(input, fontSize);
+            AssertCorpusShapesWithoutMissingGlyphs(input, fontSize);
+            AssertUnsupportedCombinationsAreDocumented(fonts, input);
+        }
+
+        /// <summary>
+        /// Primary style uses the Latin fixture font and an explicit fallback chain in reading
+        /// order. Every style resolves its own script direction, so each fallback run is shaped
+        /// in the direction its first strong character requires.
+        /// </summary>
+        private static TextStyle CreateComplexScriptStyle(JsonElement fonts, int fontSize)
+        {
+            var chain = CreateScriptStyle(fonts, fontSize, "emoji");
+            chain = CreateScriptStyle(fonts, fontSize, "cjk").Fallback(chain);
+            chain = CreateScriptStyle(fonts, fontSize, "devanagari").Fallback(chain);
+            chain = CreateScriptStyle(fonts, fontSize, "hebrew").Fallback(chain);
+            chain = CreateScriptStyle(fonts, fontSize, "arabic").Fallback(chain);
+
+            return CreateScriptStyle(fonts, fontSize, "latin")
+                .Fallback(chain);
+        }
+
+        private static TextStyle CreateScriptStyle(JsonElement fonts, int fontSize, string key)
+        {
+            return TextStyle.Default
+                .FontFamily(fonts.GetProperty(key).GetString())
+                .FontSize(fontSize)
+                .DirectionAuto()
+                .ApplyGlobalStyle();
+        }
+
+        private static TextBlock CreateComplexScriptBlock(
+            string text,
+            TextStyle style,
+            ContentDirection contentDirection)
+        {
+            return new TextBlock
+            {
+                Alignment = TextHorizontalAlignment.Start,
+                ContentDirection = contentDirection,
+                Items = new List<ITextBlockItem>
+                {
+                    new TextBlockSpan
+                    {
+                        Text = text,
+                        Style = style
+                    }
+                }
+            };
+        }
+
+        private static PageContext CreateComplexScriptPageContext()
+        {
+            ComplexScriptFonts.Register();
+
+            return new PageContext
+            {
+                FontManager = FontManager.MakeDocumentSpecific(),
+                CheckIfAllTextGlyphsAreAvailable = true
+            };
+        }
+
+        private static List<TextLine> MeasureComplexScriptLines(TextBlock block, float width)
+        {
+            block.PageContext = CreateComplexScriptPageContext();
+            block.ResetState();
+
+            return block.DivideTextItemsIntoLines(width, 10000).ToList();
+        }
+
+        private static InkRecordingCanvas DrawComplexScriptLines(TextBlock block, float width)
+        {
+            block.PageContext = CreateComplexScriptPageContext();
+            block.ResetState();
+
+            var canvas = new InkRecordingCanvas();
+            block.Canvas = canvas;
+            block.Draw(new Size(width, 10000));
+
+            return canvas;
+        }
+
+        /// <summary>
+        /// Reconstructs each line's source text from glyph indices. The shaping result is
+        /// addressed in logical order, so the concatenation of all lines follows the source
+        /// string (except for boundary spaces removed when a line starts with a space).
+        /// </summary>
+        private static List<string> GetComplexScriptLineTexts(IEnumerable<TextLine> lines)
+        {
+            var result = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var builder = new StringBuilder();
+
+                foreach (var element in line.Elements)
+                {
+                    if (element.Item is not TextBlockSpan span)
+                        continue;
+
+                    var start = span.GetCharacterIndex(element.Measurement.StartIndex);
+                    var glyphCount = span.GetGlyphCount();
+                    var end = element.Measurement.EndIndex + 1 < glyphCount
+                        ? span.GetCharacterIndex(element.Measurement.EndIndex + 1)
+                        : span.Text.Length;
+
+                    if (end > start)
+                        builder.Append(span.Text.Substring(start, end - start));
+                }
+
+                result.Add(builder.ToString());
+            }
+
+            return result;
+        }
+
+        private static void AssertComplexScriptSample(
+            string sample,
+            TextStyle style,
+            ContentDirection contentDirection,
+            float width)
+        {
+            var block = CreateComplexScriptBlock(sample, style, contentDirection);
+            var lineTexts = GetComplexScriptLineTexts(MeasureComplexScriptLines(block, width));
+
+            Assert.That(lineTexts, Is.Not.Empty, $"Sample '{sample}' must lay out at least one line.");
+            AssertLinesPreserveSampleOrder(sample, lineTexts);
+
+            // Font fallback splits the span into one run per font without reordering characters.
+            // An empty leading run is produced when the first character already needs a fallback.
+            var spans = block.Items
+                .OfType<TextBlockSpan>()
+                .Where(x => x.Text.Length > 0)
+                .ToArray();
+
+            Assert.That(
+                string.Concat(spans.Select(x => x.Text)),
+                Is.EqualTo(sample),
+                $"Font fallback must preserve the logical character order of '{sample}'.");
+
+            var fontManager = block.PageContext?.FontManager
+                ?? throw new InvalidOperationException("The complex-script block has no page context.");
+
+            foreach (var span in spans)
+            {
+                var shapingResult = new TextShaper(span.Style, fontManager).Shape(span.Text);
+
+                Assert.That(shapingResult.Length, Is.GreaterThan(0), $"Run '{span.Text}' must shape at least one glyph.");
+
+                // Clusters are addressed in logical order regardless of visual direction.
+                for (var index = 1; index < shapingResult.Length; index++)
+                {
+                    Assert.That(
+                        shapingResult[index].Cluster,
+                        Is.GreaterThanOrEqualTo(shapingResult[index - 1].Cluster),
+                        $"Shaped clusters of '{span.Text}' must follow logical UTF-16 order.");
+                }
+            }
+
+            var rightToLeft = contentDirection == ContentDirection.RightToLeft;
+            var drawn = DrawComplexScriptLines(CreateComplexScriptBlock(sample, style, contentDirection), width);
+
+            Assert.That(drawn.Runs, Is.Not.Empty, $"Sample '{sample}' must draw at least one text run.");
+            AssertVisualRunOrder(drawn, rightToLeft, sample);
+
+            // Repeated rendering of the same block must be deterministic.
+            var repeated = DrawComplexScriptLines(CreateComplexScriptBlock(sample, style, contentDirection), width);
+
+            Assert.That(repeated.Runs.Count, Is.EqualTo(drawn.Runs.Count), $"Repeated layout of '{sample}' must produce the same runs.");
+
+            for (var index = 0; index < drawn.Runs.Count; index++)
+            {
+                Assert.That(repeated.Runs[index].PenX, Is.EqualTo(drawn.Runs[index].PenX).Within(0.01f));
+                Assert.That(repeated.Runs[index].PenY, Is.EqualTo(drawn.Runs[index].PenY).Within(0.01f));
+            }
+        }
+
+        private static void AssertLinesPreserveSampleOrder(string sample, IReadOnlyList<string> lineTexts)
+        {
+            var offset = 0;
+
+            foreach (var lineText in lineTexts)
+            {
+                Assert.That(lineText, Is.Not.Empty, $"Every line of '{sample}' must contain text.");
+
+                var index = sample.IndexOf(lineText, offset, StringComparison.Ordinal);
+
+                Assert.That(index, Is.GreaterThanOrEqualTo(0), $"Line '{lineText}' must appear in logical order within '{sample}'.");
+
+                offset = index + lineText.Length;
+            }
+        }
+
+        /// <summary>
+        /// Runs on one line are placed in the paragraph's content direction: increasing X for
+        /// left-to-right, decreasing X for right-to-left.
+        /// </summary>
+        private static void AssertVisualRunOrder(InkRecordingCanvas canvas, bool rightToLeft, string sample)
+        {
+            foreach (var line in GroupRunsByLine(canvas))
+            {
+                for (var index = 1; index < line.Count; index++)
+                {
+                    var previous = line[index - 1];
+                    var current = line[index];
+
+                    if (rightToLeft)
+                    {
+                        Assert.That(
+                            current.PenX,
+                            Is.LessThanOrEqualTo(previous.PenX + 0.01f),
+                            $"Right-to-left runs of '{sample}' must advance towards the left.");
+                    }
+                    else
+                    {
+                        Assert.That(
+                            current.PenX,
+                            Is.GreaterThanOrEqualTo(previous.PenX - 0.01f),
+                            $"Left-to-right runs of '{sample}' must advance towards the right.");
+                    }
+                }
+            }
+        }
+
+        private static List<List<TextRun>> GroupRunsByLine(InkRecordingCanvas canvas)
+        {
+            var lines = new List<List<TextRun>>();
+
+            foreach (var run in canvas.Runs)
+            {
+                var line = lines.FirstOrDefault(x => Math.Abs(x[0].PenY - run.PenY) < 0.5f);
+
+                if (line == null)
+                {
+                    line = new List<TextRun>();
+                    lines.Add(line);
+                }
+
+                line.Add(run);
+            }
+
+            return lines;
+        }
+
+        private static void AssertFontPolicy(JsonElement fonts)
+        {
+            var representatives = new Dictionary<string, int>
+            {
+                ["latin"] = 0x0065,
+                ["arabic"] = 0x0627,
+                ["hebrew"] = 0x05D0,
+                ["devanagari"] = 0x0915,
+                ["cjk"] = 0x3042,
+                ["emoji"] = 0x1F600
+            };
+
+            var fontManager = CreateComplexScriptPageContext().FontManager
+                ?? throw new InvalidOperationException("The complex-script page context has no font manager.");
+
+            foreach (var (key, codePoint) in representatives)
+            {
+                var family = fonts.GetProperty(key).GetString();
+                var style = TextStyle.Default.FontFamily(family).FontSize(12).ApplyGlobalStyle();
+
+                Assert.That(
+                    fontManager.ToFont(style).ContainsGlyph(codePoint),
+                    Is.True,
+                    $"Fixture font '{family}' must cover U+{codePoint:X4}.");
+            }
+        }
+
+        private static void AssertCjkLineBreaking(JsonElement input, int fontSize)
+        {
+            var fonts = input.GetProperty("fonts");
+            var expectations = input.GetProperty("line_break_expectations");
+
+            var text = expectations.GetProperty("text").GetString()!;
+            var width = expectations.GetProperty("width").GetInt32();
+            var expectedLines = FixtureCatalog.ReadArray(expectations, "lines")
+                .Select(x => x.GetString()!)
+                .ToArray();
+
+            var prohibitedStarts = expectations.GetProperty("prohibited_starts").GetString()!;
+            var prohibitedEnds = expectations.GetProperty("prohibited_ends").GetString()!;
+
+            var style = CreateComplexScriptStyle(fonts, fontSize);
+            var lineTexts = GetComplexScriptLineTexts(
+                MeasureComplexScriptLines(CreateComplexScriptBlock(text, style, ContentDirection.LeftToRight), width));
+
+            CollectionAssert.AreEqual(expectedLines, lineTexts, "CJK text must wrap at the reviewed break opportunities.");
+
+            AssertCjkKinsoku(lineTexts, prohibitedStarts, prohibitedEnds, text);
+
+            // The fixture corpus also exercises closing punctuation pushed to the line start
+            // by a greedy measurement and opening punctuation that would otherwise end a line.
+            foreach (var sample in FixtureCatalog.ReadArray(input.GetProperty("corpus"), "cjk").Select(x => x.GetString()!))
+            {
+                var sampleLines = GetComplexScriptLineTexts(
+                    MeasureComplexScriptLines(CreateComplexScriptBlock(sample, style, ContentDirection.LeftToRight), width));
+
+                AssertCjkKinsoku(sampleLines, prohibitedStarts, prohibitedEnds, sample);
+            }
+        }
+
+        private static void AssertCjkKinsoku(
+            IReadOnlyList<string> lineTexts,
+            string prohibitedStarts,
+            string prohibitedEnds,
+            string source)
+        {
+            for (var index = 0; index < lineTexts.Count; index++)
+            {
+                var line = lineTexts[index];
+
+                Assert.That(line, Is.Not.Empty, $"Every CJK line of '{source}' must contain text.");
+
+                if (index > 0)
+                {
+                    var first = char.ConvertFromUtf32(GetFirstCodePoint(line));
+
+                    Assert.That(
+                        prohibitedStarts.IndexOf(first, StringComparison.Ordinal),
+                        Is.LessThan(0),
+                        $"Line {index + 1} of '{source}' starts with prohibited character '{first}'.");
+                }
+
+                if (index < lineTexts.Count - 1)
+                {
+                    var last = char.ConvertFromUtf32(GetLastCodePoint(line));
+
+                    Assert.That(
+                        prohibitedEnds.IndexOf(last, StringComparison.Ordinal),
+                        Is.LessThan(0),
+                        $"Line {index + 1} of '{source}' ends with prohibited character '{last}'.");
+                }
+            }
+        }
+
+        private static int GetFirstCodePoint(string text)
+        {
+            return char.ConvertToUtf32(text, 0);
+        }
+
+        private static int GetLastCodePoint(string text)
+        {
+            var index = text.Length - 1;
+
+            if (index > 0 && char.IsLowSurrogate(text[index]) && char.IsHighSurrogate(text[index - 1]))
+                index--;
+
+            return char.ConvertToUtf32(text, index);
+        }
+
+        private static void AssertCombiningMarksStayWithBase(JsonElement input, int fontSize)
+        {
+            var style = CreateScriptStyle(input.GetProperty("fonts"), fontSize, "latin");
+
+            foreach (var sample in FixtureCatalog.ReadArray(input.GetProperty("corpus"), "combining").Select(x => x.GetString()!))
+            {
+                var lineTexts = GetComplexScriptLineTexts(
+                    MeasureComplexScriptLines(CreateComplexScriptBlock(sample, style, ContentDirection.LeftToRight), 30));
+
+                Assert.That(string.Concat(lineTexts), Is.EqualTo(sample), "Combining marks must not be removed at line boundaries.");
+                Assert.That(
+                    lineTexts.Any(x => x.Length > 0 && x[0] == '́'),
+                    Is.False,
+                    "A combining mark must never start a line.");
+            }
+        }
+
+        private static void AssertCorpusShapesWithoutMissingGlyphs(JsonElement input, int fontSize)
+        {
+            var fonts = input.GetProperty("fonts");
+            var corpus = input.GetProperty("corpus");
+
+            var fontManager = CreateComplexScriptPageContext().FontManager
+                ?? throw new InvalidOperationException("The complex-script page context has no font manager.");
+
+            var scriptFonts = new Dictionary<string, string>
+            {
+                ["arabic"] = "arabic",
+                ["hebrew"] = "hebrew",
+                ["devanagari"] = "devanagari",
+                ["cjk"] = "cjk",
+                ["emoji"] = "emoji",
+                ["combining"] = "latin"
+            };
+
+            foreach (var (script, fontKey) in scriptFonts)
+            {
+                var style = CreateScriptStyle(fonts, fontSize, fontKey);
+                var shaper = new TextShaper(style, fontManager);
+
+                foreach (var sample in FixtureCatalog.ReadArray(corpus, script).Select(x => x.GetString()!))
+                {
+                    var shapingResult = shaper.Shape(sample);
+
+                    Assert.That(shapingResult.Length, Is.GreaterThan(0), $"Corpus sample '{sample}' must shape at least one glyph.");
+
+                    for (var index = 0; index < shapingResult.Length; index++)
+                    {
+                        Assert.That(
+                            shapingResult[index].Codepoint,
+                            Is.Not.Zero,
+                            $"Shaping '{sample}' with '{style.FontFamily}' produced the notdef glyph.");
+                    }
+
+                    Assert.That(
+                        shapingResult.MeasureWidth(0, shapingResult.Length - 1).Width,
+                        Is.GreaterThan(0),
+                        $"Corpus sample '{sample}' must occupy a positive width.");
+                }
+            }
+        }
+
+        private static void AssertUnsupportedCombinationsAreDocumented(JsonElement fonts, JsonElement input)
+        {
+            var unsupported = FixtureCatalog.ReadArray(input, "unsupported")
+                .Select(x => x.GetString())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToArray();
+
+            Assert.That(unsupported, Has.Length.EqualTo(3), "Every known unsupported combination must be documented in the fixture.");
+
+            // Without an explicit fallback chain, characters outside the primary font are
+            // reported instead of silently rendered as missing glyphs.
+            var style = CreateScriptStyle(fonts, 12, "latin");
+            var block = CreateComplexScriptBlock("Invoice \U0001F600", style, ContentDirection.LeftToRight);
+
+            Assert.Throws<DocumentDrawingException>(() =>
+            {
+                block.PageContext = CreateComplexScriptPageContext();
+                block.ResetState();
+            });
+        }
+
         [ParityFixtureRunner("LAY-104")]
 
         private static void RunMultiColumn(ParityFixture fixture)
