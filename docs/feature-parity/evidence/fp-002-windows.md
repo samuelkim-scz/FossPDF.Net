@@ -2,7 +2,8 @@
 
 Recorded October 26, 2026, for [FP-002 / issue #3](https://github.com/samuelkim-scz/FossPDF.Net/issues/3).
 Implementation: [PR #39](https://github.com/samuelkim-scz/FossPDF.Net/pull/39), commit `ab97685`,
-merged as `01540a8`. Evidence and platform references are completed in the follow-up validation PR.
+merged as `01540a8`. Evidence and platform references are completed in
+[validation PR #40](https://github.com/samuelkim-scz/FossPDF.Net/pull/40).
 
 ## Local Windows evidence
 
@@ -47,7 +48,7 @@ The validation follow-up adds measured `linux-x64`/`osx-arm64` references using 
 existing platform-override mechanism. Typography captures were visually inspected; Windows metrics,
 font pins, geometry assertions and all tolerance values remain unchanged. See [QUALITY.md](../QUALITY.md).
 
-The follow-up PR's checks validate the complete final revision, including solution tests and quality
+[The follow-up PR's checks](https://github.com/samuelkim-scz/FossPDF.Net/pull/40/checks) validate the complete final revision, including solution tests and quality
 baselines on all three platforms. Native binary/notice and PDF inspection JSON is retained in its
 `fp-002-native-prototypes-*` artifacts. No feature behavior or conformance guard is changed by that follow-up.
 

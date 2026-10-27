@@ -1,6 +1,6 @@
 ﻿# ADR-0001: Native backends and dependency contracts
 
-- Status: Proposed for merge
+- Status: Accepted in [PR #39](https://github.com/samuelkim-scz/FossPDF.Net/pull/39)
 - Date: 2026-10-26
 - Work item: [FP-002 / issue #3](https://github.com/samuelkim-scz/FossPDF.Net/issues/3)
 - Target: QuestPDF 2026.9.1; FossPDF baseline `0339255`
