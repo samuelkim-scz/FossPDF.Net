@@ -59,6 +59,13 @@ namespace FossPDF.UnitTests.Parity
 
     internal sealed class ParityFixture
     {
+        /// <summary>
+        /// The framework the fixture runs on. An empty list means every framework the tests
+        /// target. Fixtures backed by a net9.0-only companion package declare "net9.0" so the
+        /// net8.0 run neither executes nor expects their runner.
+        /// </summary>
+        public List<string> Frameworks { get; set; } = new();
+
         public string Id { get; set; }
         public string Title { get; set; }
         public List<string> WorkItems { get; set; } = new();
@@ -66,6 +73,16 @@ namespace FossPDF.UnitTests.Parity
         public JsonElement Input { get; set; }
         public List<string> Expected { get; set; } = new();
         public RasterExpectation Raster { get; set; }
+
+#if NET9_0
+        internal const string CurrentFramework = "net9.0";
+#else
+        internal const string CurrentFramework = "net8.0";
+#endif
+
+        internal bool ExecutesOnCurrentFramework =>
+            Frameworks.Count == 0 ||
+            Frameworks.Contains(CurrentFramework, StringComparer.OrdinalIgnoreCase);
     }
 
     internal sealed class RasterExpectation

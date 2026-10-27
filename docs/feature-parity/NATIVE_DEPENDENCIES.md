@@ -44,6 +44,12 @@ the compatible core cohort 3.119.4/8.3.1.5, including all three HarfBuzz native 
 The production SVG companion must use the reviewed cohort. Upgrading to current Svg.Skia versions
 that require SkiaSharp 4 is a separate ABI/native-cohort decision.
 
+The shipped `FossPDF.Svg` companion (FP-201) uses this exact cohort: `Svg.Skia` is pinned to
+`[4.9.1]`, the project targets `net9.0` only, and the package ships `THIRD-PARTY-NOTICES.md` plus
+the copied Svg.Skia (MIT) and Svg.Custom (MS-PL) licence texts under `licenses/`. Svg.Model,
+Svg.SceneGraph, Svg.Animation, ShimSkiaSharp and ExCSS travel as MIT-licensed package dependencies
+with their own package licence metadata intact.
+
 ## License and notice decisions
 
 FossPDF's own code remains MIT. Select unchanged Svg.Skia binaries in an optional SVG companion
@@ -65,10 +71,11 @@ committed native notices; the audit checks each package's license/notice SHA-256
 copies. The JSON manifest also records package copyright metadata, every native asset's RID,
 size/hash and notice hashes. Preserve all bundled notices, not only the top-level MIT license.
 
-When a production companion is introduced, its owning PR must include a distribution notice
-manifest for its entire graph (including ExCSS, the SVG projects, Microsoft packages and Lato
-if redistributed). Use those exact versions' upstream/package notices; do not replace them with
-a blanket FossPDF MIT notice. These proof projects are not packed or shipped as FossPDF packages.
+The first production companion, `FossPDF.Svg` (FP-201), follows this rule with the reviewed cohort
+rather than a blanket FossPDF notice. Future companions must do the same for their entire graph
+(including ExCSS, the SVG projects, Microsoft packages and Lato if redistributed). Use those exact
+versions' upstream/package notices; do not replace them with a blanket FossPDF MIT notice. These
+proof projects are not packed or shipped as FossPDF packages.
 
 ## Runtime assets and packaging
 

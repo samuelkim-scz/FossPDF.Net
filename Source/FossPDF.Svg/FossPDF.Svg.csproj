@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Authors>Samuel Kim, Silbiano Cruz, Eric Morris, Jerame Kim, FossPDF contributors</Authors>
+        <Company>Santa Cruz County HSA</Company>
+        <PackageId>FossPDF.Svg</PackageId>
+        <Version>2026.5.1</Version>
+        <PackageDescription>Optional SVG input support for FossPDF: load SVG text, files, bytes or streams, reuse parsed SVG images, and draw them through the fluent layout with vector output preserved.</PackageDescription>
+        <PackageReleaseNotes>Initial optional SVG input companion package for FossPDF.</PackageReleaseNotes>
+        <LangVersion>10</LangVersion>
+        <TargetFramework>net9.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageReadmeFile>PackageReadme.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/samuelkim-scz/FossPDF.Net</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <Copyright>Samuel Kim and FossPDF contributors</Copyright>
+        <PackageTags>pdf svg vector image foss pdf document generation</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\FossPDF\FossPDF.csproj" />
+        <!-- Exact range: the reviewed cohort is Svg.Skia 4.9.1 with the FossPDF SkiaSharp 3.119.4 /
+             HarfBuzzSharp 8.3.1.5 native pair. See ADR-0001 and NATIVE_DEPENDENCIES.md. -->
+        <PackageReference Include="Svg.Skia" Version="[4.9.1]" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="PackageReadme.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\docs\feature-parity\notices\Svg.Skia-4.9.1-LICENSE.txt" Pack="true" PackagePath="licenses\" />
+        <!-- Svg.Custom is MS-PL, not MIT. Its full licence text must travel with binary distributions. -->
+        <None Include="..\..\docs\feature-parity\notices\Svg.Custom-4.9.1-LICENSE.txt" Pack="true" PackagePath="licenses\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="FossPDF.UnitTests" />
+        <InternalsVisibleTo Include="FossPDF.Examples" />
+    </ItemGroup>
+</Project>
