@@ -125,5 +125,224 @@
       ]
     }
   },
-  "platforms": {}
+  "platforms": {
+    "linux-x64": {
+      "measuredOn": "linux-x64",
+      "scenarios": {
+        "report": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 108336,
+              "inkBounds": {
+                "x": 39,
+                "y": 40,
+                "width": 554,
+                "height": 757
+              },
+              "colorPixels": {
+                "red": 0,
+                "green": 0,
+                "blue": 17408,
+                "yellow": 0,
+                "dark": 2795,
+                "gray": 77482,
+                "other": 10651
+              }
+            }
+          ]
+        },
+        "text": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 38719,
+              "inkBounds": {
+                "x": 39,
+                "y": 48,
+                "width": 512,
+                "height": 437
+              },
+              "colorPixels": {
+                "red": 124,
+                "green": 0,
+                "blue": 0,
+                "yellow": 0,
+                "dark": 9799,
+                "gray": 28778,
+                "other": 18
+              }
+            }
+          ]
+        },
+        "graphics": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 104294,
+              "inkBounds": {
+                "x": 39,
+                "y": 46,
+                "width": 517,
+                "height": 262
+              },
+              "colorPixels": {
+                "red": 5000,
+                "green": 5000,
+                "blue": 5050,
+                "yellow": 5000,
+                "dark": 25946,
+                "gray": 53649,
+                "other": 4649
+              }
+            }
+          ]
+        },
+        "image": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 67795,
+              "inkBounds": {
+                "x": 39,
+                "y": 46,
+                "width": 512,
+                "height": 273
+              },
+              "colorPixels": {
+                "red": 15000,
+                "green": 15000,
+                "blue": 15000,
+                "yellow": 15000,
+                "dark": 1357,
+                "gray": 6438,
+                "other": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    "osx-arm64": {
+      "measuredOn": "osx-arm64",
+      "scenarios": {
+        "report": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 109280,
+              "inkBounds": {
+                "x": 39,
+                "y": 40,
+                "width": 554,
+                "height": 757
+              },
+              "colorPixels": {
+                "red": 0,
+                "green": 0,
+                "blue": 17299,
+                "yellow": 0,
+                "dark": 6204,
+                "gray": 75204,
+                "other": 10573
+              }
+            }
+          ]
+        },
+        "text": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 44025,
+              "inkBounds": {
+                "x": 39,
+                "y": 48,
+                "width": 512,
+                "height": 437
+              },
+              "colorPixels": {
+                "red": 139,
+                "green": 0,
+                "blue": 0,
+                "yellow": 0,
+                "dark": 18988,
+                "gray": 24880,
+                "other": 18
+              }
+            }
+          ]
+        },
+        "graphics": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 104426,
+              "inkBounds": {
+                "x": 39,
+                "y": 46,
+                "width": 517,
+                "height": 262
+              },
+              "colorPixels": {
+                "red": 5000,
+                "green": 5000,
+                "blue": 5228,
+                "yellow": 5000,
+                "dark": 26085,
+                "gray": 53436,
+                "other": 4677
+              }
+            }
+          ]
+        },
+        "image": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 68608,
+              "inkBounds": {
+                "x": 39,
+                "y": 46,
+                "width": 512,
+                "height": 273
+              },
+              "colorPixels": {
+                "red": 15000,
+                "green": 15000,
+                "blue": 15000,
+                "yellow": 15000,
+                "dark": 3196,
+                "gray": 5412,
+                "other": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
 }

@@ -1,7 +1,9 @@
 ﻿# FP-002 validation evidence
 
 Recorded October 26, 2026, for [FP-002 / issue #3](https://github.com/samuelkim-scz/FossPDF.Net/issues/3).
-Branch: `feature/fp-002-native-backends-adr`, based on main `e9bee81`.
+Implementation: [PR #39](https://github.com/samuelkim-scz/FossPDF.Net/pull/39), commit `ab97685`,
+merged as `01540a8`. Evidence and platform references are completed in
+[validation PR #40](https://github.com/samuelkim-scz/FossPDF.Net/pull/40).
 
 ## Local Windows evidence
 
@@ -29,8 +31,26 @@ independent inspection and dependency/native/notice audit on Windows, Ubuntu and
 `fp-002-native-prototypes-<runner>` artifacts. The main and quality jobs separately run the solution
 build, parity/unit tests, settings example and FP-003 quality baselines on the same three OS families.
 
-CI run links and observed runtime identifiers are recorded here after the final branch revision is
-validated. Merely configuring the matrix is not acceptance evidence.
+[Implementation run 40428515254](https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40428515254)
+completed all three native prototype jobs successfully at `ab97685`. The downloaded artifacts were
+inspected, rather than inferring acceptance from the workflow configuration:
+
+| Runner | Observed RID / runtime | Executable proofs | Independent checks | Native/notice audit |
+| --- | --- | --- | --- | --- |
+| Windows | `win-x64`, .NET 9.0.22 | 5/5 pass | 28 pass | Pass |
+| Ubuntu | `linux-x64`, .NET 9.0.22 | 5/5 pass | 28 pass | Pass |
+| macOS | `osx-arm64`, .NET 9.0.22 | 5/5 pass | 28 pass | Pass |
+
+The original run also exposed pre-existing quality baseline failures on Linux/macOS. Their scenario
+metrics are **identical** to [main `e9bee81`'s run](https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40416655346),
+with identical font hashes and backend pins. That baseline contained only Windows reference values.
+The validation follow-up adds measured `linux-x64`/`osx-arm64` references using the quality tool's
+existing platform-override mechanism. Typography captures were visually inspected; Windows metrics,
+font pins, geometry assertions and all tolerance values remain unchanged. See [QUALITY.md](../QUALITY.md).
+
+[The follow-up PR's checks](https://github.com/samuelkim-scz/FossPDF.Net/pull/40/checks) validate the complete final revision, including solution tests and quality
+baselines on all three platforms. Native binary/notice and PDF inspection JSON is retained in its
+`fp-002-native-prototypes-*` artifacts. No feature behavior or conformance guard is changed by that follow-up.
 
 ## Reproduce and artifacts
 
