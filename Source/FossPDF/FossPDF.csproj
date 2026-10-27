@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Authors>MarcinZiabek</Authors>
-        <Company>CodeFlint</Company>
+        <Authors>Samuel Kim, Silbiano Cruz, Eric Morris, Jerame Kim, FossPDF contributors</Authors>
+        <Company>Santa Cruz County HSA</Company>
         <PackageId>FossPDF</PackageId>
         <Version>2026.5.1</Version>
         <PackageDescription>FossPDF is an open-source, modern and battle-tested library that can help you with generating PDF documents by offering friendly, discoverable and predictable C# fluent API. Easily generate PDF reports, invoices, exports, etc.</PackageDescription>
@@ -9,7 +9,7 @@
         <LangVersion>10</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReadmeFile>PackageReadme.md</PackageReadmeFile>
-        <RepositoryUrl>https://github.com/lol768/FossPDF.NET.git</RepositoryUrl>
+        <RepositoryUrl>https://github.com/samuelkim-scz/FossPDF.Net</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -17,6 +17,10 @@
         <PackageTags>pdf report file export generate generation tool create creation render portable document format quest html library converter open source free standard core</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Nullable>enable</Nullable>
+        <!-- Ship IntelliSense documentation. CS1591 is suppressed until the remaining
+             public members are documented; existing XML comments are still emitted. -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
         <TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -26,7 +30,7 @@
     <ItemGroup>
       <PackageReference Include="SkiaSharp" Version="3.119.4" />
       <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
-      <PackageReference Include="IDisposableAnalyzers" Version="4.0.8" />
+      <PackageReference Include="IDisposableAnalyzers" Version="4.0.8" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
@@ -42,6 +46,8 @@
       <None Remove="ImagePlaceholder.png" />
 
       <None Include="Resources\PackageReadme.md" Pack="true" PackagePath="\" />
+      <None Include="Resources\DefaultFont\OFL.txt" Pack="true" PackagePath="\" />
+      <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
 
       <None Remove="Resources\DefaultFont\Lato-Black.ttf" />
       <EmbeddedResource Include="Resources\DefaultFont\Lato-Black.ttf" />

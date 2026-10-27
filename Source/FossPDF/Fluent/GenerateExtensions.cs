@@ -76,7 +76,9 @@ namespace FossPDF.Fluent
             return DocumentGenerator.GenerateImages(document, settings);
         }
         
-        /// <param name="filePath">Method should return fileName for given index</param>
+        /// <summary>Exports every page as a PNG image using the document's resolved DPI.</summary>
+        /// <param name="document">The document to export.</param>
+        /// <param name="filePath">Returns the output path for the zero-based page index.</param>
         public static void GenerateImages(this IDocument document, Func<int, string> filePath)
         {
             document.GenerateImages(filePath, ImageGenerationSettings.Default);
@@ -130,7 +132,9 @@ namespace FossPDF.Fluent
             return DocumentGenerator.GenerateSvg(document);
         }
 
-        /// <param name="filePath">Method should return fileName for given index</param>
+        /// <summary>Exports every page as an SVG document.</summary>
+        /// <param name="document">The document to export.</param>
+        /// <param name="filePath">Returns the output path for the zero-based page index.</param>
         public static void GenerateSvg(this IDocument document, Func<int, string> filePath)
         {
             var index = 0;
