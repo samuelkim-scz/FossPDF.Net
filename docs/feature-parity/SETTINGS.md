@@ -52,8 +52,8 @@ Each generation resolves one private snapshot before composition. It copies meta
 
 | Setting | When omitted | Explicit override |
 | --- | --- | --- |
-| DocumentSettings.ImageRasterDpi | DocumentMetadata.RasterDpi; legacy default 72 | Positive integer; renderer rasterization DPI, also the default page-image DPI |
-| ImageCompressionQuality | DocumentMetadata.ImageQuality; legacy default 101 | Integer 0-101; 101 retains the legacy lossless behavior |
+| DocumentSettings.ImageRasterDpi | DocumentMetadata.RasterDpi; legacy default 72 | Positive integer; renderer rasterization DPI, the default page-image DPI, and the default target DPI for images without a per-image override |
+| ImageCompressionQuality | DocumentMetadata.ImageQuality; legacy default 101 | Integer 0-101; 101 retains the legacy lossless behavior. Also the default per-image recompression quality; see [image optimization](IMAGE_OPTIMIZATION.md). |
 | ContentDirection | LeftToRight | LeftToRight or RightToLeft; explicit page/element direction takes precedence |
 | PdfAConformance | Existing metadata PdfA false -> None, true -> Legacy | None disables the legacy flag; Legacy enables the same flag |
 | PdfUaConformance | None | PdfUa1 is reserved and rejected for PDF until its backend is implemented |
@@ -71,7 +71,7 @@ Legacy DocumentMetadata properties and its obsolete process-setting wrappers rem
 
 Separate generation calls receive independent snapshots. Metadata changes made during Compose affect later generation calls, rather than changing the current call partway through. Custom documents must create fresh element trees and keep their own composition code/resources safe for concurrent use. Configure a builder before starting rendering; WithSettings/WithMetadata are configuration operations.
 
-ImageRasterDpi maps the existing backend-wide RasterDpi setting. It does not implement per-image downsampling or quality controls; those remain in FP-202. PDF layout uses points, independently of raster output DPI.
+ImageRasterDpi maps the existing backend-wide RasterDpi setting and is also the default target DPI for images that have no per-image override. Explicit image descriptors take precedence; see [the image optimization contract](IMAGE_OPTIMIZATION.md). PDF layout uses points, independently of raster output DPI.
 
 ## Page-image export
 
@@ -111,7 +111,7 @@ Likewise, disabling ordinary compression, requesting extra optimization or enabl
 | [FP-401 / FP-403](https://github.com/samuelkim-scz/FossPDF.Net/issues/26) / [PDF/UA](https://github.com/samuelkim-scz/FossPDF.Net/issues/28) | Carry semantic structure and enforce PDF/UA requirements before accepting PdfUa1. |
 | [FP-306](https://github.com/samuelkim-scz/FossPDF.Net/issues/25) | Honor compression overrides/linearization and document their conformance/security interactions. |
 | [FP-203](https://github.com/samuelkim-scz/FossPDF.Net/issues/17) | PNG/JPEG/WebP encoding, output quality, alpha/background policy and caller-owned streams follow [the image export contract](IMAGE_EXPORT.md). |
-| [FP-202](https://github.com/samuelkim-scz/FossPDF.Net/issues/16) | Add per-image optimization overrides without changing these document/output precedence rules. |
+| [FP-202](https://github.com/samuelkim-scz/FossPDF.Net/issues/16) | Per-image DPI and quality overrides take precedence over these document defaults; see [the image optimization contract](IMAGE_OPTIMIZATION.md). |
 
 Valid PDF-only conformance/compression options do not prevent PNG, SVG, XPS or preview generation. Those outputs do not make PDF conformance claims. Invalid enum values, non-positive explicit DPI/page limits and out-of-range explicit quality values fail with ArgumentOutOfRangeException. Null settings arguments fail with ArgumentNullException.
 

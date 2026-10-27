@@ -6,8 +6,13 @@ namespace FossPDF.Infrastructure
     /// </summary>
     public record DocumentSettings
     {
+        /// <summary>Default target DPI for images without a per-image override.</summary>
         public int? ImageRasterDpi { get; init; }
-        /// <summary>0-100 for lossy image encoding; 101 preserves the legacy lossless default.</summary>
+
+        /// <summary>
+        /// 0-100 for lossy image encoding; 101 preserves the legacy lossless default. Also the
+        /// default per-image quality for images without an override.
+        /// </summary>
         public int? ImageCompressionQuality { get; init; }
         public ContentDirection? ContentDirection { get; init; }
         public PdfAConformance? PdfAConformance { get; init; }

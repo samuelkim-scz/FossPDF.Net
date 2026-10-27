@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -288,6 +288,10 @@ namespace FossPDF.Drawing
             {
                 FontManager = fontManager,
                 CheckIfAllTextGlyphsAreAvailable = configuration.CheckGlyphs,
+                ImageRasterDpi = configuration.Settings.ImageRasterDpi,
+                ImageCompressionQuality = configuration.Settings.ImageCompressionQuality == 101
+                    ? null
+                    : configuration.Settings.ImageCompressionQuality,
                 IsInitialRenderingPhase = true
             };
         }

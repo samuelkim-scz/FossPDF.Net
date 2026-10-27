@@ -32,5 +32,11 @@ namespace FossPDF.Infrastructure
         ICollection<PageElementLocation> GetContentCapturedPositions(string id);
         DocumentSpecificFontManager FontManager { get; }
         bool CheckIfAllTextGlyphsAreAvailable { get; }
+
+        /// <summary>Default target DPI for images without a per-image override.</summary>
+        int? ImageRasterDpi { get; }
+
+        /// <summary>Default lossy quality for images without a per-image override.</summary>
+        int? ImageCompressionQuality { get; }
     }
 }

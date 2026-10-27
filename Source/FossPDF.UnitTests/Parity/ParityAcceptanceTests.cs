@@ -549,6 +549,169 @@ namespace FossPDF.UnitTests.Parity
                 Is.EqualTo(positions.Select(x => (x.PageNumber, x.X, x.Y, x.Width, x.Height))));
         }
 
+        [ParityFixtureRunner("IMG-202")]
+        private static void RunImageOptimization(ParityFixture fixture)
+        {
+            const int sourceWidth = 800;
+            const int sourceHeight = 400;
+            const int gap = 10;
+
+            var display = fixture.Input.GetProperty("display_size");
+            var displayWidth = display[0].GetInt32();
+            var displayHeight = display[1].GetInt32();
+            var dpi = fixture.Input.GetProperty("dpi");
+            var quality = fixture.Input.GetProperty("quality");
+
+            using var shared = SharedImage.FromBinaryData(
+                CreateQuadrantJpeg(sourceWidth, sourceHeight));
+
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(2 * displayWidth + gap + 20, displayHeight + 20);
+                page.Margin(10);
+                page.PageColor("#ffffff");
+
+                page.Content().Row(row =>
+                {
+                    row.ConstantItem(displayWidth)
+                        .Image(shared)
+                        .WithRasterDpi(dpi[0].GetInt32())
+                        .WithCompressionQuality(quality[0].GetInt32());
+
+                    row.ConstantItem(gap);
+
+                    row.ConstantItem(displayWidth)
+                        .Image(shared)
+                        .WithRasterDpi(dpi[1].GetInt32())
+                        .WithCompressionQuality(quality[1].GetInt32());
+                });
+            }));
+
+            var pdf = document.GeneratePdf(out var pageCount);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(pageCount, Is.EqualTo(1));
+            Assert.That(images, Has.Length.EqualTo(1));
+
+            SaveArtifact("IMG-202", "document.pdf", pdf);
+            SaveArtifact("IMG-202", "page-1.png", images[0]);
+
+            var embedded = ReadPdfImages(pdf);
+
+            Assert.That(embedded, Has.Count.EqualTo(2));
+            Assert.That(
+                embedded.Select(x => (x.Width, x.Height)),
+                Is.EquivalentTo(new[]
+                {
+                    (displayWidth * dpi[0].GetInt32() / 72, displayHeight * dpi[0].GetInt32() / 72),
+                    (Math.Min(displayWidth * dpi[1].GetInt32() / 72, sourceWidth),
+                        Math.Min(displayHeight * dpi[1].GetInt32() / 72, sourceHeight))
+                }));
+            Assert.That(embedded.All(x => x.Filter == "DCTDecode"), Is.True,
+                "Opaque per-image JPEG output must remain DCTDecode-encoded in the PDF.");
+
+            using var pageBitmap = SKBitmap.Decode(images[0]);
+
+            AssertColorNear(pageBitmap, 30, 20, "#ff0000", 70);
+            AssertColorNear(pageBitmap, 70, 20, "#00ff00", 70);
+            AssertColorNear(pageBitmap, 30, 40, "#0000ff", 70);
+            AssertColorNear(pageBitmap, 70, 40, "#ffff00", 70);
+
+            AssertColorNear(pageBitmap, 120, 20, "#ff0000", 40);
+            AssertColorNear(pageBitmap, 160, 20, "#00ff00", 40);
+            AssertColorNear(pageBitmap, 120, 40, "#0000ff", 40);
+            AssertColorNear(pageBitmap, 160, 40, "#ffff00", 40);
+
+            Assert.That(shared.SkImage.Width, Is.EqualTo(sourceWidth),
+                "Per-image processing must not mutate the shared source image.");
+            Assert.That(shared.SkImage.Height, Is.EqualTo(sourceHeight));
+        }
+
+        private static byte[] CreateQuadrantJpeg(int width, int height)
+        {
+            using var bitmap = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(bitmap);
+            using var paint = new SKPaint { IsAntialias = false };
+
+            canvas.Clear(SKColors.White);
+
+            void Fill(int x, int y, int w, int h, string color)
+            {
+                paint.Color = SKColor.Parse(color);
+                canvas.DrawRect(x, y, w, h, paint);
+            }
+
+            Fill(0, 0, width / 2, height / 2, "#ff0000");
+            Fill(width / 2, 0, width - width / 2, height / 2, "#00ff00");
+            Fill(0, height / 2, width / 2, height - height / 2, "#0000ff");
+            Fill(width / 2, height / 2, width - width / 2, height - height / 2, "#ffff00");
+
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+            return data.ToArray();
+        }
+
+        private static List<(int Width, int Height, string Filter)> ReadPdfImages(byte[] pdf)
+        {
+            var text = Encoding.Latin1.GetString(pdf);
+            var images = new List<(int Width, int Height, string Filter)>();
+            var index = 0;
+
+            while ((index = text.IndexOf("/Subtype /Image", index, StringComparison.Ordinal)) >= 0)
+            {
+                var block = text.Substring(index, Math.Min(400, text.Length - index));
+                images.Add((
+                    ReadInteger(block, "/Width "),
+                    ReadInteger(block, "/Height "),
+                    ReadName(block, "/Filter /")));
+                index += 14;
+            }
+
+            return images;
+        }
+
+        private static int ReadInteger(string value, string token)
+        {
+            var index = value.IndexOf(token, StringComparison.Ordinal);
+            if (index < 0)
+                return 0;
+
+            index += token.Length;
+            var end = index;
+            while (end < value.Length && char.IsDigit(value[end]))
+                end++;
+
+            return int.Parse(value.Substring(index, end - index));
+        }
+
+        private static string ReadName(string value, string token)
+        {
+            var index = value.IndexOf(token, StringComparison.Ordinal);
+            if (index < 0)
+                return string.Empty;
+
+            index += token.Length;
+            var end = index;
+            while (end < value.Length && char.IsLetter(value[end]))
+                end++;
+
+            return value.Substring(index, end - index);
+        }
+
+        private static void AssertColorNear(SKBitmap bitmap, int x, int y, string expectedColor, int tolerance)
+        {
+            var expected = SKColor.Parse(expectedColor);
+            var actual = bitmap.GetPixel(x, y);
+
+            Assert.That(
+                Math.Abs(actual.Red - expected.Red) <= tolerance &&
+                Math.Abs(actual.Green - expected.Green) <= tolerance &&
+                Math.Abs(actual.Blue - expected.Blue) <= tolerance,
+                Is.True,
+                $"Pixel at ({x},{y}) is {actual}; expected {expectedColor} within {tolerance}.");
+        }
+
         [ParityFixtureRunner("PAG-105")]
 
         private static void RunPageControls(ParityFixture fixture)

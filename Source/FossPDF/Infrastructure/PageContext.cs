@@ -19,6 +19,8 @@ namespace FossPDF.Infrastructure
 
         public DocumentSpecificFontManager FontManager { get; set; } = null!; // Set by DocumentGenerator.
         public bool CheckIfAllTextGlyphsAreAvailable { get; set; }
+        public int? ImageRasterDpi { get; set; }
+        public int? ImageCompressionQuality { get; set; }
 
         internal void SetDocumentId(int documentId)
         {

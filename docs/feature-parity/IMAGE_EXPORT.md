@@ -41,6 +41,8 @@ PNG/WebP accept opaque or translucent backgrounds. JPEG requires an opaque expli
 
 WebP lossless preserves the rendered page raster; RGB values in fully transparent pixels are not meaningful and may be normalized by the codec. Lossy output is judged by decoded color/geometry, rather than byte identity. Quality is not a promise of a particular file size. DocumentSettings.ImageCompressionQuality concerns PDF image encoding and does not override this export's CompressionQuality.
 
+For controlling the resolution and compression of individual images embedded in a generated PDF, see [the image optimization guide](IMAGE_OPTIMIZATION.md). The two features use independent settings.
+
 ## Write to caller-owned streams
 
 For a two-page document:
