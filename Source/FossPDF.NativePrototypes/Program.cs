@@ -1,5 +1,5 @@
 using System;
-using PdfSharp.Fonts;
+using System.Runtime.InteropServices;
 
 namespace FossPDF.NativePrototypes;
 
@@ -12,20 +12,24 @@ internal static class Program
 
         Directory.CreateDirectory(outputDirectory);
 
-        // Set this before any PDFsharp font resolution. The resolver avoids system-font dependencies
-        // on Linux and macOS and embeds the bundled Lato files.
-        GlobalFontSettings.FontResolver = new LatoFontResolver(
-            PrototypePaths.LatoRegular,
-            PrototypePaths.LatoBold);
-
         var results = new List<PrototypeResult>
         {
             Run("svg-input", () => SvgPrototype.Run(outputDirectory)),
             Run("existing-pdf-operations", () => PdfOperationsPrototype.Run(outputDirectory)),
-            Run("semantic-tagging", () => TaggingPrototype.Run(outputDirectory))
+            Run("semantic-tagging", () => TaggingPrototype.Run(outputDirectory)),
+            Run("semantic-paint-batches", () => PaintBatchPrototype.Run(outputDirectory)),
+            Run("ownership-and-errors", OwnershipPrototype.Run)
         };
 
         JsonFile.Write(Path.Combine(outputDirectory, "prototype-results.json"), results);
+        JsonFile.Write(Path.Combine(outputDirectory, "environment.json"), new
+        {
+            RuntimeInformation.OSDescription, RuntimeInformation.RuntimeIdentifier,
+            RuntimeInformation.FrameworkDescription,
+            SkiaSharpVersion = typeof(SkiaSharp.SKDocument).Assembly.GetName().Version?.ToString(),
+            PdfSharpVersion = typeof(PdfSharp.Pdf.PdfDocument).Assembly.GetName().Version?.ToString(),
+            SvgSkiaVersion = typeof(Svg.Skia.SKSvg).Assembly.GetName().Version?.ToString()
+        });
 
         foreach (var result in results)
         {

@@ -41,6 +41,11 @@ dotnet run --project FossPDF.NativePrototypes/FossPDF.NativePrototypes.csproj -c
 
 The prototype project is outside `FossPDF.sln`, is not packed, and must not become a production dependency. See [ADR-0001](docs/feature-parity/decisions/ADR-0001-native-backends.md) and [NATIVE_DEPENDENCIES.md](docs/feature-parity/NATIVE_DEPENDENCIES.md).
 
+Before proposing completion, also run the pinned independent PDF inspector and native asset/notice
+audit in the [prototype README](Source/FossPDF.NativePrototypes/README.md), and link successful
+Windows/Linux/macOS CI artifacts. The tag writer consumes captured semantic paint associations;
+it does not reconstruct semantics from arbitrary PDFs or establish PDF/UA/PDF/A conformance.
+
 ## Pull requests
 
 Use the PR template and link the work item. `Closes #<number>` is appropriate when the PR completes the entire issue; `Refs #<number>` tracks partial work. Preserve existing FossPDF APIs/namespaces and document supported frameworks and migration paths for additions. Record licenses/notices and runtime assets for new dependencies.

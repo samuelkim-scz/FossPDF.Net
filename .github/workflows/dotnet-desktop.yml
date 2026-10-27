@@ -154,7 +154,7 @@ jobs:
 
       - name: 🔄 Restore Prototype Packages 🔄
         shell: bash
-        run: dotnet restore "$PROTOTYPE_PROJECT"
+        run: dotnet restore "$PROTOTYPE_PROJECT" --locked-mode
         working-directory: ./Source
 
       - name: 🛠 Build Prototypes 🛠
@@ -166,6 +166,18 @@ jobs:
         shell: bash
         run: dotnet run --project "$PROTOTYPE_PROJECT" -c Release --no-build --no-restore -- --output ../artifacts/fp-002
         working-directory: ./Source
+
+      - name: Install independent PDF inspector
+        shell: bash
+        run: python -m pip install -r Source/FossPDF.NativePrototypes/requirements-validation.txt
+
+      - name: Inspect vector output and semantic associations independently
+        shell: bash
+        run: python Source/FossPDF.NativePrototypes/verify_artifacts.py artifacts/fp-002
+
+      - name: Audit native assets, notices and locked dependencies
+        shell: bash
+        run: python Source/FossPDF.NativePrototypes/audit_dependencies.py Source/FossPDF.NativePrototypes/obj/project.assets.json artifacts/fp-002
 
       - name: Upload prototype evidence
         uses: actions/upload-artifact@v7

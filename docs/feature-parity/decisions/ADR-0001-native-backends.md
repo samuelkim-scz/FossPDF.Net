@@ -1,165 +1,176 @@
-# ADR-0001: Native backends and dependency contracts
+﻿# ADR-0001: Native backends and dependency contracts
 
-- Status: Proposed
+- Status: Proposed for merge
 - Date: 2026-10-26
 - Work item: [FP-002 / issue #3](https://github.com/samuelkim-scz/FossPDF.Net/issues/3)
-- Target: QuestPDF 2026.9.1
-- Baseline: FossPDF `0339255`
-- Prototype: `Source/FossPDF.NativePrototypes`
-- Evidence: [fp-002-windows.md](../evidence/fp-002-windows.md)
+- Target: QuestPDF 2026.9.1; FossPDF baseline `0339255`
+- Runnable evidence: `Source/FossPDF.NativePrototypes`
+- Validation: [FP-002 evidence](../evidence/fp-002-windows.md)
 
-## Context
+## Context and capability boundary
 
-The core library draws with **SkiaSharp 3.119.4** and shapes with **HarfBuzzSharp 8.3.1.5** through `SkiaSharp.HarfBuzz`. Its `ICanvas` contract can translate, scale, rotate, draw rectangles/text/images, and write links and destinations. `PdfCanvas` wraps `SKDocument.CreatePdf`, which is a **write-only** PDF generator.
+FossPDF uses SkiaSharp 3.119.4 and HarfBuzzSharp 8.3.1.5. `SKDocument.CreatePdf` writes PDFs;
+it does not expose PDF import or a semantic structure tree through these managed bindings.
+`ICanvas.DrawText` receives shaped glyphs (`SKTextBlob`), not a logical semantic model.
+Tags and reading order cannot be reconstructed reliably from that flattened output.
 
-The parity target adds capabilities that the current drawing stack does not expose:
+| Capability | Existing stack | Selected path | Owner |
+| --- | --- | --- | --- |
+| Drawing and shaping | Skia/HarfBuzz; PDF, raster, SVG/XPS output | Keep current renderer and font manager | Core |
+| SVG input | Parser currently belongs to examples | Svg.Skia 4.9.1 companion, replay `SKPicture` through `Canvas` | FP-201 |
+| Existing PDFs | No reader/page model | PDFsharp 6.2.4 companion | FP-302 through FP-305 |
+| Tagged PDF | No managed semantic/marked-content API | PDFsharp low-level object model plus captured semantic paint batches | FP-401, FP-403 |
+| PDF/A profiles | Only Skia's unqualified legacy `PdfA` flag | Explicit unsupported gate until profile-specific conversion/validation is qualified | FP-402 |
+| Linearization | No writer in the selected cohort has been qualified | Keep explicit unsupported gate; qualify an opt-in qpdf adapter in FP-306 | FP-306 |
 
-| Capability | Current stack | Owning work |
-| --- | --- | --- |
-| SVG input | No parser; examples rasterize SVG through an external `Svg.Skia` reference | FP-201 |
-| Existing-PDF operations | No PDF reader or page model | FP-302–FP-306 |
-| Tagged PDF / semantic structure | No structure tree, marked-content or role APIs | FP-401, FP-403 |
-| Selectable PDF/A profiles | Only Skia's unqualified `PdfA` flag | FP-402 |
-| Font subsetting | Existing optional `FossPDF.FontSubset`/`Glue` packages | Already present |
+This decision establishes mechanisms and integration contracts. It does not implement the production
+SVG/PDF/accessibility features, select a conformance level, or claim PDF/UA/PDF/A compliance.
 
-Constraints from the roadmap:
+## Decisions
 
-- Keep FossPDF MIT-licensed and preserve existing public APIs and stream ownership.
-- Keep the core `netstandard2.1`/`net9.0` targets; new packages may be .NET 9-only.
-- Support Windows, Linux and macOS with redistributable native assets and deterministic cleanup.
-- Do not add unreviewed major-version or licence changes.
-- A structural prototype is **not** a PDF/UA or PDF/A conformance claim. Those claims require validator evidence in FP-402/FP-403.
+### Keep Skia and HarfBuzz for visual output
 
-## Decision
+The core keeps its existing `netstandard2.1`/`net9.0` targets, public `IDocument` API and native cohort.
+The companion packages initially target `net9.0`, are optional, and are never referenced by core.
+Internal rendering hooks may be added by their owning issues without adding required public interface
+members. In particular, retaining the current **internal** `ICanvas` unchanged is not a constraint on FP-401.
 
-### 1. Keep SkiaSharp + HarfBuzzSharp as the core drawing and shaping cohort
+### SVG: replay vectors and make rasterization explicit
 
-No core backend replacement is proposed. Skia remains the renderer for PDF, XPS, PNG, SVG and preview output; HarfBuzz remains the shaping engine. Existing `ICanvas`, `IDocument`, font ownership and stream contracts remain unchanged.
+Select Svg.Skia 4.9.1 (managed) with the existing native cohort. A reusable source owns its `SKSvg`
+and borrowed `Picture`; consumers do not dispose that picture independently. The companion parses
+strings/bytes/files/borrowed streams once, uses the picture's cull bounds/view box for measurement,
+and replays the picture with a saved/restored transform and clip into the existing public `Canvas` API.
+PDF/vector-capable targets retain paths. Raster exports naturally rasterize at their requested DPI.
+For unsupported SVG effects, a documented opt-in fallback rasterizes with explicit DPI/background;
+otherwise fail before output. Never silently replace all vector input with a bitmap.
 
-### 2. Adopt Svg.Skia 4.9.1 for SVG input, as an optional companion package
+The proof reuses one picture for pixel-checked raster output and direct FossPDF PDF output. An
+independent parser asserts path geometry and **no image XObjects** in the vector PDF, and an image
+in the explicitly rasterized fallback. This preserves FP-201's vector-output requirement.
 
-`Svg.Skia` parses SVG into an `SKPicture` that is drawn into Skia surfaces. The proposed package boundary is a companion package (working name `FossPDF.Svg`) that:
+FP-201 must integrate FossPDF's registered/default font resolution and define fit modes, external
+resource policy, unsupported effects and resource limits. External network/file loading is disabled
+by default; any explicit resource resolver must have a documented ownership contract. The proof
+accepts only a small self-contained shape subset, rejects external references/DTD/malformed input,
+and is not a production SVG sanitizer.
 
-- preloads SVG text/bytes/streams into a reusable source object;
-- rasterizes into an `SKImage`/`Image` at a declared DPI, then uses the existing image path;
-- owns and disposes `SKSvg`/`SKPicture`/surface objects after rasterization;
-- never becomes a dependency of the core `FossPDF` package.
+Svg.Skia is MIT; **Svg.Custom 4.9.1 is MS-PL**. Select the unchanged binary dependency with its own
+license and attribution intact in the optional companion. FossPDF's own code remains MIT; do not
+relicense or copy vendor source under MIT. Notices and distribution rules are recorded in the
+[dependency inventory](../NATIVE_DEPENDENCIES.md). A future license/cohort change requires a new review.
 
-The prototype rendered a fixed 240×140 SVG with four checked pixels and placed the rasterized result into a one-page FossPDF PDF. Vector-preserving PDF embedding is not selected for the first implementation; the existing `Image`/`ICanvas` path is the integration contract.
+### PDF operations: pin PDFsharp 6.2.4
 
-**Licence caveat:** Svg.Skia itself is MIT, but its transitive `Svg.Custom 4.9.1` is **MS-PL**, not MIT. Svg.Skia is therefore prototype-only in this branch. A production `FossPDF.Svg` companion may ship it only after the MS-PL notice and binary-distribution obligations are reviewed and accepted. If MS-PL is unacceptable, FP-201 must choose a different parser or an external rasterization path. The core package must not take this dependency.
+Select the managed PDFsharp 6.2.4 package for reading, page import/reorder/merge and the low-level
+PDF object model. Loading, password handling, page ranges, overlays, attachments and XMP APIs belong
+to FP-302 through FP-305. Import into a new destination and dispose all backend documents after save.
+The prototype imports Skia-generated pages, checks order/media boxes, and stages output before
+writing to borrowed streams, including non-seekable streams.
 
-### 3. Adopt PDFsharp 6.2.4 for existing-PDF operations, as an optional companion package
+**Version/license boundary:** 6.2.4 is MIT. The published 6.5.0 package declares AGPL-3.0-only;
+upgrading is a license decision, not routine maintenance. Exact ranges and a committed NuGet lock
+file prevent an accidental cohort change. A security fix unavailable under the accepted license
+requires review of a maintained permissive fork or a separately qualified replacement; never bypass
+security or license review to keep this ADR's version. No automatic replacement is selected.
 
-PDFsharp reads and writes PDFs, imports pages between documents and preserves page media boxes. The proposed package boundary (working name `FossPDF.PdfOperations`) exposes loading, page selection/reordering, merging and saving while leaving streams caller-owned. The core library stays write-only.
+### Tagging: preserve Skia paint; write structure through the object model
 
-The prototype opened two Skia-generated PDFs, imported and reversed their pages into a new document, verified page widths `[300, 200]`, and confirmed that PDFsharp left the caller-owned output stream open. Encryption/password policy, page-range syntax, attachments and XMP remain owned by FP-302–FP-306.
+Reject `UAManager`/`StructureBuilder` as a post-processor for imported Skia pages. PDFsharp 6.2.4's
+[implementation](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/UniversalAccessibility/UAManager.cs)
+listens to new-page/XGraphics drawing events and rejects page import. A regression proof records
+that rejection. Repainting shaped FossPDF text with `XGraphics.DrawString` is not the selected path.
 
-### 4. Adopt PDFsharp 6.2.4 UniversalAccessibility for the semantic-tagging prototype
+Select PDFsharp's public low-level object model to write `/StructTreeRoot`, `/StructElem`, `/ParentTree`,
+page `/StructParents`, `/Lang`, and balanced MCID-marked content around **known paint batches**.
+The executable proof tags two actual FossPDF/Skia pages using an explicit sidecar: one heading batch
+and one paragraph batch. It preserves the original painting instructions, embedded fonts and
+ToUnicode streams; independent inspection verifies text extraction, role/page/MCID associations,
+reverse parent-tree entries and exact declared Unicode. Whole-page batching is a deliberately narrow
+mechanism proof, not an automatic tagging feature for arbitrary PDFs.
 
-PDFsharp 6.2.4 (MIT) includes `PdfSharp.UniversalAccessibility.UAManager` and `StructureBuilder`. They produce a structure tree root, document structure element, marked-content references, a parent tree and a mark-information dictionary. The proposed path is a post-processing/backend companion that consumes a completed PDF and applies structure, language and alternate-text declarations.
+A second executable assembles two independently painted FossPDF/Skia fragments as vector Form
+XObjects on one page and tags their separate invocation streams. Independent inspection verifies
+distinct MCIDs, correct forward/reverse associations and preservation of each original fragment's
+paint, font and Unicode data. This proves the selected batch transport as well as the structure writer.
 
-The prototype created a one-page tagged document with an `Article` → `Heading1`/`Paragraph` structure, embedded Lato through a custom font resolver, and verified the structural markers. This is a **structural prototype**, not PDF/UA-1 conformance. The final tagging API, role mapping and conformance validation belong to FP-401/FP-403.
+FP-401 must implement the following integration contract **before** exposing production tagging:
 
-### 5. Keep optional packages additive
+1. Composition records a semantic tree: stable node/parent IDs, standard role, language, reading
+   order, logical text, alternate text and artifact status. Layout assigns repeated/split fragments
+   to those nodes explicitly. Semantic order is independent of painting order.
+2. Rendering captures an ordered `PaintBatch(nodeId, pageIndex, batchId, transform, clip, paint)` for
+   every semantic fragment/artifact, while the original logical text is still available. An internal
+   rendering observer/recorder is additive; it must not infer text from glyph IDs or PDF operators.
+3. Each batch has an independently addressable PDF content sequence. The first implementation path
+   records batch paint with Skia, emits isolated batch PDFs and imports them as vector Form XObjects
+   at their captured positions. The assembler wraps each invocation in a page-local MCID, writes the
+   tree/parent-tree association and preserves font resources. Alternatively, an instrumented native
+   Skia bridge can emit boundaries directly, but it needs its own ABI/runtime proof before adoption.
+4. Links/annotations, document destinations and figure alternatives are sidecar records, not inferred
+   from imported form streams. Backgrounds/decorations use artifacts. Batch IDs are unique, MCIDs are
+   page-local, and repeated content has an explicit reuse/artifact policy.
+5. Reject missing/duplicate/overlapping associations and missing required declarations before writing
+   output. Never tag an entire mixed-content page as a paragraph as a fallback.
+6. FP-401 qualifies multiple nodes on one page, nested lists/tables, split/repeated elements,
+   clipping/transforms, links, mixed scripts and unchanged visual output. These remain its feature
+   acceptance tests. FP-403 adds independent conformance validation and human accessibility review.
 
-The optional packages must not require new members on `IDocument`/`ICanvas`, must not change font/stream ownership, and must not be referenced by the core package. Consumers opt in by installing the companion package that matches their owning feature.
+The proofs validate whole-page wrapping and multi-batch Form assembly with explicit sidecars. They
+are not evidence that automatic fine-grained capture is implemented in core. Those internal
+hooks and their cost are now an explicit FP-401 requirement, rather than a claim that a completed
+opaque PDF can be semantically reconstructed by installing a companion.
 
-## Framework availability
+### Unsupported paths fail explicitly
 
-- The core `FossPDF` library keeps its existing `netstandard2.1`/`net9.0` targets and API surface.
-- The prototype project targets `net9.0` only and is not packed.
-- The proposed companion packages would target `net9.0` initially. Svg.Skia 4.9.1 also targets
-  `netstandard2.0`/`net6.0`/`net8.0`; PDFsharp 6.2.4 targets `netstandard2.0`/`net8.0`/`net9.0`.
-  Multi-targeting a companion for `netstandard2.1` should be considered only after the owning issue
-  validates the package graph; the core must not require the companion.
-- Unsupported platforms or frameworks fail explicitly; there is no silent fallback in the core.
+| Situation | Decision/fallback |
+| --- | --- |
+| Missing/mismatched Skia/HarfBuzz native asset | Report initialization failure with required RID/cohort; no silent output downgrade |
+| Unsupported framework/RID | Throw a documented unsupported-platform error; use an explicitly deployed supported service if the application chooses |
+| Unsupported SVG effect | Explicit documented rasterization option or error; vector path is the default |
+| Unmapped/ambiguous semantic paint | Reject tagging; ordinary untagged generation remains a separate caller choice |
+| PDF/A-2/3, PDF/UA-1 or linearization requested before qualification | Preserve existing `NotSupportedException` guards; a tag tree or legacy PdfA flag is insufficient |
+| PDFsharp cannot preserve an input feature | Explicit failure/declared limitation; no claimed byte-identical, signed or conforming round-trip |
 
-## Dependency and runtime contract
+FP-306 must qualify and package a qpdf adapter for the required compression/linearization controls,
+including version/license/notices, process cancellation, secrets and runtime deployment. qpdf is
+an assessed fallback candidate, not a dependency or a proven backend in this branch. FP-402 must
+qualify a profile-capable converter/writer and validators for all requested PDF/A levels. These
+unsupported decisions prevent later contributors from treating PDFsharp import as proof of those features.
 
-| Package | Version | Licence | Runtime assets | Role |
-| --- | --- | --- | --- | --- |
-| SkiaSharp | 3.119.4 | MIT | Win32/macOS/Linux native assets | Core drawing |
-| SkiaSharp.HarfBuzz | 3.119.4 | MIT | Uses Skia/HarfBuzz natives | Core shaping bridge |
-| HarfBuzzSharp | 8.3.1.5 | MIT | Win32/macOS/Linux native assets | Core shaping |
-| Svg.Skia | 4.9.1 | MIT | Managed; uses SkiaSharp natives | SVG prototype / proposed companion |
-| Svg.Custom | 4.9.1 | **MS-PL** | Managed | Transitive SVG parser; prototype-only pending licence review |
-| PDFsharp | 6.2.4 | MIT | Managed; no new native assets | PDF operations/tagging prototype |
-| Microsoft.Extensions.Logging.Abstractions | 8.0.3 | MIT | Managed | PDFsharp dependency |
-| System.Security.Cryptography.Pkcs | 8.0.1 | MIT | Managed | PDFsharp dependency |
+## Ownership, errors and integration boundaries
 
-Full transitive versions, copyrights and the prototype-only notices are recorded in
-[NATIVE_DEPENDENCIES.md](../NATIVE_DEPENDENCIES.md).
+- Caller streams are borrowed, read from their current position and left open on success/failure.
+  The proof copies at most 32 MiB into owned seekable memory and stages PDF output. Production limits
+  are owned by the feature APIs. Output is appended at its current position; callers own truncation.
+- Backend documents, parser owners, pictures, bitmaps, images, encoded data and temporary streams
+  are disposed deterministically. The SVG source must outlive every generation that replays it;
+  concurrent parser/picture use requires qualification or synchronization in FP-201.
+- Validate inputs and semantic associations before output. Copy/write failures propagate; staging
+  prevents parse/serialization failures from writing partial output, but cannot roll back a failing
+  caller sink. Passwords and input content are never included in production diagnostics.
+- Production wrappers normalize malformed-input/backend exceptions while preserving inner causes;
+  the isolated proof records the pinned backend exceptions rather than publishing an exception API.
+- Companion names are provisional: `FossPDF.Svg`, `FossPDF.PdfOperations`, `FossPDF.Accessibility`.
+  Method names, full semantic APIs, resource budgets and conformance remain with their owning issues.
 
-Version resolution note: Svg.Skia 4.9.1 declares SkiaSharp 3.119.2 and HarfBuzzSharp 8.3.1.3. The
-prototype pins the core's 3.119.4/8.3.1.5 and exercises rendering on that combination. Any companion
-package must declare the same minimum set and be tested against the core's pins.
+## Runtime assets, notices and upgrades
 
-## Ownership and error-handling contracts
+See [NATIVE_DEPENDENCIES.md](../NATIVE_DEPENDENCIES.md) for exact transitive versions, redistributable
+asset/notice evidence, qualified versus merely available RIDs, copied notices and upgrade rules.
+The proof has `IsPackable=false`, lives outside `FossPDF.sln`, and adds no production dependencies.
+Keep the NuGet lock and exact package references in sync; CI restores in locked mode.
 
-### SVG
+Every upgrade reviews package/native licenses and notices, ABI/cohort, frameworks, RID assets and
+security support, then runs the prototype matrix, parity corpus and FP-003 quality baselines.
+No unreviewed major or license change is allowed. No new native PDF engine is selected: PDFium would
+add packaging burden; iText/MuPDF licensing needs a separate decision. A small structure writer is
+necessary because the chosen high-level UA helper cannot process the existing renderer's output.
 
-- Caller-provided strings, byte arrays and streams are read synchronously for parsing; streams remain caller-owned.
-- The source object owns its `SKSvg`/`SKPicture`; rasterized `SKImage`/`Image` ownership follows the existing image contract.
-- Malformed SVG throws an `InvalidDataException`/dedicated exception before any document output; no partial PDF is accepted.
-- Rasterization DPI and background are explicit; unsupported SVG features fail or rasterize according to the documented companion behaviour, never silently change the page geometry.
+## Validation and acceptance
 
-### Existing PDFs
-
-- Caller streams remain open; the companion must not dispose them. Required read/write/seek capabilities are documented per API.
-- Imported `PdfDocument`/`PdfPage` objects are disposed by the companion after the output is written; imported pages are cloned into the destination document.
-- Encrypted, damaged or unsupported PDFs fail before page destinations are selected. Passwords are never logged.
-- The companion does not claim byte-identical round-tripping or PDF/A preservation; the owning issue defines page-range, merge and metadata semantics.
-
-### Tagging
-
-- `UAManager.ForDocument` is called before pages are added; every `BeginElement` has a matching `End`.
-- Fonts used for tagged text are loaded through an explicit resolver and embedded; the prototype uses the bundled Lato files, so no system-font resolution is required on Linux/macOS.
-- Structure, language and alternate text are declared by the companion; a missing declaration is a validation failure in the owning issue, not silently ignored.
-- Validator output (veraPDF) is required before any PDF/UA or PDF/A claim. The prototype only checks structural markers and must not be cited as conformance.
-
-### Native packaging and upgrade policy
-
-- Pin exact package versions; no floating ranges in shipped companion packages.
-- Review licence, notices, target frameworks and native assets on every upgrade.
-- Run the prototype matrix, the parity corpus and the FP-003 quality baselines before accepting an upgrade.
-- Do not take a major-version change or a licence change without updating this ADR.
-- Prefer managed-only companions where possible; any new native asset must be packaged for the declared runtime identifiers and included in the notices.
-
-## Integration contract for contributors
-
-The owning issues can implement these additive surfaces without changing the core:
-
-| Companion (working name) | Proposed surface | Owning issues |
-| --- | --- | --- |
-| `FossPDF.Svg` | Preloaded SVG source (text/bytes/stream), DPI/background options, placement through the existing image path | FP-201 |
-| `FossPDF.PdfOperations` | Load, page selection/reorder, merge, save; caller-owned streams | FP-301, FP-302–FP-306 |
-| `FossPDF.Accessibility` (or a PDF-operations extension) | Post-process a completed PDF with structure roles, language and alt text; validator hooks | FP-401, FP-402, FP-403 |
-
-Exact method names are illustrative until their issues settle them. The non-negotiable parts are the
-package boundary, stream ownership, deterministic disposal, explicit failure, and the separation
-between structural output and a conformance claim.
-
-## Consequences
-
-- The core package gains no new dependencies; consumers choose the companion packages they need.
-- Svg.Skia and PDFsharp remain prototype-only until their owning issues adopt them.
-- Svg.Skia's MS-PL transitive dependency is a licence-review gate for any SVG companion; the core stays MIT.
-- PDFsharp provides both PDF reading and a high-level UA structure builder in the same MIT package, so a separate tagging backend is not required for the first implementation path.
-- Font resolution for tagged text is the main cross-platform risk; the prototype avoids system fonts by using the bundled Lato files.
-- Performance, memory and native-asset impact must be measured in the owning issues and in FP-003 before release claims.
-
-## Alternatives considered
-
-- **Keep SVG/PDF/tagging in the core package.** Rejected: it would add optional dependencies and licensing/native risk to every consumer and change the core's clean drawing contract.
-- **PDFium or another native PDF engine.** Rejected for the first path: additional native binaries and packaging burden; PDFsharp is managed and MIT at the pinned version.
-- **iText or other dual-licensed PDF libraries.** Rejected: licence obligations conflict with the MIT-only distribution goal.
-- **Custom SVG parser or custom PDF structure writer.** Rejected: high implementation and validation cost; Svg.Skia and PDFsharp already exercise the required primitives. The Svg.Skia licence review is a conditional gate, not an unreviewed acceptance.
-- **Treat Skia's `PdfA` flag as a PDF/A profile.** Rejected: it is not a validated profile and remains a legacy flag.
-
-## Validation and next steps
-
-- Prototype results on Windows x64 are recorded in [fp-002-windows.md](../evidence/fp-002-windows.md).
-- CI runs the same prototype project on Windows, Linux and macOS and uploads its artifacts.
-- FP-201, FP-302–FP-306, FP-401, FP-402 and FP-403 must adopt or refine these paths in their own issues; this ADR does not implement them.
-- The prototype must not be cited as PDF/UA or PDF/A evidence. Validator reports are required before any conformance claim.
+The same executable and pinned independent inspector run on Windows, Linux and macOS in the
+`native-prototypes` CI job. Artifacts include PDFs/PNG/SVG, semantic sidecar, package/native/notice
+manifest, environment and pass/fail JSON. See the [evidence record](../evidence/fp-002-windows.md)
+for reproduction commands and linked CI results. This ADR closes the backend decision task only;
+FP-201/302-306/401-403 retain their production feature and conformance gates.

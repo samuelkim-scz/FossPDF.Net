@@ -29,15 +29,8 @@ internal static class PdfOperationsPrototype
         using var sourceBStream = new MemoryStream(sourceB);
         var readerOptions = new PdfReaderOptions();
 
-        using var documentA = PdfReader.Open(sourceAStream, PdfDocumentOpenMode.Import, readerOptions);
-        using var documentB = PdfReader.Open(sourceBStream, PdfDocumentOpenMode.Import, readerOptions);
-
-        using var output = new PdfDocument();
-        output.AddPage(documentB.Pages[0]);
-        output.AddPage(documentA.Pages[0]);
-
         using var outputStream = new MemoryStream();
-        output.Save(outputStream);
+        Merge(sourceBStream, sourceAStream, outputStream);
 
         if (!outputStream.CanRead || !outputStream.CanWrite)
         {
@@ -46,8 +39,10 @@ internal static class PdfOperationsPrototype
         }
         else
         {
-            checks.Add("OK: PDFsharp left the caller-owned output stream open.");
+            checks.Add("OK: caller input/output streams remain open after all backend documents are disposed.");
         }
+        if (!sourceAStream.CanRead || !sourceBStream.CanRead)
+            throw new InvalidDataException("A caller input stream was closed.");
 
         var reordered = outputStream.ToArray();
 
@@ -92,6 +87,18 @@ internal static class PdfOperationsPrototype
             Checks = checks,
             Artifacts = artifacts
         };
+    }
+
+    internal static void Merge(Stream first, Stream second, Stream output)
+    {
+        using var firstCopy = PrototypeStreams.CopyInput(first);
+        using var secondCopy = PrototypeStreams.CopyInput(second);
+        using var documentA = PdfReader.Open(firstCopy, PdfDocumentOpenMode.Import);
+        using var documentB = PdfReader.Open(secondCopy, PdfDocumentOpenMode.Import);
+        using var destination = new PdfDocument();
+        destination.AddPage(documentA.Pages[0]);
+        destination.AddPage(documentB.Pages[0]);
+        PrototypeStreams.Save(destination, output);
     }
 
     private static byte[] CreateSourcePdf(int width, int height, string color)

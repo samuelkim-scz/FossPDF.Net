@@ -2,6 +2,9 @@ using System;
 using FossPDF.Fluent;
 using SkiaSharp;
 using Svg.Skia;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using SharedImage = FossPDF.Infrastructure.Image;
 
 namespace FossPDF.NativePrototypes;
@@ -25,7 +28,8 @@ internal static class SvgPrototype
         var artifacts = new List<string>();
         var passed = true;
 
-        using var svg = SKSvg.CreateFromSvg(Svg);
+        using var svgInput = new MemoryStream(Encoding.UTF8.GetBytes(Svg));
+        using var svg = Parse(svgInput);
         var picture = svg.Picture ?? throw new InvalidOperationException("Svg.Skia did not produce a picture.");
 
         var width = (int) Math.Ceiling(picture.CullRect.Width);
@@ -68,6 +72,24 @@ internal static class SvgPrototype
         File.WriteAllBytes(pdfPath, pdf);
         artifacts.Add(pdfPath);
 
+        // Draw the same preloaded picture directly into the PDF canvas. No bitmap is involved.
+        var vectorPdf = Document.Create(container => container.Page(page =>
+        {
+            page.Size(260, 160);
+            page.Margin(10);
+            page.Content().Canvas((target, size) =>
+            {
+                target.Save();
+                target.Scale(size.Width / width, size.Height / height);
+                target.DrawPicture(picture);
+                target.Restore();
+            });
+        })).GeneratePdf();
+        var vectorPath = Path.Combine(outputDirectory, "svg-vector-in-foss-pdf.pdf");
+        File.WriteAllBytes(vectorPath, vectorPdf);
+        artifacts.Add(vectorPath);
+        checks.Add("OK: the reusable SKPicture was also drawn directly through FossPDF.Canvas for vector PDF output.");
+
         if (pageCount != 1)
         {
             passed = false;
@@ -100,5 +122,25 @@ internal static class SvgPrototype
             passed = false;
             checks.Add($"FAIL: {description} at ({x},{y}) is {actual} instead of {expectedColor}.");
         }
+    }
+
+    internal static SKSvg Parse(Stream input)
+    {
+        using var copy = PrototypeStreams.CopyInput(input);
+        using var reader = XmlReader.Create(copy, new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null
+        });
+        var document = XDocument.Load(reader);
+        // The proof deliberately accepts a small shape-only subset. Production resource/font
+        // resolution, sanitization and SVG feature coverage are contracts owned by FP-201.
+        if (document.Root == null || document.Root.Name != XName.Get("svg", "http://www.w3.org/2000/svg") ||
+            document.Root.DescendantsAndSelf().Any(element =>
+                element.Name.LocalName is not ("svg" or "rect" or "circle" or "path") ||
+                element.Attributes().Any(attribute =>
+                    attribute.Name.LocalName is "href" or "src" or "style" ||
+                    attribute.Value.Contains("url(", StringComparison.OrdinalIgnoreCase))))
+            throw new InvalidDataException("The SVG proof only accepts self-contained shape fixtures.");
+        return SKSvg.CreateFromSvg(document.ToString());
     }
 }

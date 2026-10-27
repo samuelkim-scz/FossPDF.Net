@@ -6,12 +6,6 @@ internal static class PrototypePaths
 {
     public static string RepositoryRoot { get; } = FindRepositoryRoot();
 
-    public static string LatoRegular =>
-        Path.Combine(RepositoryRoot, "Source", "FossPDF", "Resources", "DefaultFont", "Lato-Regular.ttf");
-
-    public static string LatoBold =>
-        Path.Combine(RepositoryRoot, "Source", "FossPDF", "Resources", "DefaultFont", "Lato-Bold.ttf");
-
     private static string FindRepositoryRoot()
     {
         foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
