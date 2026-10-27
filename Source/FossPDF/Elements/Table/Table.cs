@@ -6,7 +6,7 @@ using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements.Table
 {
-    internal class Table : Element, IStateResettable, IContentDirectionAware
+    internal class Table : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
         public ContentDirection ContentDirection { get; set; }
         
@@ -38,11 +38,29 @@ namespace FossPDF.Elements.Table
         public void ResetState()
         {
             Initialize();
-            
+
             foreach (var x in Cells)
                 x.IsRendered = false;
-            
+
             CurrentRow = 1;
+        }
+
+        object? IStateSnapshot.CaptureState()
+        {
+            return (Cells.Select(x => x.IsRendered).ToArray(), CurrentRow);
+        }
+
+        void IStateSnapshot.RestoreState(object? state)
+        {
+            if (state is not ValueTuple<bool[], int> snapshot)
+                return;
+
+            var (rendered, currentRow) = snapshot;
+
+            for (var index = 0; index < Cells.Count && index < rendered.Length; index++)
+                Cells[index].IsRendered = rendered[index];
+
+            CurrentRow = currentRow;
         }
         
         private void Initialize()

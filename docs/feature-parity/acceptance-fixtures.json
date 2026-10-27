@@ -753,7 +753,7 @@
       "work_items": [
         "FP-104"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "paragraphs": [
           "Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha Alpha ",
@@ -764,9 +764,13 @@
           240,
           180
         ],
+        "margin": 10,
         "columns": 2,
         "gap": 12,
         "balance": true,
+        "balance_tolerance": 20,
+        "font": "Lato",
+        "font_size": 12,
         "separator": {
           "width": 1,
           "color": "#808080"
