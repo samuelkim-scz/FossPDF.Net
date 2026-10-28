@@ -1264,7 +1264,10 @@
       "work_items": [
         "FP-303"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "source": "PAG-001",
         "overlay": {
