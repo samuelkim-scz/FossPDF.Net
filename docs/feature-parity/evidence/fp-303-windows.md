@@ -71,3 +71,7 @@ The alpha fixture checks an untouched yellow pixel, an original red pixel, the r
 ### macOS CI runner availability
 
 GitHub repeatedly cancelled unassigned macOS ARM jobs with a hosted-runner acquisition failure and ARM capacity notices (run 40708037389). The workflow now pins the standard supported macOS 26 Intel image, retaining all three macOS job suites. This changes CI architecture coverage; the new feature is not claimed to have passed the full ARM suite. Runner labels: https://docs.github.com/en/actions/reference/runners/github-hosted-runners .
+
+### Strict compression interoperability review
+
+A later qpdf 12.4.2 inspection found that the pinned PDFsharp Flate encoder omits the Adler-32 trailer. The companion now uses .NET ZLibStream for newly created forms and keeps primary page content as raw references, avoiding PDFsharp's implicit decode/re-encode path. Original encoded bytes and filters are verified independently. Python's strict zlib end-of-stream/checksum assertions run in all build jobs. All five PDF-303 artifacts pass qpdf --check with exit code 0; the independent reader/rendering script passes 47 checks. The Release build remains warning-free, all 23 layer tests and all 31 active net9.0 parity fixtures pass.
