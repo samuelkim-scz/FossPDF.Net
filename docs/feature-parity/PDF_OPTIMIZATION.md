@@ -151,3 +151,21 @@ on every runner.
 See [Source/FossPDF.Examples/PdfCompressionExamples.cs](../../Source/FossPDF.Examples/PdfCompressionExamples.cs)
 for runnable examples and [evidence/fp-306-windows.md](evidence/fp-306-windows.md) for the recorded
 Windows validation.
+
+### Processing overhead on fixed inputs
+
+The runnable `MeasureOptimizationOverheadOnFixedInputs` example warms up once and measures five
+complete adapter calls per input, including executable/version discovery, temporary-file I/O and
+the qpdf process. Rendering is excluded because each input PDF is created once before measurement.
+The recorded Windows medians with qpdf 12.4.2 are observations, not performance budgets:
+
+| Input | Before | After | Median added processing |
+| --- | --- | --- | --- |
+| Text | 90,820 B | 88,865 B | 272.24 ms |
+| Images | 65,070 B | 64,950 B | 231.97 ms |
+| Attachments (40,000 CSV rows + 512 KiB binary) | 606,723 B | 605,326 B | 319.47 ms |
+
+`measurements.json` retains all five samples. The independent inspector verifies the recorded file
+sizes, every page's decoded painting and boxes, document metadata, exact attachment bytes, and
+qpdf structural/linearization checks. All build jobs run the five examples and upload these inputs,
+outputs and measurements; no timing threshold is imposed.

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using FossPDF.Drawing;
 using FossPDF.Fluent;
 using FossPDF.Helpers;
@@ -24,6 +26,49 @@ namespace FossPDF.Examples
     /// </summary>
     public class PdfCompressionExamples
     {
+        [Test]
+        public void MeasureOptimizationOverheadOnFixedInputs()
+        {
+            var directory = CreateOutputDirectory("pdf-optimization-measurements");
+            var qpdf = RequireQpdf();
+            var binary = new byte[512 * 1024];
+            new Random(306).NextBytes(binary);
+            var csv = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Repeat("2026-10-28,service,1200.00,EUR\n", 40000)));
+            var attachments = DocumentOperation.Load(CreateInvoice().GeneratePdf())
+                .AddAttachment(csv, new DocumentOperation.DocumentAttachment { AttachmentName = "rows.csv", MimeType = "text/csv" })
+                .AddAttachment(binary, new DocumentOperation.DocumentAttachment { AttachmentName = "binary.dat" })
+                .SaveToBytes();
+            var settings = new PdfOptimizationSettings
+            {
+                EnableAdditionalCompression = true,
+                Linearize = true,
+                QpdfExecutablePath = qpdf
+            };
+            var measurements = new List<object>();
+            foreach (var (name, input) in new[]
+                     { ("text", CreateReport().GeneratePdf()), ("images", CreateImageReport().GeneratePdf()), ("attachments", attachments) })
+            {
+                PdfOptimizer.Optimize(input, settings); // Warm up runtime/tool discovery before measuring.
+                var times = new List<double>();
+                byte[] output = Array.Empty<byte>();
+                for (var sample = 0; sample < 5; sample++)
+                {
+                    var elapsed = Stopwatch.StartNew();
+                    output = PdfOptimizer.Optimize(input, settings);
+                    times.Add(elapsed.Elapsed.TotalMilliseconds);
+                }
+                times.Sort();
+                File.WriteAllBytes(Path.Combine(directory, name + "-source.pdf"), input);
+                File.WriteAllBytes(Path.Combine(directory, name + "-optimized.pdf"), output);
+                Assert.That(ReadPageCount(output), Is.EqualTo(ReadPageCount(input)));
+                measurements.Add(new { name, inputBytes = input.Length, outputBytes = output.Length,
+                    medianMilliseconds = times[2], samples = times.ToArray() });
+                TestContext.Out.WriteLine($"{name}: {input.Length} -> {output.Length} bytes; qpdf median {times[2]:F2} ms (5 samples).");
+            }
+            File.WriteAllText(Path.Combine(directory, "measurements.json"),
+                JsonSerializer.Serialize(measurements, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
         [Test]
         public void GenerateWithAdditionalCompressionAndLinearization()
         {
