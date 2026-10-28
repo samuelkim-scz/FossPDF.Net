@@ -11,6 +11,10 @@ namespace FossPDF.Elements.Text.Calculation
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
         public float TotalAscent { get; set; }
+
+        // Top of an injected element relative to the text baseline; unused by text spans.
+        public float InjectedElementTop { get; set; }
+
         public Size TextSize { get; set; }
 
         /// <summary>

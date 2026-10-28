@@ -86,6 +86,13 @@ namespace FossPDF.Drawing
             var debuggingState = configuration.EnableDebugging ? new DebuggingState() : null;
             var content = ComposeContent(document, configuration, debuggingState);
 
+            var usesZIndex = false;
+            content.VisitChildren(x =>
+            {
+                if (x is ZIndex)
+                    usesZIndex = true;
+            });
+
             var documentSpecificFontManager = FontManager.MakeDocumentSpecific();
             try
             {
@@ -97,6 +104,9 @@ namespace FossPDF.Drawing
                 var subsets = PrepareSubsetting(new[] { content }, documentSpecificFontManager);
                 documentSpecificFontManager.FireSubsetCallback(subsets);
                 pageContext.DocumentLength = RenderPass(pageContext, new FreeCanvas(), content, debuggingState, configuration.PageLimit);
+
+                if (usesZIndex && canvas is SkiaCanvasBase skiaCanvas)
+                    skiaCanvas.EnableZIndexLayers();
 
                 pageContext.DocumentLength = RenderPass(pageContext, canvas, content, debuggingState, configuration.PageLimit);
 

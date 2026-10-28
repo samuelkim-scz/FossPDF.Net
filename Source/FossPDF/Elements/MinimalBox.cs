@@ -1,27 +1,14 @@
-﻿using System;
-using FossPDF.Drawing;
-using FossPDF.Infrastructure;
-
-namespace FossPDF.Elements
+﻿namespace FossPDF.Elements
 {
-    internal class MinimalBox : ContainerElement, IContentDirectionAware
+    /// <summary>
+    /// Legacy name for shrinking both axes. Kept as a supported equivalent of Shrink().
+    /// </summary>
+    internal class MinimalBox : Shrink
     {
-        public ContentDirection ContentDirection { get; set; }
-
-        internal override void Draw(Size availableSpace)
+        public MinimalBox()
         {
-            var targetSize = base.Measure(availableSpace);
-
-            if (targetSize.Type == SpacePlanType.Wrap)
-                return;
-
-            var translate = ContentDirection == ContentDirection.RightToLeft
-                ? new Position(availableSpace.Width - targetSize.Width, 0)
-                : Position.Zero;
-
-            Canvas.Translate(translate);
-            base.Draw(targetSize);
-            Canvas.Translate(translate.Reverse());
+            Vertical = true;
+            Horizontal = true;
         }
     }
 }

@@ -36,6 +36,7 @@ namespace FossPDF.Drawing
 
         public override void Dispose()
         {
+            DisposeZIndexLayers();
             Canvas?.Dispose();
             Canvas = null;
             Surface?.Dispose();
@@ -53,10 +54,13 @@ namespace FossPDF.Drawing
             Canvas = Surface.Canvas;
             Canvas.Clear(Background);
             Canvas.Scale(scalingFactor);
+
+            BeginZIndexLayers(size);
         }
 
         public override void EndPage()
         {
+            EndZIndexLayers();
             ActiveCanvas.Save();
             var surface = Surface ?? throw new InvalidOperationException("No page image surface is available.");
             using var skImage = surface.Snapshot();

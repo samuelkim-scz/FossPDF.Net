@@ -1592,6 +1592,9 @@ namespace FossPDF.UnitTests.Parity
             public void DrawSection(string sectionName) { }
             public void Rotate(float angle) { }
             public void Scale(float scaleX, float scaleY) { }
+
+        public int GetZIndex() => 0;
+        public void SetZIndex(int index) { }
         }
 
         private readonly struct TextRun
@@ -1624,8 +1627,225 @@ namespace FossPDF.UnitTests.Parity
             public float Bottom { get; }
         }
 
-        [ParityFixtureRunner("TXT-001")]
+        [ParityFixtureRunner("LAY-107")]
+        private static void RunLayoutHelpers(ParityFixture fixture)
+        {
+            var available = fixture.Input.GetProperty("available");
+            var childSize = fixture.Input.GetProperty("child");
 
+            var availableWidth = available[0].GetInt32();
+            var availableHeight = available[1].GetInt32();
+            var childWidth = childSize[0].GetInt32();
+            var childHeight = childSize[1].GetInt32();
+
+            var axes = FixtureCatalog.ReadArray(fixture.Input, "shrink_axes")
+                .Select(x => x.GetString()!)
+                .ToArray();
+            var zOrder = FixtureCatalog.ReadArray(fixture.Input, "z_order")
+                .Select(x => x.GetInt32())
+                .ToArray();
+            var inlineAlignments = FixtureCatalog.ReadArray(fixture.Input, "inline_alignments")
+                .Select(x => MapInjectedElementAlignment(x.GetString()!))
+                .ToArray();
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(availableWidth * axes.Length, availableHeight);
+                    page.Margin(0);
+                    page.PageColor("#ffffff");
+
+                    page.Content().Row(row =>
+                    {
+                        for (var index = 0; index < axes.Length; index++)
+                        {
+                            var item = row.ConstantItem(availableWidth).Height(availableHeight);
+                            var color = index switch
+                            {
+                                0 => "#ff0000",
+                                1 => "#00ff00",
+                                _ => "#0000ff"
+                            };
+
+                            var shrink = axes[index].ToLowerInvariant() switch
+                            {
+                                "horizontal" => item.ShrinkHorizontal(),
+                                "vertical" => item.ShrinkVertical(),
+                                "both" => item.Shrink(),
+                                _ => throw new InvalidOperationException($"Unknown shrink axis: {axes[index]}")
+                            };
+
+                            shrink.Background(color).Width(childWidth).Height(childHeight);
+                        }
+                    });
+                });
+
+                container.Page(page =>
+                {
+                    page.Size(60, 60);
+                    page.Margin(0);
+                    page.PageColor("#ffffff");
+
+                    page.Content().Layers(layers =>
+                    {
+                        var colors = new[] { "#ff0000", "#00ff00", "#0000ff" };
+                        var offsets = new[] { 0, 15, 30 };
+
+                        for (var index = 0; index < zOrder.Length; index++)
+                        {
+                            var layer = index == 0 ? layers.PrimaryLayer() : layers.Layer();
+                            layer.ZIndex(zOrder[index])
+                                .PaddingLeft(offsets[index])
+                                .PaddingTop(offsets[index])
+                                .Width(30)
+                                .Height(30)
+                                .Background(colors[index]);
+                        }
+                    });
+                });
+
+                container.Page(page =>
+                {
+                    page.Size(220, 60);
+                    page.Margin(5);
+                    page.PageColor("#ffffff");
+                    page.DefaultTextStyle(style => style.FontSize(24));
+
+                    page.Content().Text(text =>
+                    {
+                        text.Span("X");
+
+                        var colors = new[] { "#ff0000", "#00ff00", "#0000ff", "#ffff00" };
+
+                        for (var index = 0; index < inlineAlignments.Length; index++)
+                        {
+                            text.Element(inlineAlignments[index])
+                                .Width(8)
+                                .Height(8)
+                                .Background(colors[index]);
+                        }
+                    });
+                });
+            });
+
+            var pdf = document.GeneratePdf(out var pageCount);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(pageCount, Is.EqualTo(3));
+            Assert.That(images, Has.Length.EqualTo(3));
+
+            SaveArtifact("LAY-107", "document.pdf", pdf);
+            var names = new[] { "shrink", "z-index", "inline-alignment" };
+            for (var index = 0; index < images.Length; index++)
+                SaveArtifact("LAY-107", $"page-{index + 1}-{names[index]}.png", images[index]);
+
+            using var shrinkPage = SKBitmap.Decode(images[0]);
+            using var zIndexPage = SKBitmap.Decode(images[1]);
+            using var inlinePage = SKBitmap.Decode(images[2]);
+
+            Assert.That(shrinkPage, Is.Not.Null);
+            Assert.That(zIndexPage, Is.Not.Null);
+            Assert.That(inlinePage, Is.Not.Null);
+
+            for (var index = 0; index < axes.Length; index++)
+            {
+                var color = index switch
+                {
+                    0 => "#ff0000",
+                    1 => "#00ff00",
+                    _ => "#0000ff"
+                };
+
+                var expectedWidth = axes[index].ToLowerInvariant() is "horizontal" or "both"
+                    ? childWidth
+                    : availableWidth;
+                var expectedHeight = axes[index].ToLowerInvariant() is "vertical" or "both"
+                    ? childHeight
+                    : availableHeight;
+
+                var bounds = FindColorBounds(shrinkPage!, color);
+                Assert.That(bounds, Is.Not.Null, $"{axes[index]} shrink marker was not rendered.");
+
+                Assert.That(bounds!.Value.Left, Is.EqualTo(index * availableWidth));
+                Assert.That(bounds.Value.Top, Is.EqualTo(0));
+                Assert.That(bounds.Value.Right, Is.EqualTo(index * availableWidth + expectedWidth - 1));
+                Assert.That(bounds.Value.Bottom, Is.EqualTo(expectedHeight - 1));
+            }
+
+            var zColors = new[] { "#ff0000", "#00ff00", "#0000ff" };
+            var zOverlapA = zOrder[0] > zOrder[1] ? zColors[0] : zColors[1];
+            var zOverlapB = zOrder[1] > zOrder[2] ? zColors[1] : zColors[2];
+
+            Assert.That(zIndexPage!.GetPixel(5, 5), Is.EqualTo(SKColor.Parse(zColors[0])));
+            Assert.That(zIndexPage.GetPixel(17, 17), Is.EqualTo(SKColor.Parse(zOverlapA)),
+                "Overlapping markers follow numeric depth, with composition order breaking ties.");
+            Assert.That(zIndexPage.GetPixel(40, 40), Is.EqualTo(SKColor.Parse(zOverlapB)),
+                "Overlapping markers follow numeric depth, with composition order breaking ties.");
+            Assert.That(zIndexPage.GetPixel(55, 55), Is.EqualTo(SKColor.Parse(zColors[2])));
+
+            var textBounds = FindDarkBounds(inlinePage!);
+            Assert.That(textBounds, Is.Not.Null, "The text prefix must render.");
+
+            var markerColors = new[] { "#ff0000", "#00ff00", "#0000ff", "#ffff00" };
+            var markers = new List<(TextInjectedElementAlignment Alignment, Bounds Bounds)>();
+
+            for (var index = 0; index < inlineAlignments.Length; index++)
+            {
+                var bounds = FindColorBounds(inlinePage!, markerColors[index]);
+                Assert.That(bounds, Is.Not.Null, $"{inlineAlignments[index]} marker was not rendered.");
+                markers.Add((inlineAlignments[index], bounds!.Value));
+            }
+
+            Assert.That(markers, Is.Not.Empty);
+
+            for (var index = 1; index < markers.Count; index++)
+            {
+                Assert.That(markers[index].Bounds.Left, Is.GreaterThan(markers[index - 1].Bounds.Left),
+                    "Injected markers retain the logical order of their text spans.");
+            }
+
+            Assert.That(markers[0].Bounds.Left, Is.GreaterThan(textBounds!.Value.Right),
+                "The text prefix stays before the injected markers.");
+
+            var byAlignment = markers.ToDictionary(x => x.Alignment, x => x.Bounds);
+
+            if (byAlignment.TryGetValue(TextInjectedElementAlignment.Top, out var top) &&
+                byAlignment.TryGetValue(TextInjectedElementAlignment.Bottom, out var bottom))
+            {
+                Assert.That(bottom.Top, Is.LessThan(top.Top),
+                    "Bottom alignment places the element above the font top.");
+                Assert.That(bottom.Bottom + 1, Is.EqualTo(top.Top).Within(1));
+            }
+
+            if (byAlignment.TryGetValue(TextInjectedElementAlignment.Middle, out var middle) &&
+                byAlignment.TryGetValue(TextInjectedElementAlignment.Top, out var topMarker))
+            {
+                Assert.That(middle.Top, Is.GreaterThan(topMarker.Top));
+            }
+
+            if (byAlignment.TryGetValue(TextInjectedElementAlignment.AboveBaseline, out var baseline))
+            {
+                Assert.That(baseline.Bottom, Is.EqualTo(textBounds!.Value.Bottom).Within(2),
+                    "Above-baseline content ends on the text baseline.");
+            }
+        }
+
+        private static TextInjectedElementAlignment MapInjectedElementAlignment(string value)
+        {
+            return value.ToLowerInvariant() switch
+            {
+                "top" => TextInjectedElementAlignment.Top,
+                "middle" => TextInjectedElementAlignment.Middle,
+                "bottom" => TextInjectedElementAlignment.Bottom,
+                "baseline" or "above-baseline" or "abovebaseline" => TextInjectedElementAlignment.AboveBaseline,
+                "below-baseline" or "belowbaseline" => TextInjectedElementAlignment.BelowBaseline,
+                _ => throw new InvalidOperationException($"Unknown inline alignment: {value}")
+            };
+        }
+
+        [ParityFixtureRunner("TXT-001")]
         private static void RunStyledText(ParityFixture fixture)
         {
             var document = CreatePage(fixture, page =>
@@ -2881,6 +3101,56 @@ namespace FossPDF.UnitTests.Parity
             Assert.That(changed, Is.LessThanOrEqualTo(policy.MaxChangedPixelFraction),
                 $"{fixture.Id} page {pageIndex + 1}: {changed:P3} of pixels exceeded " +
                 $"the {policy.SolidChannelTolerance}-level channel budget. Inspect the attached reference and actual PNGs.");
+        }
+
+        private static Bounds? FindDarkBounds(SKBitmap bitmap)
+        {
+            return FindBounds(bitmap, pixel => pixel.Red < 60 && pixel.Green < 60 && pixel.Blue < 60);
+        }
+
+        private static Bounds? FindColorBounds(SKBitmap bitmap, string color)
+        {
+            var target = SKColor.Parse(color);
+            return FindBounds(bitmap,
+                pixel => pixel.Red == target.Red && pixel.Green == target.Green && pixel.Blue == target.Blue);
+        }
+
+        private static Bounds? FindBounds(SKBitmap bitmap, Func<SKColor, bool> predicate)
+        {
+            var left = int.MaxValue;
+            var top = int.MaxValue;
+            var right = int.MinValue;
+            var bottom = int.MinValue;
+
+            for (var y = 0; y < bitmap.Height; y++)
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                if (!predicate(bitmap.GetPixel(x, y)))
+                    continue;
+
+                left = Math.Min(left, x);
+                top = Math.Min(top, y);
+                right = Math.Max(right, x);
+                bottom = Math.Max(bottom, y);
+            }
+
+            return left == int.MaxValue ? null : new Bounds(left, top, right, bottom);
+        }
+
+        private readonly struct Bounds
+        {
+            public int Left { get; }
+            public int Top { get; }
+            public int Right { get; }
+            public int Bottom { get; }
+
+            public Bounds(int left, int top, int right, int bottom)
+            {
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
+            }
         }
 
         private static void SaveArtifact(string fixtureId, string name, byte[] bytes)

@@ -315,16 +315,43 @@ namespace FossPDF.Fluent
             Hyperlink(text, url).Style(style);
         }
 
+        /// <summary>
+        /// Embeds custom content within the text. The container must fit within one line.
+        /// </summary>
         public IContainer Element()
         {
+            return Element(TextInjectedElementAlignment.AboveBaseline);
+        }
+
+        /// <summary>
+        /// Embeds custom content within the text. The container must fit within one line.
+        /// </summary>
+        /// <param name="alignment">Position of the embedded element relative to the surrounding text.</param>
+        public IContainer Element(TextInjectedElementAlignment alignment)
+        {
+            if (!Enum.IsDefined(typeof(TextInjectedElementAlignment), alignment))
+                throw new ArgumentOutOfRangeException(nameof(alignment));
+
             var container = new Container();
 
             AddItemToLastTextBlock(new TextBlockElement
             {
-                Element = container
+                Element = container,
+                Alignment = alignment
             });
 
             return container.AlignBottom().MinimalBox();
+        }
+
+        /// <summary>
+        /// Embeds custom content within the text. The container must fit within one line.
+        /// </summary>
+        public void Element(Action<IContainer> handler, TextInjectedElementAlignment alignment = TextInjectedElementAlignment.AboveBaseline)
+        {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            handler(Element(alignment));
         }
 
         internal void Compose(IContainer container)

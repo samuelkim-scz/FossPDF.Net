@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using FossPDF.Infrastructure;
@@ -9,8 +10,126 @@ namespace FossPDF.Drawing
 {
     internal abstract class SkiaCanvasBase : ICanvas, IRenderingCanvas, IDisposable
     {
+        private sealed class ZIndexLayer : IDisposable
+        {
+            public SKPictureRecorder Recorder { get; } = new SKPictureRecorder();
+            public SKCanvas Canvas { get; }
+
+            public ZIndexLayer(SKRect bounds)
+            {
+                Canvas = Recorder.BeginRecording(bounds);
+            }
+
+            public void Dispose()
+            {
+                Canvas.Dispose();
+                Recorder.Dispose();
+            }
+        }
+
+        private bool ZIndexLayersEnabled { get; set; }
+        private int CurrentZIndex { get; set; }
+        private SKRect PageBounds { get; set; }
+        private Dictionary<int, ZIndexLayer> ZIndexLayers { get; } = new Dictionary<int, ZIndexLayer>();
+
         internal SKCanvas? Canvas { get; set; }
-        protected SKCanvas ActiveCanvas => Canvas ?? throw new InvalidOperationException("No page is being rendered.");
+
+        protected SKCanvas ActiveCanvas
+        {
+            get
+            {
+                if (ZIndexLayersEnabled && ZIndexLayers.TryGetValue(CurrentZIndex, out var layer))
+                    return layer.Canvas;
+
+                return Canvas ?? throw new InvalidOperationException("No page is being rendered.");
+            }
+        }
+
+        /// <summary>
+        /// Captures each z-index level in its own picture so the page can compose them in depth order.
+        /// </summary>
+        internal void EnableZIndexLayers()
+        {
+            ZIndexLayersEnabled = true;
+        }
+
+        protected void BeginZIndexLayers(Size pageSize)
+        {
+            DisposeZIndexLayers();
+
+            PageBounds = new SKRect(0, 0, pageSize.Width, pageSize.Height);
+            CurrentZIndex = 0;
+
+            if (ZIndexLayersEnabled)
+                GetZIndexLayer(0);
+        }
+
+        protected void EndZIndexLayers()
+        {
+            if (!ZIndexLayersEnabled)
+                return;
+
+            var layers = ZIndexLayers
+                .OrderBy(x => x.Key)
+                .Select(x => x.Value)
+                .ToList();
+
+            ZIndexLayers.Clear();
+
+            try
+            {
+                foreach (var layer in layers)
+                {
+                    using var picture = layer.Recorder.EndRecording();
+                    Canvas?.DrawPicture(picture);
+                }
+            }
+            finally
+            {
+                foreach (var layer in layers)
+                    layer.Dispose();
+
+                CurrentZIndex = 0;
+            }
+        }
+
+        protected void DisposeZIndexLayers()
+        {
+            foreach (var layer in ZIndexLayers.Values)
+                layer.Dispose();
+
+            ZIndexLayers.Clear();
+            CurrentZIndex = 0;
+        }
+
+        private SKCanvas GetZIndexLayer(int index)
+        {
+            if (ZIndexLayers.TryGetValue(index, out var existing))
+                return existing.Canvas;
+
+            var layer = new ZIndexLayer(PageBounds);
+            ZIndexLayers.Add(index, layer);
+            return layer.Canvas;
+        }
+
+        public int GetZIndex()
+        {
+            return CurrentZIndex;
+        }
+
+        public void SetZIndex(int index)
+        {
+            if (!ZIndexLayersEnabled)
+            {
+                CurrentZIndex = index;
+                return;
+            }
+
+            var matrix = ActiveCanvas.TotalMatrix;
+
+            CurrentZIndex = index;
+            GetZIndexLayer(index).SetMatrix(matrix);
+        }
 
         public Matrix4x4 Transform
         {

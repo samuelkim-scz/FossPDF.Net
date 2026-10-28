@@ -232,6 +232,17 @@ namespace FossPDF.Fluent
         {
             return element.Element(new Unconstrained());
         }
+
+        /// <summary>
+        /// Places the element at the given stacking depth. Higher values render above lower values.
+        /// </summary>
+        public static IContainer ZIndex(this IContainer element, int indexValue)
+        {
+            return element.Element(new ZIndex
+            {
+                Depth = indexValue
+            });
+        }
         
         public static IContainer DefaultTextStyle(this IContainer element, TextStyle textStyle)
         {

@@ -40,5 +40,8 @@ namespace FossPDF.UnitTests.TestEngine
         public void DrawHyperlink(string url, Size size) => throw new NotImplementedException();
         public void DrawSectionLink(string sectionName, Size size) => throw new NotImplementedException();
         public void DrawSection(string sectionName) => throw new NotImplementedException();
+
+        public int GetZIndex() => 0;
+        public void SetZIndex(int index) { }
     }
 }

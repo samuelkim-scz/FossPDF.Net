@@ -20,6 +20,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The image optimization guide](docs/feature-parity/IMAGE_OPTIMIZATION.md) covers per-image raster DPI, resampling, JPEG/WebP quality, document defaults and shared-image ownership.
 
+[The layout helpers guide](docs/feature-parity/LAYOUT_HELPERS.md) covers per-axis shrinking, z-index composition and alignment of content injected into text.
+
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
 ## Confirmed gaps and capabilities to validate

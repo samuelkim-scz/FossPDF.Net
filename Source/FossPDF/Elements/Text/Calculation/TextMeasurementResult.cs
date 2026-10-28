@@ -1,5 +1,6 @@
 ﻿using System;
 using FossPDF.Drawing;
+using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements.Text.Calculation
 {
@@ -27,5 +28,11 @@ namespace FossPDF.Elements.Text.Calculation
         public int TotalIndex { get; set; }
 
         public bool IsLast => EndIndex == TotalIndex;
+
+        /// <summary>
+        /// Set for an embedded element; null for a text span. The line uses this value to place
+        /// the element relative to the surrounding text metrics.
+        /// </summary>
+        public TextInjectedElementAlignment? InjectedElementAlignment { get; set; }
     }
 }
