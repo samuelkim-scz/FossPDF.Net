@@ -186,3 +186,20 @@ scopes a language change, `SemanticLink` associates URL and section-link annotat
 `ZIndex` or the qpdf compression/linearization settings cannot be captured and throw
 `NotSupportedException`. This is structural tagging, not a PDF/UA conformance claim; see
 [docs/feature-parity/PDF_ACCESSIBILITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ACCESSIBILITY.md).
+
+### Validated PDF/A-2 and PDF/A-3
+
+Select one of the six `DocumentSettings.PdfAConformance` profiles and call `GeneratePdfA`.
+The companion supplies archival XMP, embedded fonts/Unicode maps and an sRGB output intent;
+A levels use semantic tagging. PDF/A-3 supports owned `PdfAAttachment` snapshots with MIME,
+modification date and all five associated-file relationships. Optional qpdf optimization runs
+before validation.
+
+Applications deploy Java 8+ and the unmodified veraPDF 1.30.3 `cli-1.30.3.jar`, selected through
+`PdfAOptions.VeraPdfJarPath` or `FOSSPDF_VERAPDF_JAR`. The library verifies the qualified JAR hash
+and validates the finished bytes against the exact profile before publishing output. Validation
+failure throws `PdfAConformanceException` with `Report.Json`; the destination is untouched.
+`GeneratePdfA(out var report)` returns the full independent report alongside the bytes.
+Legacy PdfA selections map to validated PDF/A-2b in this API; ordinary `GeneratePdf` keeps the
+existing unvalidated legacy behavior. See
+[PDF/A deployment, example and limitations](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ARCHIVAL.md).

@@ -40,6 +40,7 @@
         <InternalsVisibleTo Include="FossPDF.Examples" />
         <InternalsVisibleTo Include="FossPDF.Previewer" />
         <InternalsVisibleTo Include="FossPDF.Svg" />
+        <InternalsVisibleTo Include="FossPDF.PdfOperations" />
     </ItemGroup>
 
     <ItemGroup>

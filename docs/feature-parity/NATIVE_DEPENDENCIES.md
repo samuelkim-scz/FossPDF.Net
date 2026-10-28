@@ -158,3 +158,20 @@ The .NET corpus covers 40/128/256-bit encryption, deliberately clear metadata, e
 The qpdf staging directory uses owner-only mode 0700 on Unix. The net9.0 core target uses the framework UnixFileMode API; netstandard2.1 calls the system libc mkdir function on Linux/macOS because that target lacks the managed overload. No libc binary is distributed. Both paths are exercised by the net8.0/net9.0 CI suites. Windows uses the user temporary directory's inherited ACL.
 
 Tagged-PDF visual regression validation uses PyMuPDF 1.26.7 (AGPL/commercial) as an external development-only Python tool, pinned in requirements-tagging-validation.txt. It is never referenced, packed or distributed by the core or companion .NET packages. This version supplies Windows/Linux/macOS Intel and ARM wheels: https://pypi.org/project/pymupdf/1.26.7/ . Production tagging continues to use the exact MIT PDFsharp 6.2.4 pin.
+
+
+## FP-402 external PDF/A validator
+
+`GeneratePdfA` in the optional .NET 9 operations companion uses the existing Skia/PDFsharp writer
+and requires application-deployed Java 8+ and the unmodified veraPDF 1.30.3 CLI JAR. These are
+external executables, never NuGet dependencies or files distributed by FossPDF. veraPDF offers
+[GPLv3+/MPLv2+ licensing](https://github.com/veraPDF/veraPDF-apps#licensing); deployments obtain it directly with its notices and choose an applicable
+license. CI uses Temurin 17 via actions/setup-java and installs only the CLI pack.
+
+The official 1.30.3 release archive's detached signature was verified against release key
+`13DD102B4DD69354D12DE5A83184863278B17FE7`. The reviewed archive, CLI JAR and six bundled profile
+hashes are pinned in `Source/FossPDF.UnitTests/Parity/install_verapdf.py`; runtime verifies the JAR
+hash, so another validator build cannot silently change acceptance. Upgrade the runtime hash,
+installer manifest and qualification corpus together after reviewing the official release and
+licenses. No vendor code or profile XML is copied into the MIT library. See
+[deployment and limitations](PDF_ARCHIVAL.md) and [qualification evidence](evidence/fp-402-windows.md).

@@ -159,6 +159,28 @@ namespace FossPDF.PdfOperations
                         new XElement(xmp + "ModifyDate", info.ModificationDate.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture))))));
         }
 
+        internal static byte[] ApplyArchivalIdentification(byte[] saved, PdfDocument document, string flavour,
+            IReadOnlyList<XElement> extensions)
+        {
+            var packet = Create(document.Info);
+            var description = packet.Root!.Element(Rdf + "RDF")!.Element(Rdf + "Description")!;
+            XNamespace pdfaid = "http://www.aiim.org/pdfa/ns/id/";
+            description.Add(new XAttribute(XNamespace.Xmlns + "pdfaid", pdfaid),
+                new XElement(pdfaid + "part", flavour[0].ToString()),
+                new XElement(pdfaid + "conformance", flavour[1].ToString().ToUpperInvariant()));
+            var names = description.Elements().Select(x => x.Name).ToHashSet();
+            foreach (var property in extensions)
+            {
+                if (!names.Add(property.Name))
+                    throw new ArgumentException($"The metadata property '{property.Name}' already exists.", nameof(extensions));
+                description.Add(new XElement(property));
+            }
+            var bytes = Encoding.UTF8.GetBytes(packet.ToString(SaveOptions.DisableFormatting));
+            if (bytes.Length > 16 * 1024 * 1024)
+                throw new PdfOperationException("The archival XMP packet exceeds the 16 MiB output limit.");
+            return AppendMetadataRevision(saved, document, bytes, false, false);
+        }
+
         private static byte[] AppendMetadataRevision(byte[] saved, PdfDocument document, byte[] data, bool encrypted, bool encryptMetadata)
         {
             // PDFsharp 6.2.4 replaces /Metadata during Save. Append one bounded incremental

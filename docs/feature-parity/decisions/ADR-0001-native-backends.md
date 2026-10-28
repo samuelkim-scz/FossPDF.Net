@@ -20,7 +20,7 @@ Tags and reading order cannot be reconstructed reliably from that flattened outp
 | SVG input | Parser currently belongs to examples | Svg.Skia 4.9.1 companion, replay `SKPicture` through `Canvas` | FP-201 |
 | Existing PDFs | No reader/page model | PDFsharp 6.2.4 companion | FP-302 through FP-305 |
 | Tagged PDF | No managed semantic/marked-content API | PDFsharp low-level object model plus captured semantic paint batches | FP-401, FP-403 |
-| PDF/A profiles | Only Skia's unqualified legacy `PdfA` flag | Explicit unsupported gate until profile-specific conversion/validation is qualified | FP-402 |
+| PDF/A profiles | Skia legacy PDF/A-2b output plus semantic assembly | Optional .NET 9 GeneratePdfA writer, final-output validation with pinned veraPDF 1.30.3; see PDF_ARCHIVAL.md | FP-402 |
 | Linearization | No writer in the selected cohort has been qualified | Keep explicit unsupported gate; qualify an opt-in qpdf adapter in FP-306 | FP-306 |
 
 This decision establishes mechanisms and integration contracts. It does not implement the production
@@ -174,3 +174,15 @@ The same executable and pinned independent inspector run on Windows, Linux and m
 manifest, environment and pass/fail JSON. See the [evidence record](../evidence/fp-002-windows.md)
 for reproduction commands and linked CI results. This ADR closes the backend decision task only;
 FP-201/302-306/401-403 retain their production feature and conformance gates.
+
+
+## FP-402 qualification update
+
+The profile gate is lifted only for the optional companion's `GeneratePdfA` API. It combines
+Skia's embedded fonts/ToUnicode/sRGB output intent with the FP-401 semantic writer for A levels,
+FP-305 associated files/XMP, and a qualified metadata serialization step for all six PDF/A-2/3
+profiles. Final bytes, including any FP-306 qpdf pass, must pass the exact pinned veraPDF 1.30.3
+profile before publication. Core remains independent and directs selected-profile GeneratePdf
+calls to the companion. Legacy GeneratePdf behavior is preserved without retroactively claiming
+all legacy documents conform. PDF/UA remains gated by FP-403. See
+[PDF_ARCHIVAL.md](../PDF_ARCHIVAL.md) and [FP-402 evidence](../evidence/fp-402-windows.md).

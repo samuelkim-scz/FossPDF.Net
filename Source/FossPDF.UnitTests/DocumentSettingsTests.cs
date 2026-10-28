@@ -281,7 +281,7 @@ namespace FossPDF.UnitTests
         [TestCase(PdfAConformance.PdfA3A)]
         [TestCase(PdfAConformance.PdfA3B)]
         [TestCase(PdfAConformance.PdfA3U)]
-        public void SelectablePdfAProfilesFailBeforeWritingUntilTheirBackendIsImplemented(PdfAConformance profile)
+        public void SelectablePdfAProfilesDirectCallersToTheOptionalArchivalWriter(PdfAConformance profile)
         {
             AssertUnsupported(new DocumentSettings { PdfAConformance = profile });
         }

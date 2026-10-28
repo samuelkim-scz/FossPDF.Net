@@ -42,6 +42,9 @@ namespace FossPDF.Infrastructure
 
         internal bool HasWork => EnableAdditionalCompression || DisableCompression || Linearize;
 
+        // The archival companion requires an EOL before every endstream, including binary streams.
+        internal bool NewlineBeforeEndstream { get; init; }
+
         internal void Validate()
         {
             if (DisableCompression && EnableAdditionalCompression)
