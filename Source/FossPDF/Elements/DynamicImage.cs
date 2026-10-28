@@ -9,23 +9,53 @@ namespace FossPDF.Elements
     internal class DynamicImage : Element
     {
         public Func<Size, byte[]>? Source { get; set; }
-        
+
+        public int? TargetDpi { get; set; }
+        public int? CompressionQuality { get; set; }
+        public bool UseOriginalImage { get; set; }
+
         internal override SpacePlan Measure(Size availableSpace)
         {
-            return availableSpace.IsNegative() 
-                ? SpacePlan.Wrap() 
+            return availableSpace.IsNegative()
+                ? SpacePlan.Wrap()
                 : SpacePlan.FullRender(availableSpace);
         }
 
         internal override void Draw(Size availableSpace)
         {
             var imageData = Source?.Invoke(availableSpace);
-            
+
             if (imageData == null)
                 return;
 
-            using var image = SKImage.FromEncodedData(imageData);
-            Canvas.DrawImage(image, Position.Zero, availableSpace);
+            using var original = SKImage.FromEncodedData(imageData);
+            if (original == null)
+                return;
+
+            // Layout passes do not paint images; skip expensive resampling and encoding.
+            if (Canvas is FreeCanvas)
+            {
+                Canvas.DrawImage(original, Position.Zero, availableSpace);
+                return;
+            }
+
+            var image = ImageProcessing.GetImageToDraw(
+                original,
+                availableSpace,
+                TargetDpi ?? PageContext?.ImageRasterDpi,
+                CompressionQuality ?? PageContext?.ImageCompressionQuality,
+                UseOriginalImage,
+                out var dispose);
+
+            try
+            {
+                Canvas.DrawImage(image, Position.Zero, availableSpace);
+            }
+            finally
+            {
+                if (dispose)
+                    image.Dispose();
+            }
         }
     }
 }

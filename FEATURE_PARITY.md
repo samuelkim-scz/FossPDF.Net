@@ -18,6 +18,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The settings contract](docs/feature-parity/SETTINGS.md) defines document/output defaults, compatibility mappings, concurrency and ownership rules for dependent feature work.
 
+[The image optimization guide](docs/feature-parity/IMAGE_OPTIMIZATION.md) covers per-image raster DPI, resampling, JPEG/WebP quality, document defaults and shared-image ownership.
+
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
 ## Confirmed gaps and capabilities to validate

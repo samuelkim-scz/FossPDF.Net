@@ -9,34 +9,34 @@ namespace FossPDF.Fluent
 {
     public static class ImageExtensions
     {
-        public static void Image(this IContainer parent, byte[] imageData, ImageScaling scaling = ImageScaling.FitWidth)
+        public static ImageDescriptor Image(this IContainer parent, byte[] imageData, ImageScaling scaling = ImageScaling.FitWidth)
         {
             var image = SKImage.FromEncodedData(imageData);
-            parent.Image(image, scaling);
-        }
-        
-        public static void Image(this IContainer parent, string filePath, ImageScaling scaling = ImageScaling.FitWidth)
-        {
-            var image = SKImage.FromEncodedData(filePath);
-            parent.Image(image, scaling);
-        }
-        
-        public static void Image(this IContainer parent, Stream fileStream, ImageScaling scaling = ImageScaling.FitWidth)
-        {
-            var image = SKImage.FromEncodedData(fileStream);
-            parent.Image(image, scaling);
+            return parent.Image(image, scaling);
         }
 
-        public static void Image(this IContainer parent, Infrastructure.Image image, ImageScaling scaling = ImageScaling.FitWidth)
+        public static ImageDescriptor Image(this IContainer parent, string filePath, ImageScaling scaling = ImageScaling.FitWidth)
         {
-            parent.Image(image.SkImage, scaling);
+            var image = SKImage.FromEncodedData(filePath);
+            return parent.Image(image, scaling);
         }
-        
-        private static void Image(this IContainer parent, SKImage image, ImageScaling scaling = ImageScaling.FitWidth)
+
+        public static ImageDescriptor Image(this IContainer parent, Stream fileStream, ImageScaling scaling = ImageScaling.FitWidth)
+        {
+            var image = SKImage.FromEncodedData(fileStream);
+            return parent.Image(image, scaling);
+        }
+
+        public static ImageDescriptor Image(this IContainer parent, Infrastructure.Image image, ImageScaling scaling = ImageScaling.FitWidth)
+        {
+            return parent.Image(image.SkImage, scaling);
+        }
+
+        private static ImageDescriptor Image(this IContainer parent, SKImage image, ImageScaling scaling = ImageScaling.FitWidth)
         {
             if (image == null)
                 throw new DocumentComposeException("Cannot load or decode provided image.");
-            
+
             var imageElement = new Elements.Image
             {
                 InternalImage = image
@@ -44,11 +44,12 @@ namespace FossPDF.Fluent
 
             if (scaling != ImageScaling.Resize)
             {
-                var aspectRatio = image.Width / (float)image.Height;
+                var aspectRatio = image.Width / (float) image.Height;
                 parent = parent.AspectRatio(aspectRatio, Map(scaling));
             }
 
             parent.Element(imageElement);
+            return new ImageDescriptor(imageElement);
 
             static AspectRatioOption Map(ImageScaling scaling)
             {
@@ -62,12 +63,15 @@ namespace FossPDF.Fluent
             }
         }
 
-        public static void Image(this IContainer element, Func<Size, byte[]> imageSource)
+        public static DynamicImageDescriptor Image(this IContainer element, Func<Size, byte[]> imageSource)
         {
-            element.Element(new DynamicImage
+            var imageElement = new DynamicImage
             {
                 Source = imageSource
-            });
+            };
+
+            element.Element(imageElement);
+            return new DynamicImageDescriptor(imageElement);
         }
     }
 }
