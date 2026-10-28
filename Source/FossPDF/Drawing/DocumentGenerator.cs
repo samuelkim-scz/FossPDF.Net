@@ -537,6 +537,12 @@ namespace FossPDF.Drawing
             if (content == null)
                 return;
 
+            if (content is Lazy lazy)
+            {
+                lazy.TextStyle = documentDefaultTextStyle;
+                return;
+            }
+
             if (content is TextBlock textBlock)
             {
                 foreach (var textBlockItem in textBlock.Items)

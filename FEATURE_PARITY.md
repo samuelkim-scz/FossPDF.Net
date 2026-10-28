@@ -22,6 +22,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The layout helpers guide](docs/feature-parity/LAYOUT_HELPERS.md) covers per-axis shrinking, z-index composition and alignment of content injected into text.
 
+[The deferred composition guide](docs/feature-parity/LAZY_COMPOSITION.md) covers Lazy/LazyWithCache lifecycle, cache trade-offs, failure rules and resource ownership.
+
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
 ## Confirmed gaps and capabilities to validate
