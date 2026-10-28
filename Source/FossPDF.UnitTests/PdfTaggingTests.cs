@@ -22,6 +22,51 @@ namespace FossPDF.UnitTests
     [Category("SemanticTagging")]
     public class PdfTaggingTests
     {
+        [TestCase("rounded")]
+        [TestCase("rotated")]
+        [TestCase("empty")]
+        [TestCase("canvas")]
+        [TestCase("svg")]
+        public void SemanticScopesPreserveClippingAndRestoredGraphicsState(string mode)
+        {
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(200, 180);
+                page.Margin(10);
+                page.Content().Column(column =>
+                {
+                    var shape = column.Item().Width(80).Height(80)
+                        .CornerRadius(mode == "rounded" ? 25 : 0).Clip();
+                    if (mode == "rotated")
+                        shape = shape.Rotate(20).Clip();
+                    else if (mode == "empty")
+                        shape = shape.TranslateX(100).Clip();
+                    var figure = shape.SemanticFigure("A clipped red shape.");
+                    if (mode == "canvas")
+                        figure.Canvas((canvas, size) =>
+                        {
+                            using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Red };
+                            canvas.DrawRect(0, 0, size.Width, size.Height, paint);
+                        });
+                    else if (mode == "svg")
+                        figure.Svg("<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='red'/></svg>");
+                    else
+                        figure.Background("#ff0000");
+                    column.Item().PaddingTop(15).Height(20).Background("#0000ff");
+                });
+            }));
+            var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "ACC-401");
+            Directory.CreateDirectory(directory);
+            var prefix = Path.Combine(directory, "graphics-state-" + mode);
+            File.WriteAllBytes(prefix + "-source.pdf", document.GeneratePdf());
+            var tagged = document.GenerateTaggedPdf();
+            File.WriteAllBytes(prefix + "-tagged.pdf", tagged);
+            using var inspected = TaggedPdfInspector.Open(tagged);
+            Assert.That(inspected.StructureRoles(), Does.Contain("Figure"));
+            TestContext.AddTestAttachment(prefix + "-source.pdf", "Independent renderer reference.");
+            TestContext.AddTestAttachment(prefix + "-tagged.pdf", "Independent renderer must find identical pixels.");
+        }
+
         [Test]
         public void StructureTreeContainsRolesInReadingOrder()
         {

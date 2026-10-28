@@ -82,3 +82,9 @@ The independent script accepts `--qpdf <path>` when qpdf is not on `PATH`. CI in
 - The standard structure vocabulary is supported; custom roles and role maps are not.
 - `FossPDF.PdfOperations` targets `net9.0` only per ADR-0001. The core capture APIs exist on both core targets, and no core package reference was added.
 - PDFsharp records its own producer string in `/Producer` and preserves the caller's value as `(Original: …)`; this is PDFsharp behavior, asserted by the metadata test.
+
+## Independent graphics-state review
+
+Semantic boundaries previously reduced clips to integer device bounds and lost the saved-state stack. Rounded/rotated clips changed and empty clips became visible; later content could remain clipped. The capture canvas now replays exact clip operations and saved frames, compacts adjacent transforms, and preserves antialiasing. Direct Canvas/SVG drawing also notifies capture of paint, so those batches are retained.
+
+Five end-to-end reference/tagged pairs cover rounded, rotated, empty, custom-canvas and vector-SVG cases. PyMuPDF 1.26.7 renders each at 2x; every channel agrees within 2/255 (only edge antialiasing), and each tagged PDF passes qpdf without warnings. The independent inspector passes 97 checks, including those visual comparisons; all 62 focused tagging/active parity checks pass, with 6 planned skips. The unit-project Release build has zero warnings/errors. CI runs the same pinned renderer and uploads the reference/tagged PDFs, PNGs and JSON report.

@@ -50,6 +50,8 @@ namespace FossPDF.Drawing
 
         private readonly List<PageCapture> _pages = new List<PageCapture>();
         private readonly Stack<Scope> _scopes = new Stack<Scope>();
+        private readonly List<(Action<SKCanvas> Apply, bool IsTransform)> _graphicsState = new();
+        private readonly Stack<int> _savePoints = new();
         private PageCapture? _page;
         private int _nextNodeId = 1;
         private int _nextNodeOrder = 1;
@@ -99,6 +101,8 @@ namespace FossPDF.Drawing
 
         public override void BeginPage(Size size)
         {
+            _graphicsState.Clear();
+            _savePoints.Clear();
             _page = new PageCapture(size);
             PushRecordingScope(null, suppressesSemantics: false);
         }
@@ -183,6 +187,69 @@ namespace FossPDF.Drawing
                 "ZIndex cannot be combined with tagged PDF generation because stacking layers cannot be addressable semantic batches.");
         }
 
+        public override void SaveState()
+        {
+            _savePoints.Push(_graphicsState.Count);
+            base.SaveState();
+            _graphicsState.Add((canvas => canvas.Save(), false));
+        }
+
+        public override void RestoreState()
+        {
+            base.RestoreState();
+            if (_savePoints.Count == 0)
+                return;
+            var start = _savePoints.Pop();
+            _graphicsState.RemoveRange(start, _graphicsState.Count - start);
+        }
+
+        public override void Translate(Position vector)
+        {
+            base.Translate(vector);
+            RecordTransform();
+        }
+
+        public override void Rotate(float angle)
+        {
+            base.Rotate(angle);
+            RecordTransform();
+        }
+
+        public override void Scale(float scaleX, float scaleY)
+        {
+            base.Scale(scaleX, scaleY);
+            RecordTransform();
+        }
+
+        private void RecordTransform()
+        {
+            var matrix = Canvas!.TotalMatrix;
+            var command = ((Action<SKCanvas>)(canvas => canvas.SetMatrix(matrix)), true);
+            // Collapse adjacent transforms so repeated layout translations do not grow replay work.
+            if (_graphicsState.Count > 0 && _graphicsState[^1].IsTransform)
+                _graphicsState[^1] = command;
+            else
+                _graphicsState.Add(command);
+        }
+
+        public override void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
+        {
+            base.ClipRectangle(vector, size, cornerRadius);
+            if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
+                return;
+            _graphicsState.Add((canvas =>
+            {
+                if (cornerRadius.IsZero)
+                    canvas.ClipRect(new SKRect(vector.X, vector.Y, vector.X + size.Width, vector.Y + size.Height),
+                        SKClipOperation.Intersect, antialias: true);
+                else
+                {
+                    using var rounded = CreateRoundRect(vector, size, cornerRadius);
+                    canvas.ClipRoundRect(rounded, SKClipOperation.Intersect, antialias: true);
+                }
+            }, false));
+        }
+
         protected override void OnPaintOperation()
         {
             foreach (var scope in _scopes)
@@ -218,8 +285,6 @@ namespace FossPDF.Drawing
                 Checkpoint(parent);
 
             var pageSize = _page?.Size ?? Size.Zero;
-            var matrix = Canvas?.TotalMatrix ?? SKMatrix.Identity;
-            var clip = GetClip(Canvas);
 
             var scope = new Scope
             {
@@ -228,7 +293,7 @@ namespace FossPDF.Drawing
                 PreviousCanvas = Canvas
             };
 
-            StartRecording(scope, pageSize, matrix, clip);
+            StartRecording(scope, pageSize);
             _scopes.Push(scope);
             Canvas = scope.Canvas;
         }
@@ -254,27 +319,24 @@ namespace FossPDF.Drawing
             if (scope.Recorder == null || scope.Canvas == null)
                 return;
 
-            var matrix = scope.Canvas.TotalMatrix;
-            var clip = GetClip(scope.Canvas);
             var pageSize = _page?.Size ?? Size.Zero;
 
             Complete(scope);
-            StartRecording(scope, pageSize, matrix, clip);
+            StartRecording(scope, pageSize);
 
             if (ReferenceEquals(_scopes.Peek(), scope))
                 Canvas = scope.Canvas;
         }
 
-        private void StartRecording(Scope scope, Size pageSize, SKMatrix matrix, SKRect clip)
+        private void StartRecording(Scope scope, Size pageSize)
         {
             var recorder = new SKPictureRecorder();
             var canvas = recorder.BeginRecording(new SKRect(0, 0, pageSize.Width, pageSize.Height));
 
-            if (!clip.IsEmpty)
-                canvas.ClipRect(clip, SKClipOperation.Intersect, antialias: false);
-
-            if (!matrix.IsIdentity)
-                canvas.SetMatrix(matrix);
+            // Recreate saved frames and the exact clip operations, including curved and empty
+            // intersections. DeviceClipBounds alone cannot describe those states.
+            foreach (var command in _graphicsState)
+                command.Apply(canvas);
 
             scope.Recorder = recorder;
             scope.Canvas = canvas;
@@ -332,17 +394,5 @@ namespace FossPDF.Drawing
             return stream.ToArray();
         }
 
-        private static SKRect GetClip(SKCanvas? canvas)
-        {
-            if (canvas == null)
-                return SKRect.Empty;
-
-            var bounds = canvas.DeviceClipBounds;
-
-            if (bounds.Width <= 0 || bounds.Height <= 0)
-                return SKRect.Empty;
-
-            return new SKRect(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
-        }
     }
 }

@@ -25,6 +25,7 @@ namespace FossPDF.Elements
             if (Handler == null || skiaCanvas == null)
                 return;
 
+            ((Drawing.SkiaCanvasBase)Canvas).NotifyPaintOperation();
             var originalMatrix = skiaCanvas.TotalMatrix;
             Handler.Invoke(skiaCanvas, availableSpace);
             skiaCanvas.SetMatrix(originalMatrix);

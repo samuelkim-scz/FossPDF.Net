@@ -153,7 +153,7 @@ namespace FossPDF.Drawing
         public abstract void BeginPage(Size size);
         public abstract void EndPage();
 
-        public void Translate(Position vector)
+        public virtual void Translate(Position vector)
         {
             ActiveCanvas.Translate(vector.X, vector.Y);
         }
@@ -165,6 +165,8 @@ namespace FossPDF.Drawing
         protected virtual void OnPaintOperation()
         {
         }
+
+        internal void NotifyPaintOperation() => OnPaintOperation();
 
         public void DrawRectangle(Position vector, Size size, string color)
         {
@@ -469,17 +471,17 @@ namespace FossPDF.Drawing
             ActiveCanvas.DrawImage(image, new SKRect(vector.X, vector.Y, size.Width, size.Height));
         }
 
-        public void SaveState()
+        public virtual void SaveState()
         {
             ActiveCanvas.Save();
         }
 
-        public void RestoreState()
+        public virtual void RestoreState()
         {
             ActiveCanvas.Restore();
         }
 
-        public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
+        public virtual void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
         {
             if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
                 return;
@@ -513,12 +515,12 @@ namespace FossPDF.Drawing
             ActiveCanvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), sectionName).Dispose();
         }
 
-        public void Rotate(float angle)
+        public virtual void Rotate(float angle)
         {
             ActiveCanvas.RotateDegrees(angle);
         }
 
-        public void Scale(float scaleX, float scaleY)
+        public virtual void Scale(float scaleX, float scaleY)
         {
             ActiveCanvas.Scale(scaleX, scaleY);
         }
@@ -594,7 +596,7 @@ namespace FossPDF.Drawing
             };
         }
 
-        private static SKRoundRect CreateRoundRect(Position vector, Size size, BorderRadius radius)
+        protected static SKRoundRect CreateRoundRect(Position vector, Size size, BorderRadius radius)
         {
             var rect = new SKRect(vector.X, vector.Y, vector.X + size.Width, vector.Y + size.Height);
             return CreateRoundRect(rect, ToRadii(radius.TopLeft, radius.TopRight, radius.BottomRight, radius.BottomLeft));

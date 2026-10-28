@@ -1,5 +1,6 @@
 """Independently verify FP-401 tagged PDF artifacts with pypdf and qpdf; validation only, never shipped with FossPDF."""
 import argparse
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -121,6 +122,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     parser.add_argument("--qpdf", default="qpdf")
+    parser.add_argument("--render", action="store_true")
     parser.add_argument("--catalog", type=Path, default=Path(__file__).resolve().parents[3] /
                         "docs/feature-parity/acceptance-fixtures.json")
     args = parser.parse_args()
@@ -238,6 +240,30 @@ def main():
             "ACC-401: qpdf --check reports a structurally valid PDF")
     require("no syntax or stream encoding errors" in (result.stdout + result.stderr).lower(),
             "ACC-401: qpdf reports no syntax or stream encoding errors")
+
+    rendering = []
+    if args.render:
+        import pymupdf
+        for mode in ("rounded", "rotated", "empty", "canvas", "svg"):
+            prefix = args.directory / ("graphics-state-" + mode)
+            before, after = Path(str(prefix) + "-source.pdf"), Path(str(prefix) + "-tagged.pdf")
+            with pymupdf.open(before) as original, pymupdf.open(after) as tagged:
+                require(len(original) == len(tagged) == 1, mode + ": visual regression fixture retains one page")
+                left = original[0].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+                right = tagged[0].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+                left.save(str(prefix) + "-source.png")
+                right.save(str(prefix) + "-tagged.png")
+                require((left.width, left.height, left.n) == (right.width, right.height, right.n),
+                        mode + ": rendered page geometry is unchanged")
+                error = max(abs(x-y) for x, y in zip(left.samples, right.samples))
+                require(error <= 2, mode + ": every rendered channel differs by at most 2/255 (edge antialiasing)")
+                rendering.append({"fixture": mode, "maximum_channel_error": error,
+                                  "source_sha256": hashlib.sha256(before.read_bytes()).hexdigest(),
+                                  "tagged_sha256": hashlib.sha256(after.read_bytes()).hexdigest()})
+            result = subprocess.run([args.qpdf, "--check", str(after)], capture_output=True, text=True)
+            require(result.returncode == 0, mode + ": regression PDF passes qpdf without warnings")
+    (args.directory / "independent-validation.json").write_text(json.dumps(
+        {"checks": checks, "rendering": rendering}, indent=2), encoding="utf-8")
 
     for message in checks:
         print("PASS " + message)
