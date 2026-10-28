@@ -16,7 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:
@@ -57,6 +58,15 @@ jobs:
             choco install qpdf -y --no-progress
           fi
 
+      - name: Make the installed Windows qpdf available to every validation step
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $qpdf = Get-ChildItem -LiteralPath $env:ProgramFiles -Directory -Filter 'qpdf*' |
+            Sort-Object Name -Descending | ForEach-Object { Join-Path $_.FullName 'bin/qpdf.exe' } |
+            Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $qpdf) { throw 'The installed qpdf executable was not found.' }
+          Split-Path -Parent $qpdf | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - name: Run unit tests
         shell: bash
         run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
@@ -72,6 +82,9 @@ jobs:
         run: |
           python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-security-validation.txt
           python Source/FossPDF.UnitTests/Parity/verify_pdf_security.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-304
+      - name: Inspect attachments and XMP with an independent reader
+        shell: bash
+        run: python Source/FossPDF.UnitTests/Parity/verify_pdf_attachments.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-305
       - name: Verify PDF compression and linearization with independent tools
         shell: bash
         run: |
@@ -109,7 +122,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:
@@ -160,7 +174,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:

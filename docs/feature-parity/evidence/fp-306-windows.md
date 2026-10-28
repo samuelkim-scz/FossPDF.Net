@@ -100,3 +100,9 @@ The tests and examples that need qpdf report an explicit skip when it is not ins
 - Optimization does not make PDF/A or PDF/UA conformance claims, and it is rejected together with encryption in the companion.
 - Size improvements are workload-dependent. Text-heavy and image-heavy output shrank by roughly 2% and 2.6%; tiny documents grew. Image bytes are already compressed, so the gain comes mostly from the document structure.
 - qpdf and veraPDF are not installed for `FossPDF.Quality`, so the quality tool still skips its conformance checks; linearization is validated by the fixture, unit tests and the independent script instead.
+
+## Integrated review after FP-305 selection
+
+The branch now integrates the reviewed attachment implementation merged in #60, replacing the superseded #58 code and guide. Stream/byte attachments, namespace-preserving XMP, and the protected-metadata bridge remain intact. Compression runs after the completed attachment/XMP revision and preserves it. The adapter stages PDFs in owner-only Unix directories (both framework paths checked in CI), and actual waiting processes are terminated by cancellation and timeout tests. Windows CI explicitly exports the installed qpdf directory for the Python inspector.
+
+Independent validation on the integrated tree: 47 layer checks, 36 security checks, 91 attachment/XMP checks with MuPDF, and 17 qpdf/pypdf compression checks pass. All four compression examples pass. Windows visual/performance checks pass, including the qpdf structural check; veraPDF is unavailable. The local qpdf 12.4.2 tool was obtained as the official portable release and its SHA-256 verified, without installing it system-wide. The Release solution build has zero warnings/errors; before adding the two real-process termination cases, the full suites passed 483 tests / 13 skips on net8.0 and 617 / 7 on net9.0. The final focused optimizer suites pass 21 / 29 cases respectively, including the new termination cases.

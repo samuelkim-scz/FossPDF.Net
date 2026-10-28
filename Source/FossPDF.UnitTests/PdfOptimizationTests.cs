@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using FossPDF.Drawing;
@@ -14,6 +16,51 @@ namespace FossPDF.UnitTests
     [Category("PdfOptimization")]
     public class PdfOptimizationTests
     {
+        [Test]
+        public void TemporaryDirectoryIsPrivateBeforeDocumentBytesAreWritten()
+        {
+            var directory = QpdfProcessBackend.CreatePrivateDirectory();
+            try
+            {
+                Assert.That(Directory.Exists(directory), Is.True);
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    Assert.That(File.GetUnixFileMode(directory),
+                        Is.EqualTo(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute));
+            }
+            finally { Directory.Delete(directory); }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ProcessBackendStopsARealWaitingProcess(bool cancel)
+        {
+            var windows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            var directory = QpdfProcessBackend.CreatePrivateDirectory();
+            try
+            {
+                var script = Path.Combine(directory, windows ? "wait.ps1" : "wait.sh");
+                File.WriteAllText(script, windows ? "Start-Sleep -Seconds 30" : "exec sleep 30\n");
+                var executable = windows
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
+                        "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
+                var arguments = windows
+                    ? new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script }
+                    : new[] { script };
+                using var cancellation = new CancellationTokenSource();
+                if (cancel)
+                    cancellation.CancelAfter(250);
+                var elapsed = Stopwatch.StartNew();
+                TestDelegate run = () => new QpdfProcessBackend().Run(executable, arguments,
+                    new byte[] { 1 }, TimeSpan.FromMilliseconds(cancel ? 10000 : 250), cancellation.Token);
+                if (cancel)
+                    Assert.Throws<OperationCanceledException>(run);
+                else
+                    Assert.That(Assert.Throws<PdfOptimizationException>(run)!.Message, Does.Contain("did not finish"));
+                Assert.That(elapsed.Elapsed, Is.LessThan(TimeSpan.FromSeconds(5)), "The 30-second process must be terminated.");
+            }
+            finally { Directory.Delete(directory, recursive: true); }
+        }
+
         [Test]
         public void LinearizedDocumentPassesTheQpdfLinearizationCheck()
         {

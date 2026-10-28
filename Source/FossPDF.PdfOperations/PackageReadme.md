@@ -101,63 +101,48 @@ readers, not copy protection. Encrypted PDFs cannot be PDF/A conforming. See
 [docs/feature-parity/PDF_SECURITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_SECURITY.md)
 for the strength/bit mapping, password rules and failure behavior.
 
-## Attachments and XMP metadata
-
-`AddAttachment` embeds a file with its exact bytes and lists it in both the embedded-files name
-tree and the catalog's associated-files array. The name, media type, description, timestamps and
-associated-file relationship (`Data`, `Source`, `Alternative`, `Supplement` or `Unspecified`) are
-written into the PDF. Attachments carried by the primary loaded document are kept; a duplicate key
-throws `PdfOperationException` unless `Replace` is set.
-
-```csharp
-DocumentOperation
-    .LoadFile("report.pdf")
-    .AddAttachment(new DocumentOperation.DocumentAttachment
-    {
-        FilePath = "terms.txt",
-        MimeType = "text/plain",
-        Relationship = DocumentOperation.DocumentAttachmentRelationship.Supplement
-    })
-    .Save("report-with-attachment.pdf");
-```
-
-`ExtendMetadata` appends a well-formed XML fragment to the XMP packet. The extension is written as
-a PDF incremental update, so the pages and the original document information stay unchanged.
-`ExtendMetadata` cannot be combined with `Encrypt`.
-
-## Compression and linearization
-
-`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
-document with the external [qpdf](https://qpdf.readthedocs.io/) 11.0 or newer executable, which the
-application provides (FossPDF does not distribute it). `UseQpdfExecutable(path)` overrides discovery
-for one operation; otherwise `DocumentSettings`/`FossPDF.Settings.QpdfExecutablePath` and then
-`PATH` are used. The optimizer runs after every other recorded operation, including attachments,
-XMP extensions, overlays and decryption.
-
-```csharp
-DocumentOperation
-    .LoadFile("report.pdf")
-    .EnableAdditionalCompression()
-    .Linearize()
-    .UseQpdfExecutable(@"C:\Program Files\qpdf 12.4.2\bin\qpdf.exe")
-    .Save("report-optimized.pdf");
-```
-
-Optimization cannot be combined with `Encrypt`: qpdf rewrites the document and writes it
-unencrypted, so such a plan throws `InvalidOperationException`. A missing or too-old qpdf throws
-`NotSupportedException` before any output is written. See
-[docs/feature-parity/PDF_OPTIMIZATION.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_OPTIMIZATION.md)
-for the flag mapping, measured sizes and failure behavior.
-
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
 - Page boxes, content streams, resources and annotations are preserved. Metadata (title, author,
   subject, keywords, creator and creation/modification dates) is copied from the primary loaded
-  document. XMP metadata is not copied unless `ExtendMetadata` is used; see
-  [docs/feature-parity/PDF_ATTACHMENTS.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ATTACHMENTS.md).
+  document. Existing primary-document attachments and XMP metadata are also preserved.
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- Explicit extra compression, decompression and linearization require an installed qpdf 11.0+ and
-  fail clearly when it is unavailable; page content, page boxes and metadata stay equivalent.
+- Explicit compression and linearization require an external qpdf 11.0+ executable.
+
+## Attachments and XMP
+
+Use `AddAttachment(new DocumentOperation.DocumentAttachment { FilePath = "data.csv", MimeType = "text/csv" })`
+to capture a file, or pass bytes/a borrowed stream with a configuration object. Unicode display
+names, descriptions, timestamps, replacement keys and associated-file relationships are supported.
+An existing key requires `Replace = true`; file content and settings are captured when added.
+
+`ExtendMetadata("<custom:Value xmlns:custom='urn:example'>value</custom:Value>")` adds a qualified
+XMP property while retaining existing namespaces and document metadata. Duplicate property names
+fail instead of overwriting existing values. Encryption settings also apply to the extended XMP.
+
+See [the attachment/XMP guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/ATTACHMENTS_XMP.md)
+for ownership, naming, supported relationships, backend requirements and validation. These
+packaging primitives do not establish PDF/A, PDF/UA or invoice-profile conformance.
+
+## Compression and linearization
+
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
+document with [qpdf](https://qpdf.readthedocs.io/) 11.0 or newer, which the application provides.
+`UseQpdfExecutable(path)` overrides `FossPDF.Settings.QpdfExecutablePath` and then PATH discovery.
+Optimization runs after page operations, attachments and XMP extensions. Additional compression
+and linearization can be combined; compression and decompression cannot.
+
+```csharp
+DocumentOperation.LoadFile("report.pdf")
+    .EnableAdditionalCompression().Linearize()
+    .UseQpdfExecutable(@"C:\Program Files\qpdf 12.4.2\bin\qpdf.exe")
+    .Save("report-optimized.pdf");
+```
+
+Combining optimization with `Encrypt` throws before writing output: this adapter does not forward
+passwords to qpdf. Missing or unsupported executables fail clearly. See the
+[optimization guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_OPTIMIZATION.md)
+for settings precedence, measured sizes, cancellation and timeout behavior.

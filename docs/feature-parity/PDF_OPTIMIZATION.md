@@ -94,9 +94,7 @@ the object structure before qpdf sees it.
   optimizes the document and reads the exact bytes and relationship back; extended XMP metadata is
   preserved as well.
 - **Overlays and underlays** are applied first and then optimized with the rest of the document.
-- **Encryption**: optimization cannot be combined with `DocumentOperation.Encrypt(...)`. qpdf
-  rewrites the document and writes it unencrypted, so the plan throws `InvalidOperationException`
-  at save time instead of silently dropping protection. Decrypt and optimize as separate steps.
+- **Encryption**: optimization cannot be combined with `DocumentOperation.Encrypt(...)` because this adapter does not forward passwords to the external process. The plan throws `InvalidOperationException` before producing output. Decrypt and optimize as separate steps.
 - **PDF/A and PDF/UA**: no conformance claim is made. Optimization does not validate a profile, and
   the conformance guards remain in place until FP-402/FP-403 implement their backends.
 - **Image and preview output**: the options are PDF-only. `GenerateImages`, SVG, XPS and previewer
@@ -125,7 +123,7 @@ writing as well.
 - The document is written to a uniquely named directory under the system temporary directory and
   passed to qpdf as a file path; qpdf writes the result to standard output. Input is never passed
   through stdin because qpdf requires a seekable input file.
-- The temporary directory is removed before the call returns, including on failure.
+- On Unix, the temporary directory is created atomically with owner-only mode 0700 before writing document bytes. On Windows it inherits the user temporary directory ACL. It is removed before the call returns, including on failure.
 - Document content and paths are passed as process arguments, never through a shell command string,
   so no shell metacharacter interpretation occurs.
 - Passwords are not passed to qpdf; optimization and encryption are mutually exclusive.
