@@ -82,3 +82,13 @@ The pypdf inspection was run outside the repository against the generated artifa
 - Permission flags are advisory for conforming readers and are not enforced by this operation on imported inputs. They are not DRM.
 - An encrypted PDF cannot be PDF/A conforming. PDF/A output is not implemented yet (FP-402); its validation must reject encrypted output when it is added.
 - qpdf and veraPDF were unavailable, so no independent PDF/A or profile conformance claim is made. Independent inspection is limited to pypdf's reading of the standard security handler, permissions and page content.
+
+## October 28 review and repeatable three-strength inspection
+
+Integrated the FP-303 graphics-state fix and updated the overlay/encryption regression to assert that the original-content `q`/`Q` wrappers survive an encrypted round trip. The acceptance fixture now also emits `encrypted-40.pdf` and `encrypted-128.pdf` for independent compatibility inspection.
+
+Release build: zero warnings/errors. Complete suites: .NET 8, 463 passed / 13 skipped; .NET 9, 566 passed / 9 skipped. All 21 security cases plus PDF-304 pass on .NET 9, and both security examples pass.
+
+`Source/FossPDF.UnitTests/Parity/verify_pdf_security.py` passes 36 independent checks with pypdf 6.21.2. Each strength is checked for its standard handler, revision, key length, permissions, crypt filter, rejected empty/incorrect passwords, correct user/owner authentication and exact preservation of decoded page painting and boxes. Decrypted output has no encryption dictionary. The script reads the public fixture passwords from the acceptance catalog and asserts that its report contains neither value. No passwords are printed or supplied in process arguments.
+
+The three OS build jobs install `requirements-security-validation.txt`, run the independent script, and upload its JSON report with tool versions, generic check descriptions and input hashes. The Python reader and AES provider are validation-only dependencies and do not change FossPDF packaging or production licenses.

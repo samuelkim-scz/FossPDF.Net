@@ -183,3 +183,14 @@ pages keep their dimensions and identical decoded content.
 See [Source/FossPDF.Examples/PdfSecurityExamples.cs](../../Source/FossPDF.Examples/PdfSecurityExamples.cs)
 for runnable examples and [evidence/fp-304-windows.md](evidence/fp-304-windows.md) for the recorded
 Windows validation, including independent inspection with `pypdf`.
+
+### Reproduce independent inspection
+
+The parity fixture also emits 40-bit and 128-bit compatibility outputs. The CI jobs run the independent reader for all three strengths:
+
+```powershell
+python -m pip install -r FossPDF.UnitTests/Parity/requirements-security-validation.txt
+python FossPDF.UnitTests/Parity/verify_pdf_security.py FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-304
+```
+
+The script reads the public fixture passwords directly from the acceptance catalog; it never prints them, passes them as process arguments or writes them to its JSON report. It checks standard security handlers, crypt filters, key lengths, permissions, empty/wrong password rejection, user/owner authentication, exact decoded page content and removal of encryption. Tool versions, checks and input hashes are uploaded with the parity artifacts. The Python reader and AES provider are validation dependencies only and are not packaged with FossPDF.

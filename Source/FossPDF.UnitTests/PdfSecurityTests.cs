@@ -423,7 +423,9 @@ namespace FossPDF.UnitTests
                 var decrypted = DocumentOperation.Load(result, "userpw").SaveToBytes();
                 var streams = ReadStreams(decrypted, 0);
 
-                streams.Should().HaveCount(2);
+                streams.Should().HaveCount(4, "original painting is isolated before the overlay");
+                streams[0].Trim().Should().Be("q");
+                streams[2].Trim().Should().Be("Q");
                 streams[^1].Should().Contain("/L0 Do");
             }
             finally

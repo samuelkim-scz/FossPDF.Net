@@ -52,6 +52,25 @@ namespace FossPDF.UnitTests.Parity
                 "PDF-304: the result is a PDF document.");
             SaveArtifact(fixture.Id, "encrypted.pdf", encrypted);
 
+            // Keep all three supported handlers available to the independent reader, without
+            // writing passwords into reports, filenames or command-line arguments.
+            SaveArtifact(fixture.Id, "encrypted-40.pdf", DocumentOperation.Load(source)
+                .Encrypt(new DocumentOperation.Encryption40Bit
+                {
+                    UserPassword = userPassword,
+                    OwnerPassword = ownerPassword,
+                    AllowPrinting = allowPrinting,
+                    AllowContentExtraction = allowCopying
+                }).SaveToBytes());
+            SaveArtifact(fixture.Id, "encrypted-128.pdf", DocumentOperation.Load(source)
+                .Encrypt(new DocumentOperation.Encryption128Bit
+                {
+                    UserPassword = userPassword,
+                    OwnerPassword = ownerPassword,
+                    AllowPrinting = allowPrinting,
+                    AllowContentExtraction = allowCopying
+                }).SaveToBytes());
+
             var dictionary = ReadSecurityDictionary(encrypted);
 
             Assert.That(ReadSecurityInteger(dictionary, "/V"), Is.EqualTo(5),

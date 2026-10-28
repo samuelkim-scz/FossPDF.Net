@@ -1,0 +1,2 @@
+# Independent reader and its AES provider; validation only, never shipped with FossPDF.
+pypdf[crypto]==6.21.2
