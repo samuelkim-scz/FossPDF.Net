@@ -524,6 +524,14 @@ namespace FossPDF.PdfOperations
                 foreach (var content in _underlays)
                     contents.Insert(index++, CreateContentStream(content));
 
+                // Page content streams share one graphics state. Isolate the unchanged original
+                // streams so their CTM, clip, opacity, etc. cannot leak into the overlays.
+                if (_overlays.Count > 0)
+                {
+                    contents.Insert(index, CreateContentStream("q\n"));
+                    contents.Add(CreateContentStream("Q\n"));
+                }
+
                 foreach (var content in _overlays)
                     contents.Add(CreateContentStream(content));
 
