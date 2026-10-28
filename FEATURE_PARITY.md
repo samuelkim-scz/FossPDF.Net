@@ -26,6 +26,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The text features guide](docs/feature-parity/TEXT_FEATURES.md) covers OpenType feature toggles and underline/overline/strikethrough color, thickness and style controls.
 
+[The attachment and XMP guide](docs/feature-parity/ATTACHMENTS_XMP.md) covers captured files, replacement keys, relationships, namespaces and encrypted metadata.
+
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
 [The PDF operations guide](docs/feature-parity/PDF_OPERATIONS.md) covers loading existing PDFs, page selectors, merging, metadata/annotation preservation and failure/ownership rules.
