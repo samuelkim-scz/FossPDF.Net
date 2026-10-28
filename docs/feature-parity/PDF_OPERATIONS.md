@@ -95,15 +95,15 @@ The output producer is set by the PDF writing library, and XMP metadata is not c
 | The selection produces no pages | `PdfOperationException` |
 | Saving without loading a document | `InvalidOperationException` |
 
-The declared password opens a protected input for import. Configuring encryption, permissions or
-decryption is FP-304 and is not part of this API.
+The declared password opens a protected input for import. Encrypting the output, writing permission
+flags and explicitly decrypting are covered by [PDF_SECURITY.md](PDF_SECURITY.md).
 
 ## Scope
 
 This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
-and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md). It does not include:
+and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md); encryption, permissions and decryption
+are covered by [PDF_SECURITY.md](PDF_SECURITY.md). It does not include:
 
-- encryption, permissions and decryption controls (FP-304);
 - attachments, associated files and XMP extensions (FP-305);
 - explicit extra compression or linearization (FP-306);
 - rasterizing or previewing existing PDF pages.

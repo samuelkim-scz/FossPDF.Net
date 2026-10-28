@@ -74,6 +74,33 @@ centered, with source and destination rotation handled. Underlays are drawn in r
 below the original content; overlays are drawn in registration order above it. The layer file is
 read when the method is called.
 
+## Encryption and permissions
+
+`Encrypt` writes the PDF standard security handler. The owner password is required; the user
+password is optional. `Encryption256Bit` (AES-256, the recommended strength), `Encryption128Bit`
+(RC4, 128-bit) and `Encryption40Bit` (legacy RC4, 40-bit) expose permission flags for printing,
+copying, modification, annotations, form filling and page assembly where the revision supports
+them:
+
+```csharp
+DocumentOperation
+    .LoadFile("report.pdf")
+    .Encrypt(new DocumentOperation.Encryption256Bit
+    {
+        UserPassword = "reader-password",
+        OwnerPassword = "owner-password",
+        AllowPrinting = false,
+        AllowContentExtraction = false
+    })
+    .Save("report-protected.pdf");
+```
+
+Loading with the user or owner password and saving without `Encrypt` produces an unencrypted
+document; `Decrypt()` states that intent explicitly. Permission flags are advisory for conforming
+readers, not copy protection. Encrypted PDFs cannot be PDF/A conforming. See
+[docs/feature-parity/PDF_SECURITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_SECURITY.md)
+for the strength/bit mapping, password rules and failure behavior.
+
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
@@ -83,5 +110,5 @@ read when the method is called.
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- This release does not encrypt, decrypt, attach files, extend XMP metadata or linearize; those
-  workflows are tracked by their own work items.
+- This release does not attach files, extend XMP metadata or linearize; those workflows are
+  tracked by their own work items.

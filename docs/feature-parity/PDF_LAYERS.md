@@ -101,7 +101,8 @@ Boundaries of this work item:
 - Annotations, form fields, outlines and JavaScript from **layer** pages are not copied; only page
   content and its resources are placed. (qpdf also copies layer-page annotations; FossPDF does not.)
 - Layer pages are not rasterized or previewed.
-- Encryption, permissions, attachments and extra compression remain FP-304, FP-305 and FP-306.
+- Encryption, permissions, attachments and extra compression are covered by
+  [PDF_SECURITY.md](PDF_SECURITY.md), FP-305 and FP-306.
 - Page-level optional-content configuration and tagged-PDF structure are not interpreted.
 
 ## Failure behavior
