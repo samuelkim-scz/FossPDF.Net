@@ -27,6 +27,26 @@ namespace FossPDF.Fluent
             return new Document(handler);
         }
 
+        /// <summary>
+        /// Combines multiple generated documents into one. Use the returned document's
+        /// <see cref="MergedDocument.UseOriginalPageNumbers"/> or
+        /// <see cref="MergedDocument.UseContinuousPageNumbers"/> method to choose the numbering strategy.
+        /// </summary>
+        public static MergedDocument Merge(IEnumerable<IDocument> documents)
+        {
+            return new MergedDocument(documents);
+        }
+
+        /// <summary>
+        /// Combines multiple generated documents into one. Use the returned document's
+        /// <see cref="MergedDocument.UseOriginalPageNumbers"/> or
+        /// <see cref="MergedDocument.UseContinuousPageNumbers"/> method to choose the numbering strategy.
+        /// </summary>
+        public static MergedDocument Merge(params IDocument[] documents)
+        {
+            return new MergedDocument(documents);
+        }
+
         public Document WithMetadata(DocumentMetadata metadata)
         {
             Metadata = metadata ?? Metadata;

@@ -15,7 +15,9 @@ namespace FossPDF.Elements.Text.Items
         public override void Draw(TextDrawingRequest request)
         {
             request.Canvas.Translate(new Position(0, request.TotalAscent));
-            request.Canvas.DrawSectionLink(SectionName, new Size(request.TextSize.Width, request.TextSize.Height));
+            request.Canvas.DrawSectionLink(
+                request.PageContext.GetDocumentLocationName(SectionName),
+                new Size(request.TextSize.Width, request.TextSize.Height));
             request.Canvas.Translate(new Position(0, -request.TotalAscent));
             
             base.Draw(request);

@@ -121,7 +121,7 @@ Deliver SVG input, image optimization/output controls, and modern container/line
 
 ### [Parity M3 - PDF document operations](https://github.com/samuelkim-scz/FossPDF.Net/milestone/4)
 
-Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization.
+Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |
