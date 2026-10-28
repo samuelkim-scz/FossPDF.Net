@@ -37,7 +37,17 @@ namespace FossPDF.Fluent
             var data = document.GeneratePdf();
             stream.Write(data, 0, data.Length);
         }
-        
+
+        /// <summary>
+        /// Renders the document into semantic paint batches for the tagged-PDF backend. The rendered
+        /// fragments are assembled and tagged by the optional <c>FossPDF.PdfOperations</c> package
+        /// (<c>GenerateTaggedPdf</c>). The core package never references a PDF library.
+        /// </summary>
+        public static TaggedDocumentContent GenerateTaggedContent(this IDocument document)
+        {
+            return DocumentGenerator.GenerateTaggedContent(document);
+        }
+
         #endregion
 
         #region XPS

@@ -1382,7 +1382,10 @@
       "work_items": [
         "FP-401"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "language": "en-US",
         "title": "Accessible fixture",

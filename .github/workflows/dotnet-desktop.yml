@@ -73,6 +73,10 @@ jobs:
         run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
+      - name: Set up the pinned Python validation runtime
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - name: Inspect PDF layers with an independent reader
         shell: bash
         run: |
@@ -93,10 +97,15 @@ jobs:
         shell: bash
         run: |
           python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-compression-validation.txt
-          python Source/FossPDF.UnitTests/Parity/verify_pdf_compression.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-306 --benchmarks Source/FossPDF.Examples/bin/Release/net9.0/pdf-optimization-measurements
-      - name: Run .NET 9 settings consumer example
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_compression.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-306
+      - name: Verify tagged PDF structure with independent tools
         shell: bash
-        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity
+        run: |
+          python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-tagging-validation.txt
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_tagging.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/ACC-401 --render
+      - name: Run .NET 9 settings and accessibility examples
+        shell: bash
+        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples" --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
       - name: Upload test and parity fixture evidence
@@ -109,6 +118,7 @@ jobs:
             Source/FossPDF.UnitTests/bin/Release/net*/parity-artifacts/**
             Source/FossPDF.Examples/bin/Release/net9.0/settings-example/**
             Source/FossPDF.Examples/bin/Release/net9.0/pdf-optimization-*/**
+            Source/FossPDF.Examples/bin/Release/net9.0/accessible-*/**
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

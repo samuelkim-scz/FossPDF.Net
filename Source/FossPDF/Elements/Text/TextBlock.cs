@@ -10,6 +10,7 @@ namespace FossPDF.Elements.Text
 {
     internal class TextBlock : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
+        private SemanticNode? _semanticNode;
         public ContentDirection ContentDirection { get; set; }
 
         public TextHorizontalAlignment? Alignment { get; set; }
@@ -136,6 +137,7 @@ namespace FossPDF.Elements.Text
             if (!lines.Any())
                 return;
 
+            using var semantic = new AutomaticSemanticScope(Canvas, ref _semanticNode, "P");
             var topOffset = 0f;
 
             foreach (var line in lines)

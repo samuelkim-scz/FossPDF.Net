@@ -1,10 +1,11 @@
 # FossPDF.PdfOperations
 
-Optional existing-PDF operations for [FossPDF](https://www.nuget.org/packages/FossPDF).
+Optional advanced PDF operations for [FossPDF](https://www.nuget.org/packages/FossPDF).
 
-The package loads existing PDFs and imports selected pages into a new document. Pages keep their
-original page boxes, content streams and resources; nothing is rasterized. It targets `net9.0` and
-is not referenced by the core package.
+The package loads existing PDFs and imports selected pages into a new document, and it assembles
+the semantic structure captured by the core package into a tagged PDF. Pages and forms keep their
+original content streams and resources; nothing is rasterized. It targets `net9.0` and is not
+referenced by the core package.
 
 ## Usage
 
@@ -146,3 +147,42 @@ Combining optimization with `Encrypt` throws before writing output: this adapter
 passwords to qpdf. Missing or unsupported executables fail clearly. See the
 [optimization guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_OPTIMIZATION.md)
 for settings precedence, measured sizes, cancellation and timeout behavior.
+
+
+## Tagged PDF
+
+`GenerateTaggedPdf` renders a document through the core package's semantic capture and assembles a
+tagged PDF: a logical structure tree, marked-content identifiers, `/Alt` alternative text, element
+and catalog language, a parent tree, and `/Artifact` marks for decorative content. The visual
+output is unchanged.
+
+```csharp
+using FossPDF.Drawing;
+using FossPDF.Fluent;
+using FossPDF.Infrastructure;
+
+var document = Document.Create(container =>
+{
+    container.Page(page =>
+    {
+        page.Content().Column(column =>
+        {
+            column.Item().SemanticHeading1().Text("Quarterly totals");
+            column.Item().SemanticParagraph().Text("Revenue is twelve units.");
+            column.Item().SemanticFigure("Four colored quadrants.").Height(60).Background("#ff0000");
+        });
+    });
+}).WithMetadata(new DocumentMetadata { Title = "Accessible report", Language = "en-US" });
+
+document.GenerateTaggedPdf("report.pdf");
+```
+
+Standard text, images, Canvas/SVG, links and tables receive automatic tags. Semantic wrappers
+override those defaults; `SemanticIgnore()` excludes a subtree. Headers/footers and page layers
+are decorative by default, with explicit semantic overrides available. `SemanticLanguage("de-DE")`
+scopes a language change, `SemanticLink` associates URL and section-link annotations with a
+`/Link` element, and a semantic element split across pages stays one structure element.
+`GenerateTaggedContent()` and `ToTaggedPdf()` expose the two stages separately. Documents that use
+`ZIndex` or the qpdf compression/linearization settings cannot be captured and throw
+`NotSupportedException`. This is structural tagging, not a PDF/UA conformance claim; see
+[docs/feature-parity/PDF_ACCESSIBILITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ACCESSIBILITY.md).

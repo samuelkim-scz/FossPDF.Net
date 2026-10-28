@@ -48,7 +48,7 @@ namespace FossPDF.Drawing
         /// <summary>
         /// Captures each z-index level in its own picture so the page can compose them in depth order.
         /// </summary>
-        internal void EnableZIndexLayers()
+        internal virtual void EnableZIndexLayers()
         {
             ZIndexLayersEnabled = true;
         }
@@ -153,10 +153,20 @@ namespace FossPDF.Drawing
         public abstract void BeginPage(Size size);
         public abstract void EndPage();
 
-        public void Translate(Position vector)
+        public virtual void Translate(Position vector)
         {
             ActiveCanvas.Translate(vector.X, vector.Y);
         }
+
+        /// <summary>
+        /// Called whenever a drawing operation that can produce visible output or an annotation is
+        /// performed. Semantic capture uses it to drop scopes that only changed the canvas state.
+        /// </summary>
+        protected virtual void OnPaintOperation()
+        {
+        }
+
+        internal void NotifyPaintOperation() => OnPaintOperation();
 
         public void DrawRectangle(Position vector, Size size, string color)
         {
@@ -164,6 +174,14 @@ namespace FossPDF.Drawing
                 return;
 
             var paint = color.ColorToPaint();
+
+            // Fully transparent fills produce no visual output. Skipping them also keeps semantic
+            // capture from reporting empty artifact batches for the default page background.
+            if (paint.Color.Alpha == 0)
+                return;
+
+            OnPaintOperation();
+
             ActiveCanvas.DrawRect(vector.X, vector.Y, size.Width, size.Height, paint);
         }
 
@@ -176,6 +194,8 @@ namespace FossPDF.Drawing
 
             if (length < Size.Epsilon)
                 return;
+
+            OnPaintOperation();
 
             using var shader = CreateLineShader(style, start, end);
             using var paint = new SKPaint
@@ -305,6 +325,8 @@ namespace FossPDF.Drawing
             if (!TryCreateShadowShape(vector, size, cornerRadius, shadow, out var rect, out var radii))
                 return;
 
+            OnPaintOperation();
+
             using var roundRect = CreateRoundRect(rect, radii);
             using var maskFilter = shadow.Blur > 0
                 ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, shadow.Blur / 2)
@@ -358,11 +380,17 @@ namespace FossPDF.Drawing
             if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
                 return;
 
-            if (style.HasFill)
+            var hasFill = style.HasFill &&
+                          (style.FillGradient != null || style.FillColor!.ColorToPaint().Color.Alpha > 0);
+
+            if (hasFill)
                 DrawDecoratedFill(vector, size, style);
 
             if (style.HasBorder)
                 DrawDecoratedBorder(vector, size, style);
+
+            if (hasFill || style.HasBorder)
+                OnPaintOperation();
         }
 
         private void DrawDecoratedFill(Position vector, Size size, RectangleStyle style)
@@ -433,25 +461,27 @@ namespace FossPDF.Drawing
 
         public void DrawText(SKTextBlob skTextBlob, Position position, TextStyle style, DocumentSpecificFontManager fontManager)
         {
+            OnPaintOperation();
             ActiveCanvas.DrawText(skTextBlob, position.X, position.Y, fontManager.ToPaint(style));
         }
 
         public void DrawImage(SKImage image, Position vector, Size size)
         {
+            OnPaintOperation();
             ActiveCanvas.DrawImage(image, new SKRect(vector.X, vector.Y, size.Width, size.Height));
         }
 
-        public void SaveState()
+        public virtual void SaveState()
         {
             ActiveCanvas.Save();
         }
 
-        public void RestoreState()
+        public virtual void RestoreState()
         {
             ActiveCanvas.Restore();
         }
 
-        public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
+        public virtual void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
         {
             if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
                 return;
@@ -469,25 +499,28 @@ namespace FossPDF.Drawing
 
         public void DrawHyperlink(string url, Size size)
         {
+            OnPaintOperation();
             ActiveCanvas.DrawUrlAnnotation(new SKRect(0, 0, size.Width, size.Height), url).Dispose();
         }
 
         public void DrawSectionLink(string sectionName, Size size)
         {
+            OnPaintOperation();
             ActiveCanvas.DrawLinkDestinationAnnotation(new SKRect(0, 0, size.Width, size.Height), sectionName).Dispose();
         }
 
         public void DrawSection(string sectionName)
         {
+            OnPaintOperation();
             ActiveCanvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), sectionName).Dispose();
         }
 
-        public void Rotate(float angle)
+        public virtual void Rotate(float angle)
         {
             ActiveCanvas.RotateDegrees(angle);
         }
 
-        public void Scale(float scaleX, float scaleY)
+        public virtual void Scale(float scaleX, float scaleY)
         {
             ActiveCanvas.Scale(scaleX, scaleY);
         }
@@ -563,7 +596,7 @@ namespace FossPDF.Drawing
             };
         }
 
-        private static SKRoundRect CreateRoundRect(Position vector, Size size, BorderRadius radius)
+        protected static SKRoundRect CreateRoundRect(Position vector, Size size, BorderRadius radius)
         {
             var rect = new SKRect(vector.X, vector.Y, vector.X + size.Width, vector.Y + size.Height);
             return CreateRoundRect(rect, ToRadii(radius.TopLeft, radius.TopRight, radius.BottomRight, radius.BottomLeft));

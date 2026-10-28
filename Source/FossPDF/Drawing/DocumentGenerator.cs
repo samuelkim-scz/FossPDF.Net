@@ -52,6 +52,29 @@ namespace FossPDF.Drawing
             return pageCount;
         }
 
+        /// <summary>
+        /// Renders the document into semantic paint batches instead of a finished PDF. Fragments are
+        /// assembled and tagged by the optional PDF operations package; the core never references a
+        /// PDF library.
+        /// </summary>
+        internal static TaggedDocumentContent GenerateTaggedContent(IDocument document)
+        {
+            if (document == null)
+                throw new ArgumentNullException(nameof(document));
+
+            var configuration = GenerationConfiguration.Resolve(document);
+            configuration.ValidatePdf();
+
+            if (configuration.Optimization != null)
+                throw new NotSupportedException(
+                    "Post-processing with qpdf cannot be combined with tagged PDF generation because the optimizer may rewrite the structure tree. Generate the tagged PDF first and optimize it in a separate step.");
+
+            using var canvas = new TaggedPdfCanvas();
+            RenderDocument(canvas, document, configuration);
+
+            return canvas.BuildContent(configuration.Metadata);
+        }
+
         internal static void GenerateXps(Stream stream, IDocument document)
         {
             CheckIfStreamIsCompatible(stream);

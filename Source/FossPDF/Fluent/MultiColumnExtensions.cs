@@ -64,7 +64,7 @@ namespace FossPDF.Fluent
                 throw new DocumentComposeException("The 'MultiColumn.Spacer' layer has already been defined. Please call this method only once.");
 
             var container = new RepeatContent();
-            MultiColumn.Spacer = container;
+            MultiColumn.Spacer = new DefaultArtifactElement { Child = container };
             return container;
         }
     }

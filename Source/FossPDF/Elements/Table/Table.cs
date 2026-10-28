@@ -8,6 +8,9 @@ namespace FossPDF.Elements.Table
 {
     internal class Table : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
+        private SemanticNode? _semanticNode;
+        private Dictionary<int, SemanticNode>? _semanticRows;
+        internal string SemanticRole { get; set; } = "TBody";
         public ContentDirection ContentDirection { get; set; }
         
         public List<TableColumnDefinition> Columns { get; set; } = new();
@@ -128,6 +131,7 @@ namespace FossPDF.Elements.Table
 
         internal override void Draw(Size availableSpace)
         {
+            using var semantic = Cells.Count == 0 ? default : new AutomaticSemanticScope(Canvas, ref _semanticNode, SemanticRole);
             UpdateColumnsWidth(availableSpace.Width);
             var renderingCommands = PlanLayout(availableSpace);
 
@@ -144,7 +148,18 @@ namespace FossPDF.Elements.Table
                     : new Position(availableSpace.Width - command.Offset.X - command.Size.Width, command.Offset.Y);
                 
                 Canvas.Translate(offset);
-                command.Cell.Draw(command.Size);
+                SemanticNode? row = null;
+                if (AutomaticSemanticScope.GetCanvas(Canvas) != null)
+                {
+                    _semanticRows ??= new Dictionary<int, SemanticNode>();
+                    _semanticRows.TryGetValue(command.Cell.Row, out row);
+                }
+                using (var rowScope = new AutomaticSemanticScope(Canvas, ref row, "TR"))
+                {
+                    if (row != null)
+                        _semanticRows![command.Cell.Row] = row;
+                    command.Cell.Draw(command.Size);
+                }
                 Canvas.Translate(offset.Reverse());
             }
 
