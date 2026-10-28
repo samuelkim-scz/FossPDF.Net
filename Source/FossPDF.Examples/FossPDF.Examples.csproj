@@ -42,4 +42,14 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+        <!--
+          The complex-script corpus is shared with the unit tests. Link the licensed subset
+          fonts as embedded resources instead of keeping a second copy of the binaries.
+        -->
+        <EmbeddedResource Include="..\FossPDF.UnitTests\Resources\ComplexScripts\*.ttf">
+            <LogicalName>FossPDF.Examples.Resources.ComplexScripts.%(Filename)%(Extension)</LogicalName>
+        </EmbeddedResource>
+    </ItemGroup>
+
 </Project>

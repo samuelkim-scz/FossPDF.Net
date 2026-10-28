@@ -138,6 +138,21 @@ namespace FossPDF.Elements.Text.Items
             if (Style.WrapAnywhere ?? false)
                 return (endIndex, endIndex + 1);
 
+            // CJK text has no spaces. Break at the last position allowed by the Unicode line
+            // breaking rules, so closing punctuation is not pushed to the start of the next line
+            // and opening punctuation does not end the current one.
+            if (!shapingResult.IsRightToLeft &&
+                TryFindCjkBreakOpportunity(shapingResult, startIndex, endIndex, out var cjkBreakIndex))
+            {
+                var nextIndex = cjkBreakIndex + 1;
+
+                // consume the space after the break, as space based wrapping does
+                if (nextIndex < shapingResult.Length && shapingResult[nextIndex].IsSpace)
+                    nextIndex++;
+
+                return (cjkBreakIndex, nextIndex);
+            }
+
             // current line ends at word, next character is space, perfect place to wrap
             if (!shapingResult[endIndex].IsSpace && shapingResult[endIndex + 1].IsSpace)
                 return (endIndex, endIndex + 2);
@@ -160,7 +175,93 @@ namespace FossPDF.Elements.Text.Items
             // there is no available space to wrap text
             // if the item is first within the line, perform safe mode and chop the word
             // otherwise, move the item into the next line
-            return isFirstElementInLine ? (endIndex, endIndex + 1) : null;
+            if (!isFirstElementInLine)
+                return null;
+
+            // safe mode must not cut a grapheme cluster in half: keep combining marks and emoji
+            // sequences attached to their base character. If the remaining glyphs of the cluster
+            // do not fit, the whole cluster is still placed on the line.
+            while (endIndex + 1 < shapingResult.Length &&
+                   shapingResult[endIndex + 1].Cluster == shapingResult[endIndex].Cluster)
+            {
+                endIndex++;
+            }
+
+            return (endIndex, endIndex + 1);
+        }
+
+        private bool TryFindCjkBreakOpportunity(
+            TextShapingResult shapingResult,
+            int startIndex,
+            int endIndex,
+            out int breakIndex)
+        {
+            breakIndex = -1;
+
+            for (var index = endIndex; index >= startIndex; index--)
+            {
+                if (index + 1 >= shapingResult.Length)
+                    break;
+
+                // glyphs that belong to the same grapheme cluster must not be separated
+                if (shapingResult[index].Cluster == shapingResult[index + 1].Cluster)
+                    continue;
+
+                var nextCharacterIndex = shapingResult[index + 1].Cluster;
+
+                if (nextCharacterIndex <= 0 || nextCharacterIndex >= Text.Length)
+                    continue;
+
+                if (!TryGetCodePointBefore(Text, nextCharacterIndex, out var before))
+                    continue;
+
+                var after = char.ConvertToUtf32(Text, nextCharacterIndex);
+
+                if (!CjkLineBreak.CanBreakBetween(before, after))
+                    continue;
+
+                breakIndex = index;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryGetCodePointBefore(string text, int characterIndex, out int codePoint)
+        {
+            codePoint = 0;
+
+            if (characterIndex <= 0 || characterIndex > text.Length)
+                return false;
+
+            var previousIndex = characterIndex - 1;
+
+            if (previousIndex > 0 &&
+                char.IsLowSurrogate(text[previousIndex]) &&
+                char.IsHighSurrogate(text[previousIndex - 1]))
+            {
+                previousIndex--;
+            }
+
+            codePoint = char.ConvertToUtf32(text, previousIndex);
+            return true;
+        }
+
+        /// <summary>
+        /// Maps a glyph index (the coordinate used by <see cref="TextMeasurementResult"/> and
+        /// drawing requests) to the index of the first UTF-16 character of its cluster.
+        /// </summary>
+        internal int GetCharacterIndex(int glyphIndex)
+        {
+            if (TextShapingResult == null || glyphIndex < 0 || glyphIndex >= TextShapingResult.Length)
+                return glyphIndex;
+
+            return TextShapingResult[glyphIndex].Cluster;
+        }
+
+        internal int GetGlyphCount()
+        {
+            return TextShapingResult?.Length ?? Text.Length;
         }
 
         public List<uint>? GetGlyphCodepoints()

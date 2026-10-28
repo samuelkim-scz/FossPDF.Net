@@ -903,7 +903,7 @@
       "work_items": [
         "FP-109"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "samples": [
           "Invoice رقم 123 (USD)",
@@ -911,10 +911,61 @@
           "漢字かなカナ 123"
         ],
         "width": 160,
+        "font_size": 12,
         "font_policy": "explicit licensed fixtures with coverage",
         "directions": [
           "LTR",
           "RTL"
+        ],
+        "fonts": {
+          "latin": "FossPDF Test Latin",
+          "arabic": "FossPDF Test Arabic",
+          "hebrew": "FossPDF Test Hebrew",
+          "devanagari": "FossPDF Test Devanagari",
+          "cjk": "FossPDF Test CJK",
+          "emoji": "FossPDF Test Emoji"
+        },
+        "corpus": {
+          "arabic": [
+            "السَّلَامُ عَلَيْكُمْ",
+            "لا",
+            "مرحبا بالعالم"
+          ],
+          "hebrew": [
+            "שלום עולם",
+            "שָׁלוֹם"
+          ],
+          "devanagari": [
+            "हिन्दी नमस्ते दुनिया",
+            "क्षि"
+          ],
+          "cjk": [
+            "あいうえ。」かきくけこ",
+            "「あいうえお」かきくけこ"
+          ],
+          "emoji": [
+            "😀 😃 🎉 ❤️",
+            "👍🏽"
+          ],
+          "combining": [
+            "éééééé"
+          ]
+        },
+        "line_break_expectations": {
+          "text": "あいうえおかきくけこさしすせそ",
+          "width": 60,
+          "lines": [
+            "あいうえお",
+            "かきくけこ",
+            "さしすせそ"
+          ],
+          "prohibited_starts": "、。，．・：；？！）」』】〕",
+          "prohibited_ends": "（「『【〔"
+        },
+        "unsupported": [
+          "Unicode bidi reordering across style runs (UAX #9 levels)",
+          "Automatic system font fallback without an explicit TextStyle.Fallback chain",
+          "Colour emoji glyphs (the licensed fixture font is monochrome)"
         ]
       },
       "expected": [
