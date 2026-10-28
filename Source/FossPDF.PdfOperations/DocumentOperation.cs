@@ -398,8 +398,10 @@ namespace FossPDF.Fluent
         /// </summary>
         public byte[] SaveToBytes()
         {
-            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption,
+            ValidateOptimization();
+            var result = PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption,
                 _attachments, _metadataExtensions);
+            return OptimizeOutput(result);
         }
 
         private DocumentOperation SetEncryption(EncryptionBase encryption, EncryptionStrength strength)

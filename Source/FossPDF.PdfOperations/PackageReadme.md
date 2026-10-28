@@ -110,7 +110,7 @@ for the strength/bit mapping, password rules and failure behavior.
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- Extra compression and linearization remain separate work items.
+- Explicit compression and linearization require an external qpdf 11.0+ executable.
 
 ## Attachments and XMP
 
@@ -126,3 +126,23 @@ fail instead of overwriting existing values. Encryption settings also apply to t
 See [the attachment/XMP guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/ATTACHMENTS_XMP.md)
 for ownership, naming, supported relationships, backend requirements and validation. These
 packaging primitives do not establish PDF/A, PDF/UA or invoice-profile conformance.
+
+## Compression and linearization
+
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
+document with [qpdf](https://qpdf.readthedocs.io/) 11.0 or newer, which the application provides.
+`UseQpdfExecutable(path)` overrides `FossPDF.Settings.QpdfExecutablePath` and then PATH discovery.
+Optimization runs after page operations, attachments and XMP extensions. Additional compression
+and linearization can be combined; compression and decompression cannot.
+
+```csharp
+DocumentOperation.LoadFile("report.pdf")
+    .EnableAdditionalCompression().Linearize()
+    .UseQpdfExecutable(@"C:\Program Files\qpdf 12.4.2\bin\qpdf.exe")
+    .Save("report-optimized.pdf");
+```
+
+Combining optimization with `Encrypt` throws before writing output: this adapter does not forward
+passwords to qpdf. Missing or unsupported executables fail clearly. See the
+[optimization guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_OPTIMIZATION.md)
+for settings precedence, measured sizes, cancellation and timeout behavior.

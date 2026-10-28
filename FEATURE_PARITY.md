@@ -1,4 +1,4 @@
-﻿# FossPDF feature-parity roadmap
+# FossPDF feature-parity roadmap
 
 This is the shared implementation plan for functional parity with **QuestPDF 2026.9.1**. The initial target was established on **October 26, 2026**. Work is tracked in [the master issue](https://github.com/samuelkim-scz/FossPDF.Net/issues/1), [GitHub milestones](https://github.com/samuelkim-scz/FossPDF.Net/milestones), and the linked implementation issues below.
 
@@ -33,6 +33,10 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 [The PDF operations guide](docs/feature-parity/PDF_OPERATIONS.md) covers loading existing PDFs, page selectors, merging, metadata/annotation preservation and failure/ownership rules.
 
 [The PDF security guide](docs/feature-parity/PDF_SECURITY.md) covers password-based encryption strengths, permission flags, decryption and password-handling boundaries.
+
+[The PDF attachments guide](docs/feature-parity/ATTACHMENTS_XMP.md) covers embedded files, associated-file relationships, Unicode names and XMP metadata extensions.
+
+[The PDF optimization guide](docs/feature-parity/PDF_OPTIMIZATION.md) covers explicit additional compression, intentional decompression and linearization through an external qpdf executable, including discovery, measured size behavior, interactions and failure handling.
 
 ## Confirmed gaps and capabilities to validate
 
@@ -135,7 +139,7 @@ Deliver SVG input, image optimization/output controls, and modern container/line
 
 ### [Parity M3 - PDF document operations](https://github.com/samuelkim-scz/FossPDF.Net/milestone/4)
 
-Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md). Existing-PDF loading, page selection and merging are documented in [docs/feature-parity/PDF_OPERATIONS.md](docs/feature-parity/PDF_OPERATIONS.md), overlays and underlays in [docs/feature-parity/PDF_LAYERS.md](docs/feature-parity/PDF_LAYERS.md), and encryption, permissions and decryption in [docs/feature-parity/PDF_SECURITY.md](docs/feature-parity/PDF_SECURITY.md).
+Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md). Existing-PDF loading, page selection and merging are documented in [docs/feature-parity/PDF_OPERATIONS.md](docs/feature-parity/PDF_OPERATIONS.md), overlays and underlays in [docs/feature-parity/PDF_LAYERS.md](docs/feature-parity/PDF_LAYERS.md), encryption, permissions and decryption in [docs/feature-parity/PDF_SECURITY.md](docs/feature-parity/PDF_SECURITY.md), attachments and XMP extensions in [docs/feature-parity/ATTACHMENTS_XMP.md](docs/feature-parity/ATTACHMENTS_XMP.md), and explicit compression and linearization in [docs/feature-parity/PDF_OPTIMIZATION.md](docs/feature-parity/PDF_OPTIMIZATION.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

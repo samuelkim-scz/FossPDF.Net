@@ -1,4 +1,4 @@
-﻿# Native backend dependency and ownership inventory
+# Native backend dependency and ownership inventory
 
 This is the versioned inventory for [ADR-0001](decisions/ADR-0001-native-backends.md) and
 [FP-002](https://github.com/samuelkim-scz/FossPDF.Net/issues/3). The isolated .NET 9 proof project is
@@ -38,6 +38,15 @@ The independently installed inspector is **pypdf 6.21.2**, BSD-3-Clause, Python 
 it is validation tooling only, never a FossPDF runtime dependency. Its exact version is in
 `requirements-validation.txt`; its distribution includes its BSD license. Bundled Lato remains
 SIL OFL 1.1; see `Source/FossPDF/Resources/DefaultFont/OFL.txt`.
+
+**qpdf** (measured with 12.4.2, Apache-2.0) is an optional *external executable* for the FP-306
+compression and linearization controls, not a package dependency: it is not referenced by any
+project, not restored by NuGet, and not distributed by FossPDF. Applications install qpdf 11.0 or
+newer themselves and point FossPDF at it through `DocumentSettings.QpdfExecutablePath`,
+`FossPDF.Settings.QpdfExecutablePath`, the `DocumentOperation.UseQpdfExecutable` overload or `PATH`.
+Absence of qpdf is reported as `NotSupportedException` before any output is written. CI installs
+qpdf from the distribution package manager (apt, Homebrew, Chocolatey) for coverage only. See
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md).
 
 Svg.Skia 4.9.1 declares SkiaSharp 3.119.2/HarfBuzzSharp 8.3.1.3 minimums. The proof explicitly pins
 the compatible core cohort 3.119.4/8.3.1.5, including all three HarfBuzz native asset packages.
@@ -137,7 +146,7 @@ these experiments out of production packages.
 4. A fix unavailable in MIT PDFsharp 6.2.4 requires a reviewed maintained permissive fork or a newly
    qualified replacement. Neither an AGPL update nor ignoring a security issue is automatic policy.
 5. Revisit ADR-0001 when a replacement, framework/RID addition or native bridge is selected. qpdf
-   remains an FP-306 candidate requiring a separate deployment/license/error-handling proof.
+   is qualified as an optional external executable by FP-306; see PDF_OPTIMIZATION.md and its evidence for deployment, licensing and error handling.
 6. Conformance remains gated by independent validators and the owning acceptance issues; marker
    checks or PDFsharp's high-level helper are not PDF/UA or PDF/A evidence.
 
@@ -146,3 +155,4 @@ these experiments out of production packages.
 The net9.0 operations companion retains the exact PDFsharp 6.2.4 package and existing licenses. Its writer regenerates XMP during save, so `PdfXmpMetadata` appends one metadata revision to the companion's own serialized output. A .NET `UnsafeAccessor` bridge binds the pinned handler's `EnterObject`, `EncryptStream` and `LeaveObject` methods for protected XMP. This uses backend password derivation and ciphers; no cryptographic implementation or vendor source is copied into FossPDF. A backend upgrade must qualify those exact managed entry points and the incremental metadata corpus again.
 
 The .NET corpus covers 40/128/256-bit encryption, deliberately clear metadata, extraction and later decrypted round trips on each CI OS. Independent pypdf/MuPDF inspection checks packaging and metadata interoperability. No NativeAOT claim follows from this managed bridge; publish-and-run evidence remains FP-503. The mechanism follows the pinned [save preparation](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf/PdfDocument.cs) and [security handler](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf.Security/PdfStandardSecurityHandler.cs) contracts.
+The qpdf staging directory uses owner-only mode 0700 on Unix. The net9.0 core target uses the framework UnixFileMode API; netstandard2.1 calls the system libc mkdir function on Linux/macOS because that target lacks the managed overload. No libc binary is distributed. Both paths are exercised by the net8.0/net9.0 CI suites. Windows uses the user temporary directory's inherited ACL.

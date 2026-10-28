@@ -1,0 +1,2 @@
+# Independent reader for compression/linearization equivalence; validation only, never shipped with FossPDF.
+pypdf==6.21.2

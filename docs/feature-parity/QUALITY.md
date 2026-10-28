@@ -221,3 +221,7 @@ overrides.
   required before publishing throughput or memory claims.
 - qpdf validates PDF structure, not PDF/A or PDF/UA conformance. Those claims remain gated by FP-402
   and FP-403 and their validator reports.
+
+### Intel macOS runner qualification (October 28, 2026)
+
+After hosted ARM acquisition failures, CI pins the supported macos-26-intel image. The osx-x64 reference was independently qualified with unchanged main 20756f4 in https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/40723391982 . All four scenario PNGs are byte-identical to the feature output, every scenario metric and embedded font hash matches, and all captures were visually reviewed. The existing Windows/Linux/ARM references and global tolerances remain intact; new full ARM runtime validation is not claimed.

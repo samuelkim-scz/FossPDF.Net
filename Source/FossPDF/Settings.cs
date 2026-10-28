@@ -41,6 +41,18 @@ namespace FossPDF
         /// <remarks>By default, this flag is enabled only when the debugger IS attached.</remarks>
         public static bool CheckIfAllTextGlyphsAreAvailable { get; set; } = System.Diagnostics.Debugger.IsAttached;
 
+        /// <summary>
+        /// Optional path to the qpdf executable used by PDF compression and linearization settings.
+        /// The application supplies qpdf 11.0 or newer; FossPDF does not distribute it. When this
+        /// value is not set, the <c>qpdf</c> executable is searched on <c>PATH</c>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Infrastructure.DocumentSettings.QpdfExecutablePath"/> takes precedence for a
+        /// single document. qpdf is an external tool with its own license; see the PDF optimization
+        /// guide.
+        /// </remarks>
+        public static string? QpdfExecutablePath { get; set; }
+
         static Settings()
         {
             NativeDependencyCompatibilityChecker.Test();

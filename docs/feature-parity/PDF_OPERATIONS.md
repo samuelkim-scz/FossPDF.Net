@@ -98,13 +98,20 @@ The output producer is set by the PDF writing library. Primary-document XMP and 
 The declared password opens a protected input for import. Encrypting the output, writing permission
 flags and explicitly decrypting are covered by [PDF_SECURITY.md](PDF_SECURITY.md).
 
+## Optimization
+
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` use qpdf 11+ after all
+other operations, including attachment and XMP updates. `UseQpdfExecutable(path)` overrides the
+global executable setting and PATH discovery. Output encryption is rejected before any bytes are
+written because this adapter does not forward passwords to qpdf. See
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for interactions, measured sizes and failure behavior.
+
 ## Scope
 
 This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
 and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md); encryption, permissions and decryption
 are covered by [PDF_SECURITY.md](PDF_SECURITY.md). It does not include:
 
-- explicit extra compression or linearization (FP-306);
 - rasterizing or previewing existing PDF pages.
 
 ## Acceptance and example

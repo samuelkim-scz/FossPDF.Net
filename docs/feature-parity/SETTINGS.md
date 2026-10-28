@@ -57,9 +57,9 @@ Each generation resolves one private snapshot before composition. It copies meta
 | ContentDirection | LeftToRight | LeftToRight or RightToLeft; explicit page/element direction takes precedence |
 | PdfAConformance | Existing metadata PdfA false -> None, true -> Legacy | None disables the legacy flag; Legacy enables the same flag |
 | PdfUaConformance | None | PdfUa1 is reserved and rejected for PDF until its backend is implemented |
-| CompressDocument | true; normal renderer compression | false is reserved and rejected for PDF |
-| EnableAdditionalCompression | false | true is reserved and rejected for PDF |
-| Linearize | false | true is reserved and rejected for PDF |
+| CompressDocument | true; normal renderer compression | false makes qpdf rewrite the PDF without stream compression; requires qpdf 11 or newer |
+| EnableAdditionalCompression | false | true runs qpdf with object streams, stream recompression and compression level 9; requires qpdf 11 or newer |
+| Linearize | false | true runs qpdf with `--linearize`; requires qpdf 11 or newer |
 | DocumentLayoutExceptionThreshold | FossPDF.Settings.DocumentLayoutExceptionThreshold; initial default 250 | Positive maximum page count, inclusive |
 | EnableCaching | FossPDF.Settings.EnableCaching; initially enabled without a debugger | Per-document bool |
 | EnableDebugging | FossPDF.Settings.EnableDebugging; initially enabled with a debugger | Per-document bool |
@@ -103,19 +103,19 @@ GenerateImagesToStreams adds caller-owned per-page writable streams without requ
 
 The contract reserves PdfA2A, PdfA2B, PdfA2U, PdfA3A, PdfA3B and PdfA3U in PdfAConformance, and PdfUa1 in PdfUaConformance. Requesting these PDF modes throws NotSupportedException before composition or output writes. Legacy is the existing unqualified Skia PdfA flag; it does not claim a particular validated PDF/A profile.
 
-Likewise, disabling ordinary compression, requesting extra optimization or enabling linearization is rejected for PDF. These options cannot silently fall back to the normal renderer behavior.
+Likewise, the compression and linearization options are honored for PDF only through an installed qpdf 11+ executable. They are rejected before composition when qpdf cannot be found, and contradictory combinations fail with ArgumentException; see [the PDF optimization contract](PDF_OPTIMIZATION.md).
 
 | Capability owner | Integration obligation |
 | --- | --- |
 | [FP-402](https://github.com/samuelkim-scz/FossPDF.Net/issues/27) | Implement the six PDF/A profiles and validation; replace the corresponding generation guard only when the backend honors the selected profile. |
 | [FP-401 / FP-403](https://github.com/samuelkim-scz/FossPDF.Net/issues/26) / [PDF/UA](https://github.com/samuelkim-scz/FossPDF.Net/issues/28) | Carry semantic structure and enforce PDF/UA requirements before accepting PdfUa1. |
-| [FP-306](https://github.com/samuelkim-scz/FossPDF.Net/issues/25) | Honor compression overrides/linearization and document their conformance/security interactions. |
+| [FP-306](https://github.com/samuelkim-scz/FossPDF.Net/issues/25) | Implemented for PDF through the external qpdf backend; see [PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for discovery, interactions and failure behavior. |
 | [FP-203](https://github.com/samuelkim-scz/FossPDF.Net/issues/17) | PNG/JPEG/WebP encoding, output quality, alpha/background policy and caller-owned streams follow [the image export contract](IMAGE_EXPORT.md). |
 | [FP-202](https://github.com/samuelkim-scz/FossPDF.Net/issues/16) | Per-image DPI and quality overrides take precedence over these document defaults; see [the image optimization contract](IMAGE_OPTIMIZATION.md). |
 
 Valid PDF-only conformance/compression options do not prevent PNG, SVG, XPS or preview generation. Those outputs do not make PDF conformance claims. Invalid enum values, non-positive explicit DPI/page limits and out-of-range explicit quality values fail with ArgumentOutOfRangeException. Null settings arguments fail with ArgumentNullException.
 
-These extension points establish a shared contract. The corresponding feature issues and planned acceptance fixtures remain open until implemented and validated.
+These extension points establish a shared contract. The remaining conformance issues and their planned acceptance fixtures stay open until implemented and validated; the compression and linearization options are implemented and covered by the `PDF-306` fixture.
 
 ## Ownership and compatibility
 
