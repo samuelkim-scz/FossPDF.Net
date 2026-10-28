@@ -27,11 +27,11 @@
           "page": 1,
           "width": 595,
           "height": 842,
-          "inkPixels": 108263,
+          "inkPixels": 108288,
           "inkBounds": {
-            "x": 39,
+            "x": 40,
             "y": 40,
-            "width": 554,
+            "width": 516,
             "height": 757
           },
           "colorPixels": {
@@ -39,9 +39,9 @@
             "green": 0,
             "blue": 17468,
             "yellow": 0,
-            "dark": 5341,
-            "gray": 74889,
-            "other": 10565
+            "dark": 5336,
+            "gray": 74912,
+            "other": 10572
           }
         }
       ]
@@ -53,20 +53,20 @@
           "page": 1,
           "width": 595,
           "height": 842,
-          "inkPixels": 37072,
+          "inkPixels": 37067,
           "inkBounds": {
-            "x": 39,
+            "x": 40,
             "y": 48,
-            "width": 512,
+            "width": 511,
             "height": 437
           },
           "colorPixels": {
-            "red": 132,
+            "red": 131,
             "green": 0,
             "blue": 0,
             "yellow": 0,
-            "dark": 14372,
-            "gray": 22557,
+            "dark": 14371,
+            "gray": 22554,
             "other": 11
           }
         }
@@ -79,7 +79,7 @@
           "page": 1,
           "width": 595,
           "height": 842,
-          "inkPixels": 104261,
+          "inkPixels": 104260,
           "inkBounds": {
             "x": 39,
             "y": 46,
@@ -92,7 +92,7 @@
             "blue": 5252,
             "yellow": 5000,
             "dark": 25933,
-            "gray": 53635,
+            "gray": 53634,
             "other": 4441
           }
         }
@@ -105,11 +105,11 @@
           "page": 1,
           "width": 595,
           "height": 842,
-          "inkPixels": 67799,
+          "inkPixels": 67815,
           "inkBounds": {
-            "x": 39,
+            "x": 40,
             "y": 46,
-            "width": 512,
+            "width": 511,
             "height": 273
           },
           "colorPixels": {
@@ -117,8 +117,8 @@
             "green": 15000,
             "blue": 15000,
             "yellow": 15000,
-            "dark": 2861,
-            "gray": 4938,
+            "dark": 2860,
+            "gray": 4955,
             "other": 0
           }
         }
@@ -138,9 +138,9 @@
               "height": 842,
               "inkPixels": 108336,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 40,
-                "width": 554,
+                "width": 516,
                 "height": 757
               },
               "colorPixels": {
@@ -164,9 +164,9 @@
               "height": 842,
               "inkPixels": 38719,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 48,
-                "width": 512,
+                "width": 511,
                 "height": 437
               },
               "colorPixels": {
@@ -216,9 +216,9 @@
               "height": 842,
               "inkPixels": 67795,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 46,
-                "width": 512,
+                "width": 511,
                 "height": 273
               },
               "colorPixels": {
@@ -247,9 +247,9 @@
               "height": 842,
               "inkPixels": 109280,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 40,
-                "width": 554,
+                "width": 516,
                 "height": 757
               },
               "colorPixels": {
@@ -273,9 +273,9 @@
               "height": 842,
               "inkPixels": 44025,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 48,
-                "width": 512,
+                "width": 511,
                 "height": 437
               },
               "colorPixels": {
@@ -325,9 +325,9 @@
               "height": 842,
               "inkPixels": 68608,
               "inkBounds": {
-                "x": 39,
+                "x": 40,
                 "y": 46,
-                "width": 512,
+                "width": 511,
                 "height": 273
               },
               "colorPixels": {

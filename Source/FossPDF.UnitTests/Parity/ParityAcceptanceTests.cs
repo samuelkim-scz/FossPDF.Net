@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using FossPDF.Drawing;
 using FossPDF.Drawing.Exceptions;
+using FossPDF.Elements.Text;
+using FossPDF.Elements.Text.Calculation;
+using FossPDF.Elements.Text.Items;
 using FossPDF.Fluent;
 using FossPDF.Infrastructure;
 using NUnit.Framework;
@@ -19,21 +23,32 @@ namespace FossPDF.UnitTests.Parity
     [Category("FeatureParity")]
     public class ParityAcceptanceTests
     {
-        private static readonly IReadOnlyDictionary<string, Action<ParityFixture>> Runners =
-            new Dictionary<string, Action<ParityFixture>>
+        private static readonly IReadOnlyDictionary<string, Action<ParityFixture>> Runners = CreateRunners();
+
+        private static IReadOnlyDictionary<string, Action<ParityFixture>> CreateRunners()
+        {
+            var runners = new Dictionary<string, Action<ParityFixture>>(StringComparer.Ordinal);
+
+            foreach (var method in typeof(ParityAcceptanceTests)
+                         .GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                ["PAG-001"] = RunExplicitPagination,
-                ["PAG-002"] = RunOverflowPagination,
-                ["PAG-105"] = RunPageControls,
-                ["TXT-001"] = RunStyledText,
-                ["IMG-001"] = RunRasterImage,
-                ["OUT-001"] = RunRasterDpi,
-                ["OUT-203"] = RunImageFormats,
-                ["SET-004"] = RunDocumentSettings,
-                ["FAIL-001"] = RunMalformedImage,
-                ["FAIL-002"] = RunImpossibleLayout,
-                ["RES-001"] = RunCallerOwnedStream
-            };
+                var attribute = method.GetCustomAttribute<ParityFixtureRunnerAttribute>();
+
+                if (attribute == null)
+                    continue;
+
+                var parameters = method.GetParameters();
+
+                if (parameters.Length != 1 || parameters[0].ParameterType != typeof(ParityFixture))
+                    throw new InvalidOperationException(
+                        $"Parity runner '{method.Name}' must accept a single {nameof(ParityFixture)} parameter.");
+
+                if (!runners.TryAdd(attribute.FixtureId, (Action<ParityFixture>)method.CreateDelegate(typeof(Action<ParityFixture>))))
+                    throw new InvalidOperationException($"Multiple parity runners are registered for fixture '{attribute.FixtureId}'.");
+            }
+
+            return runners;
+        }
 
         public static IEnumerable<TestCaseData> Fixtures()
         {
@@ -179,8 +194,12 @@ namespace FossPDF.UnitTests.Parity
                 }
             }));
 
+        [ParityFixtureRunner("PAG-001")]
+
         private static void RunExplicitPagination(ParityFixture fixture) =>
             RenderAndCheck(ExplicitPagination(fixture), fixture);
+
+        [ParityFixtureRunner("PAG-002")]
 
         private static void RunOverflowPagination(ParityFixture fixture) =>
             RenderAndCheck(CreatePage(fixture, page =>
@@ -194,6 +213,8 @@ namespace FossPDF.UnitTests.Parity
                             .Background(color.GetString());
                 });
             }), fixture);
+
+        [ParityFixtureRunner("PAG-105")]
 
         private static void RunPageControls(ParityFixture fixture)
         {
@@ -387,10 +408,14 @@ namespace FossPDF.UnitTests.Parity
             return count;
         }
 
+        [ParityFixtureRunner("OUT-001")]
+
         private static void RunRasterDpi(ParityFixture fixture) =>
             RenderAndCheck(CreatePage(fixture, page =>
                 page.Content().Height(fixture.Input.GetProperty("block_height").GetInt32())
                     .Background(fixture.Input.GetProperty("color").GetString())), fixture);
+
+        [ParityFixtureRunner("OUT-203")]
 
         private static void RunImageFormats(ParityFixture fixture)
         {
@@ -435,6 +460,8 @@ namespace FossPDF.UnitTests.Parity
             }
         }
 
+        [ParityFixtureRunner("SET-004")]
+
         private static void RunDocumentSettings(ParityFixture fixture)
         {
             var metadata = new DocumentMetadata
@@ -453,6 +480,8 @@ namespace FossPDF.UnitTests.Parity
             RenderAndCheck(document, fixture);
             Assert.That(metadata.RasterDpi, Is.EqualTo(fixture.Input.GetProperty("legacy_dpi").GetInt32()));
         }
+
+        [ParityFixtureRunner("IMG-001")]
 
         private static void RunRasterImage(ParityFixture fixture)
         {
@@ -476,6 +505,620 @@ namespace FossPDF.UnitTests.Parity
                 page.Content().Width(fixture.Input.GetProperty("display_width").GetInt32())
                     .Image(sharedImage)), fixture);
         }
+
+        private const float ParagraphGeometryTolerance = 0.01f;
+
+        // Skia's text-blob bounds are conservative for descenders and antialiasing adds a
+        // fringe, so the decoded ink box may differ by up to 2.5 pixels at the 72 DPI fixture.
+        private const float ParagraphInkTolerance = 2.5f;
+
+        [ParityFixtureRunner("TXT-101")]
+        private static void RunParagraphLayout(ParityFixture fixture)
+        {
+            var text = fixture.Input.GetProperty("text").GetString();
+            var width = fixture.Input.GetProperty("width").GetInt32();
+            var indentation = fixture.Input.GetProperty("first_line_indent").GetInt32();
+            var wordSpacing = fixture.Input.GetProperty("word_spacing").GetInt32();
+
+            var scenarios = FixtureCatalog.ReadArray(fixture.Input, "scenarios")
+                .Select(x => x.GetString())
+                .ToArray();
+
+            CollectionAssert.AreEquivalent(
+                new[] { "ltr_justify", "rtl_start", "narrow", "word_spacing", "multipage" },
+                scenarios,
+                "TXT-101 scenario inventory");
+
+            AssertJustifiedLayout(fixture, text, width, indentation);
+            AssertLogicalAlignment(fixture, text, width);
+            AssertNarrowLayout(fixture, text, width);
+            AssertWordSpacing(fixture, text, wordSpacing);
+            AssertPageContinuation(fixture, text, width, indentation);
+
+            foreach (var scenario in scenarios)
+                RenderParagraphScenario(fixture, scenario, text, width, indentation, wordSpacing);
+        }
+
+        private static void AssertJustifiedLayout(ParityFixture fixture, string text, int width, int indentation)
+        {
+            var style = CreateParagraphStyle(fixture);
+            var block = CreateParagraphBlock(text, style, TextHorizontalAlignment.Justify, indentation);
+            var lines = MeasureParagraphLines(block, width);
+
+            Assert.That(lines.Count, Is.GreaterThan(1), "TXT-101: the justified paragraph must wrap.");
+            Assert.That(lines[0].Indentation, Is.EqualTo(indentation).Within(ParagraphGeometryTolerance));
+            Assert.That(lines.Skip(1).Select(x => x.Indentation), Is.All.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: continuation lines are not indented.");
+            Assert.That(lines[0].BoxWidth, Is.EqualTo(width - indentation).Within(ParagraphGeometryTolerance));
+            Assert.That(lines.Skip(1).Select(x => x.BoxWidth), Is.All.EqualTo(width).Within(ParagraphGeometryTolerance));
+            Assert.That(lines.Take(lines.Count - 1).Select(x => x.IsLastLineOfParagraph), Is.All.False);
+            Assert.That(lines.Last().IsLastLineOfParagraph, Is.True);
+
+            foreach (var line in lines.Take(lines.Count - 1))
+            {
+                Assert.That(line.SpaceCount, Is.GreaterThan(0),
+                    "TXT-101: a non-final justified line contains word gaps.");
+                Assert.That(line.Width, Is.LessThanOrEqualTo(line.BoxWidth + ParagraphGeometryTolerance));
+
+                var box = TextLineLayout.GetLineBox(width, ContentDirection.LeftToRight, line.Indentation);
+                var additionalSpacing = TextLineLayout.GetAdditionalWordSpacing(
+                    TextHorizontalAlignment.Justify, box, line.Width, line.SpaceCount);
+
+                Assert.That(line.Width + line.SpaceCount * additionalSpacing,
+                    Is.EqualTo(line.BoxWidth).Within(ParagraphGeometryTolerance),
+                    "TXT-101: justification fills exactly the available line box.");
+            }
+
+            var canvas = DrawParagraph(block, width);
+            Assert.That(canvas.Runs.Count, Is.EqualTo(lines.Count));
+            Assert.That(canvas.Runs[0].PenX, Is.EqualTo(indentation).Within(ParagraphGeometryTolerance));
+            Assert.That(canvas.Runs.Skip(1).Select(x => x.PenX), Is.All.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: only the first line starts at the indented origin.");
+        }
+
+        private static void AssertLogicalAlignment(ParityFixture fixture, string text, int width)
+        {
+            var ltrStyle = CreateParagraphStyle(fixture);
+            var ltrStartLines = MeasureParagraphLines(
+                CreateParagraphBlock(text, ltrStyle, TextHorizontalAlignment.Start, 0), width);
+            var ltrStart = DrawParagraph(
+                CreateParagraphBlock(text, ltrStyle, TextHorizontalAlignment.Start, 0), width);
+
+            Assert.That(ltrStart.Runs[0].PenX, Is.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: LTR Start aligns to the left edge.");
+
+            var ltrEndLines = MeasureParagraphLines(
+                CreateParagraphBlock(text, ltrStyle, TextHorizontalAlignment.End, 0), width);
+            var ltrEnd = DrawParagraph(
+                CreateParagraphBlock(text, ltrStyle, TextHorizontalAlignment.End, 0), width);
+
+            Assert.That(ltrEnd.Runs[0].PenX, Is.EqualTo(width - ltrEndLines[0].Width).Within(ParagraphGeometryTolerance),
+                "TXT-101: LTR End aligns to the right edge.");
+
+            var rtlStyle = CreateParagraphStyle(fixture, rightToLeft: true);
+            var rtlStartLines = MeasureParagraphLines(
+                CreateParagraphBlock(text, rtlStyle, TextHorizontalAlignment.Start, 0, ContentDirection.RightToLeft),
+                width);
+            var rtlStart = DrawParagraph(
+                CreateParagraphBlock(text, rtlStyle, TextHorizontalAlignment.Start, 0, ContentDirection.RightToLeft),
+                width);
+
+            Assert.That(rtlStart.Runs[0].PenX, Is.EqualTo(width - rtlStartLines[0].Width).Within(ParagraphGeometryTolerance),
+                "TXT-101: RTL Start is the right paragraph edge.");
+
+            var rtlEndLines = MeasureParagraphLines(
+                CreateParagraphBlock(text, rtlStyle, TextHorizontalAlignment.End, 0, ContentDirection.RightToLeft),
+                width);
+            var rtlEnd = DrawParagraph(
+                CreateParagraphBlock(text, rtlStyle, TextHorizontalAlignment.End, 0, ContentDirection.RightToLeft),
+                width);
+
+            Assert.That(rtlEnd.Runs[0].PenX, Is.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: RTL End is the left paragraph edge.");
+            Assert.That(rtlEndLines[0].Width, Is.LessThanOrEqualTo(width + ParagraphGeometryTolerance));
+        }
+
+        private static void AssertNarrowLayout(ParityFixture fixture, string text, int width)
+        {
+            var style = CreateParagraphStyle(fixture);
+            var narrowWidth = width / 2;
+
+            var wideLines = MeasureParagraphLines(
+                CreateParagraphBlock(text, style, TextHorizontalAlignment.Start, 0), width);
+            var narrowBlock = CreateParagraphBlock(text, style, TextHorizontalAlignment.Start, 0);
+            var narrowLines = MeasureParagraphLines(narrowBlock, narrowWidth);
+
+            Assert.That(narrowLines.Count, Is.GreaterThan(wideLines.Count),
+                "TXT-101: a narrower box wraps earlier.");
+            Assert.That(narrowLines.Select(x => x.Width),
+                Is.All.LessThanOrEqualTo(narrowWidth + ParagraphGeometryTolerance));
+
+            var canvas = DrawParagraph(narrowBlock, narrowWidth);
+            Assert.That(canvas.Runs.Count, Is.EqualTo(narrowLines.Count));
+            Assert.That(canvas.Runs.Select(x => x.PenX), Is.All.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: default Start alignment keeps narrow lines at the left edge.");
+        }
+
+        private static void AssertWordSpacing(ParityFixture fixture, string text, int wordSpacing)
+        {
+            var fontSize = fixture.Input.GetProperty("font_size").GetInt32();
+            var spaces = text.Count(x => x == ' ');
+
+            var defaultStyle = CreateParagraphStyle(fixture);
+            var spacedStyle = CreateParagraphStyle(fixture, wordSpacing: wordSpacing);
+
+            var defaultLine = MeasureParagraphLines(
+                CreateParagraphBlock(text, defaultStyle, TextHorizontalAlignment.Start, 0), 10000).Single();
+            var spacedLine = MeasureParagraphLines(
+                CreateParagraphBlock(text, spacedStyle, TextHorizontalAlignment.Start, 0), 10000).Single();
+
+            Assert.That(spacedLine.Width - defaultLine.Width,
+                Is.EqualTo(spaces * wordSpacing * fontSize).Within(ParagraphGeometryTolerance),
+                "TXT-101: word spacing is a factor of the font size.");
+
+            var defaultWrapped = MeasureParagraphLines(
+                CreateParagraphBlock(text, defaultStyle, TextHorizontalAlignment.Start, 0), defaultLine.Width);
+            var spacedWrapped = MeasureParagraphLines(
+                CreateParagraphBlock(text, spacedStyle, TextHorizontalAlignment.Start, 0), defaultLine.Width);
+
+            Assert.That(spacedWrapped.Count, Is.GreaterThan(defaultWrapped.Count),
+                "TXT-101: configured word spacing contributes to line breaking.");
+        }
+
+        private static void AssertPageContinuation(ParityFixture fixture, string text, int width, int indentation)
+        {
+            var style = CreateParagraphStyle(fixture);
+            var longText = string.Join(" ", Enumerable.Repeat(text, 20));
+            var block = CreateParagraphBlock(longText, style, TextHorizontalAlignment.Justify, indentation);
+
+            block.PageContext = CreateParagraphPageContext();
+            block.ResetState();
+
+            var lines = block.DivideTextItemsIntoLines(width, 10000).ToList();
+            var lineHeight = lines[0].LineHeight;
+
+            var firstPage = new InkRecordingCanvas();
+            block.Canvas = firstPage;
+            block.Draw(new Size(width, lineHeight));
+
+            Assert.That(firstPage.Runs.Count, Is.GreaterThan(0));
+            Assert.That(firstPage.Runs[0].PenX, Is.EqualTo(indentation).Within(ParagraphGeometryTolerance),
+                "TXT-101: page 1 begins with the indented first line.");
+
+            var secondPage = new InkRecordingCanvas();
+            block.Canvas = secondPage;
+            block.Draw(new Size(width, 10000));
+
+            Assert.That(secondPage.Runs.Count, Is.GreaterThan(0));
+            Assert.That(secondPage.Runs[0].PenX, Is.EqualTo(0).Within(ParagraphGeometryTolerance),
+                "TXT-101: a paragraph continued on the next page does not repeat the indentation.");
+        }
+
+        private static void RenderParagraphScenario(
+            ParityFixture fixture,
+            string scenario,
+            string text,
+            int width,
+            int indentation,
+            int wordSpacing)
+        {
+            var font = fixture.Input.GetProperty("font").GetString();
+            var fontSize = fixture.Input.GetProperty("font_size").GetInt32();
+            var renderedText = scenario == "multipage"
+                ? string.Join(" ", Enumerable.Repeat(text, 20))
+                : text;
+
+            var document = CreatePage(fixture, page =>
+            {
+                page.DefaultTextStyle(style => style.FontFamily(font).FontSize(fontSize));
+                ConfigureParagraphScenario(page, scenario, renderedText, width, indentation, wordSpacing);
+            });
+
+            var pdf = document.GeneratePdf(out var pageCount);
+            var pages = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(pages.Length, Is.EqualTo(pageCount));
+
+            SaveArtifact(fixture.Id, $"scenario-{scenario}.pdf", pdf);
+            for (var index = 0; index < pages.Length; index++)
+                SaveArtifact(fixture.Id, $"scenario-{scenario}-page-{index + 1}.png", pages[index]);
+
+            if (scenario == "multipage")
+            {
+                var margin = fixture.Input.GetProperty("margin").GetInt32();
+                Assert.That(pageCount, Is.GreaterThanOrEqualTo(2),
+                    "TXT-101: the long paragraph spans multiple pages.");
+                Assert.That(GetInkLeftInTopBand(pages[0], 16), Is.GreaterThanOrEqualTo(margin + indentation - 2),
+                    "TXT-101: page 1 starts with the indented first line.");
+                Assert.That(GetInkLeftInTopBand(pages[1], 16), Is.LessThanOrEqualTo(margin + 2),
+                    "TXT-101: the continued paragraph on page 2 starts at the margin.");
+                return;
+            }
+
+            Assert.That(pageCount, Is.EqualTo(1), $"TXT-101 {scenario}: expected a single page.");
+            AssertInkMatchesLayout(fixture, scenario, pages[0], text, width, indentation, wordSpacing);
+        }
+
+        private static void ConfigureParagraphScenario(
+            PageDescriptor page,
+            string scenario,
+            string text,
+            int width,
+            int indentation,
+            int wordSpacing)
+        {
+            switch (scenario)
+            {
+                case "ltr_justify":
+                    page.Content().Width(width).Text(descriptor =>
+                    {
+                        descriptor.Justify();
+                        descriptor.ParagraphFirstLineIndentation(indentation);
+                        descriptor.Span(text);
+                    });
+                    break;
+
+                case "rtl_start":
+                    page.ContentFromRightToLeft();
+                    page.Content().Width(width).Text(descriptor =>
+                    {
+                        descriptor.AlignStart();
+                        descriptor.Span(text).DirectionFromRightToLeft();
+                    });
+                    break;
+
+                case "narrow":
+                    page.Content().Width(width / 2).Text(descriptor =>
+                    {
+                        descriptor.AlignStart();
+                        descriptor.Span(text);
+                    });
+                    break;
+
+                case "word_spacing":
+                    page.Content().Width(width).Text(descriptor =>
+                    {
+                        descriptor.Justify();
+                        descriptor.Span(text).WordSpacing(wordSpacing);
+                    });
+                    break;
+
+                case "multipage":
+                    page.Content().Width(width).Text(descriptor =>
+                    {
+                        descriptor.Justify();
+                        descriptor.ParagraphFirstLineIndentation(indentation);
+                        descriptor.Span(text);
+                    });
+                    break;
+
+                default:
+                    Assert.Fail($"Unknown TXT-101 scenario '{scenario}'.");
+                    break;
+            }
+        }
+
+        private static void AssertInkMatchesLayout(
+            ParityFixture fixture,
+            string scenario,
+            byte[] page,
+            string text,
+            int width,
+            int indentation,
+            int wordSpacing)
+        {
+            var scenarioWidth = scenario == "narrow" ? width / 2 : width;
+            var style = CreateParagraphStyle(
+                fixture,
+                rightToLeft: scenario == "rtl_start",
+                wordSpacing: scenario == "word_spacing" ? wordSpacing : 0);
+
+            var justified = scenario == "ltr_justify" || scenario == "word_spacing";
+
+            var block = CreateParagraphBlock(
+                text,
+                style,
+                justified ? TextHorizontalAlignment.Justify : TextHorizontalAlignment.Start,
+                scenario == "ltr_justify" ? indentation : 0,
+                scenario == "rtl_start" ? ContentDirection.RightToLeft : ContentDirection.LeftToRight);
+
+            var layout = DrawParagraph(block, scenarioWidth);
+            Assert.That(layout.HasInk, Is.True);
+
+            var lines = MeasureParagraphLines(block, scenarioWidth);
+            var horizontal = GetHorizontalInkBounds(block, lines, scenarioWidth);
+
+            var margin = fixture.Input.GetProperty("margin").GetInt32();
+            var expected = new InkBounds(
+                margin + horizontal.Left,
+                margin + layout.Top,
+                margin + horizontal.Right,
+                margin + layout.Bottom);
+            var actual = GetRasterInkBounds(page);
+
+            Assert.That(Math.Abs(actual.Left - expected.Left), Is.LessThanOrEqualTo(ParagraphInkTolerance),
+                $"{scenario} ink left: layout {expected.Left:F2}, raster {actual.Left:F2}");
+            Assert.That(Math.Abs(actual.Top - expected.Top), Is.LessThanOrEqualTo(ParagraphInkTolerance),
+                $"{scenario} ink top: layout {expected.Top:F2}, raster {actual.Top:F2}");
+            Assert.That(Math.Abs(actual.Right - expected.Right), Is.LessThanOrEqualTo(ParagraphInkTolerance),
+                $"{scenario} ink right: layout {expected.Right:F2}, raster {actual.Right:F2}");
+            Assert.That(Math.Abs(actual.Bottom - expected.Bottom), Is.LessThanOrEqualTo(ParagraphInkTolerance),
+                $"{scenario} ink bottom: layout {expected.Bottom:F2}, raster {actual.Bottom:F2}");
+        }
+
+        /// <summary>
+        /// Horizontal ink bounds are derived from the measured glyph bearings because
+        /// <see cref="SKTextBlob.Bounds"/> overestimates the justified line extent while the
+        /// rasterizer draws the normalized, spacing-adjusted glyph positions.
+        /// </summary>
+        private static (float Left, float Right) GetHorizontalInkBounds(
+            TextBlock block,
+            IReadOnlyCollection<TextLine> lines,
+            float width)
+        {
+            var alignment = block.Alignment.GetValueOrDefault(TextHorizontalAlignment.Start);
+            var left = float.MaxValue;
+            var right = float.MinValue;
+
+            foreach (var line in lines)
+            {
+                var resolved = TextLineLayout.ResolveAlignment(
+                    alignment, line.IsLastLineOfParagraph, line.SpaceCount);
+                var box = TextLineLayout.GetLineBox(width, block.ContentDirection, line.Indentation);
+                var additionalSpacing = TextLineLayout.GetAdditionalWordSpacing(
+                    resolved, box, line.Width, line.SpaceCount);
+
+                var renderedWidth = line.Width + line.SpaceCount * additionalSpacing;
+                var cursor = TextLineLayout.GetContentStart(
+                    resolved, block.ContentDirection, box, renderedWidth);
+
+                var first = line.Elements.First().Measurement;
+                var last = line.Elements.Last().Measurement;
+
+                if (block.ContentDirection == ContentDirection.LeftToRight)
+                {
+                    left = Math.Min(left, cursor + first.FirstGlyphBearing);
+                    right = Math.Max(right, cursor + renderedWidth - last.LastGlyphBearing);
+                }
+                else
+                {
+                    right = Math.Max(right, cursor - first.LastGlyphBearing);
+                    left = Math.Min(left, cursor - renderedWidth + last.FirstGlyphBearing);
+                }
+            }
+
+            return (left, right);
+        }
+
+        private static InkBounds GetRasterInkBounds(byte[] png)
+        {
+            using var bitmap = SKBitmap.Decode(png);
+            Assert.That(bitmap, Is.Not.Null);
+
+            var left = int.MaxValue;
+            var top = int.MaxValue;
+            var right = int.MinValue;
+            var bottom = int.MinValue;
+
+            for (var y = 0; y < bitmap.Height; y++)
+            {
+                for (var x = 0; x < bitmap.Width; x++)
+                {
+                    var color = bitmap.GetPixel(x, y);
+
+                    // Include faint antialiasing so the measured box approaches the glyph
+                    // outline bounds rather than only the fully covered pixels.
+                    if (color.Red >= 250 && color.Green >= 250 && color.Blue >= 250)
+                        continue;
+
+                    left = Math.Min(left, x);
+                    top = Math.Min(top, y);
+                    right = Math.Max(right, x);
+                    bottom = Math.Max(bottom, y);
+                }
+            }
+
+            Assert.That(right, Is.GreaterThanOrEqualTo(left), "The raster page contains text ink.");
+            return new InkBounds(left, top, right + 1, bottom + 1);
+        }
+
+        /// <summary>
+        /// Returns the leftmost ink pixel within the first text line band. The very first ink
+        /// row only contains the apex of tall glyphs, which is not a reliable left edge.
+        /// </summary>
+        private static int GetInkLeftInTopBand(byte[] png, int bandHeight)
+        {
+            using var bitmap = SKBitmap.Decode(png);
+            Assert.That(bitmap, Is.Not.Null);
+
+            var top = -1;
+
+            for (var y = 0; y < bitmap.Height && top < 0; y++)
+            {
+                for (var x = 0; x < bitmap.Width; x++)
+                {
+                    var color = bitmap.GetPixel(x, y);
+
+                    if (color.Red < 250 || color.Green < 250 || color.Blue < 250)
+                    {
+                        top = y;
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(top, Is.GreaterThanOrEqualTo(0), "The raster page contains no text ink.");
+
+            var left = int.MaxValue;
+
+            for (var y = top; y < Math.Min(bitmap.Height, top + bandHeight); y++)
+            {
+                for (var x = 0; x < left; x++)
+                {
+                    var color = bitmap.GetPixel(x, y);
+
+                    if (color.Red < 250 || color.Green < 250 || color.Blue < 250)
+                    {
+                        left = x;
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(left, Is.LessThan(int.MaxValue), "The raster page contains no text ink.");
+            return left;
+        }
+
+        private static TextStyle CreateParagraphStyle(
+            ParityFixture fixture,
+            bool rightToLeft = false,
+            int wordSpacing = 0)
+        {
+            var style = TextStyle.Default
+                .FontFamily(fixture.Input.GetProperty("font").GetString())
+                .FontSize(fixture.Input.GetProperty("font_size").GetInt32())
+                .WordSpacing(wordSpacing);
+
+            if (rightToLeft)
+                style = style.DirectionFromRightToLeft();
+
+            return style.ApplyGlobalStyle();
+        }
+
+        private static TextBlock CreateParagraphBlock(
+            string text,
+            TextStyle style,
+            TextHorizontalAlignment alignment,
+            float indentation,
+            ContentDirection contentDirection = ContentDirection.LeftToRight)
+        {
+            return new TextBlock
+            {
+                Alignment = alignment,
+                FirstLineIndentation = indentation,
+                ContentDirection = contentDirection,
+                Items = new List<ITextBlockItem>
+                {
+                    new TextBlockSpan
+                    {
+                        Text = text,
+                        Style = style
+                    }
+                }
+            };
+        }
+
+        private static PageContext CreateParagraphPageContext()
+        {
+            return new PageContext
+            {
+                FontManager = FontManager.MakeDocumentSpecific(),
+                CheckIfAllTextGlyphsAreAvailable = false
+            };
+        }
+
+        private static List<TextLine> MeasureParagraphLines(TextBlock block, float width)
+        {
+            block.PageContext = CreateParagraphPageContext();
+            block.ResetState();
+
+            return block.DivideTextItemsIntoLines(width, 10000).ToList();
+        }
+
+        private static InkRecordingCanvas DrawParagraph(TextBlock block, float width, float height = 10000)
+        {
+            if (block.PageContext == null)
+            {
+                block.PageContext = CreateParagraphPageContext();
+                block.ResetState();
+            }
+
+            var canvas = new InkRecordingCanvas();
+            block.Canvas = canvas;
+            block.Draw(new Size(width, height));
+
+            return canvas;
+        }
+
+        private sealed class InkRecordingCanvas : ICanvas
+        {
+            private float _offsetX;
+            private float _offsetY;
+
+            public List<TextRun> Runs { get; } = new();
+
+            public float Left { get; private set; } = float.MaxValue;
+            public float Top { get; private set; } = float.MaxValue;
+            public float Right { get; private set; } = float.MinValue;
+            public float Bottom { get; private set; } = float.MinValue;
+
+            public bool HasInk => Right > Left;
+
+            public void Translate(Position vector)
+            {
+                _offsetX += vector.X;
+                _offsetY += vector.Y;
+            }
+
+            public void DrawText(
+                SKTextBlob skTextBlob,
+                Position position,
+                TextStyle style,
+                DocumentSpecificFontManager fontManager)
+            {
+                var bounds = skTextBlob.Bounds;
+                var penX = _offsetX + position.X;
+                var penY = _offsetY + position.Y;
+
+                Runs.Add(new TextRun(penX, penY, bounds));
+
+                Left = Math.Min(Left, penX + bounds.Left);
+                Top = Math.Min(Top, penY + bounds.Top);
+                Right = Math.Max(Right, penX + bounds.Right);
+                Bottom = Math.Max(Bottom, penY + bounds.Bottom);
+            }
+
+            public void DrawRectangle(Position vector, Size size, string color) { }
+            public void DrawImage(SKImage image, Position position, Size size) { }
+            public void DrawHyperlink(string url, Size size) { }
+            public void DrawSectionLink(string sectionName, Size size) { }
+            public void DrawSection(string sectionName) { }
+            public void Rotate(float angle) { }
+            public void Scale(float scaleX, float scaleY) { }
+        }
+
+        private readonly struct TextRun
+        {
+            public TextRun(float penX, float penY, SKRect bounds)
+            {
+                PenX = penX;
+                PenY = penY;
+                Bounds = bounds;
+            }
+
+            public float PenX { get; }
+            public float PenY { get; }
+            public SKRect Bounds { get; }
+        }
+
+        private readonly struct InkBounds
+        {
+            public InkBounds(float left, float top, float right, float bottom)
+            {
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
+            }
+
+            public float Left { get; }
+            public float Top { get; }
+            public float Right { get; }
+            public float Bottom { get; }
+        }
+
+        [ParityFixtureRunner("TXT-001")]
 
         private static void RunStyledText(ParityFixture fixture)
         {
@@ -521,12 +1164,16 @@ namespace FossPDF.UnitTests.Parity
                 "Styled text escaped the content area.");
         }
 
+        [ParityFixtureRunner("FAIL-001")]
+
         private static void RunMalformedImage(ParityFixture fixture)
         {
             var input = Convert.FromHexString(fixture.Input.GetProperty("image_bytes_hex").GetString());
             var document = Document.Create(container => container.Page(page => page.Content().Image(input)));
             Assert.Throws<DocumentComposeException>(() => document.GeneratePdf());
         }
+
+        [ParityFixtureRunner("FAIL-002")]
 
         private static void RunImpossibleLayout(ParityFixture fixture)
         {
@@ -535,6 +1182,8 @@ namespace FossPDF.UnitTests.Parity
                 page.Content().Width(size[0].GetInt32()).Height(size[1].GetInt32()).Background("#ff0000"));
             Assert.Throws<DocumentLayoutException>(() => document.GeneratePdf());
         }
+
+        [ParityFixtureRunner("RES-001")]
 
         private static void RunCallerOwnedStream(ParityFixture fixture)
         {

@@ -53,6 +53,8 @@ namespace FossPDF.Drawing
             // used for letter spacing calculation
             var lastCluster = glyphInfos.LastOrDefault().Cluster;
             var letterSpacing = (TextStyle.LetterSpacing ?? 0) * (TextStyle.Size ?? 16);
+            var wordSpacing = (TextStyle.WordSpacing ?? 0) * (TextStyle.Size ?? 16);
+            var spaceGlyph = SkiaFont.Typeface.GetGlyphs(" ")[0];
 
             var glyphs = new ShapedGlyph[length];
 
@@ -72,16 +74,22 @@ namespace FossPDF.Drawing
                     xOffset += letterSpacing;
                 }
 
+                // word spacing expands the advance of space glyphs, so it contributes to
+                // line breaking and measurement in the same way as the configured spacing
+                var isSpace = glyphInfos[i].Codepoint == spaceGlyph;
+                var advance = glyphPositions[i].XAdvance * scaleX + (isSpace ? wordSpacing : 0);
+
                 glyphs[i] = new ShapedGlyph
                 {
                     Codepoint = (ushort)glyphInfos[i].Codepoint,
                     Position = new SKPoint(xOffset + glyphPositions[i].XOffset * scaleX,
                         yOffset - glyphPositions[i].YOffset * scaleY),
-                    Width = glyphPositions[i].XAdvance * scaleX,
+                    Width = advance,
                     LBearing = lBearing,
                     RBearing = rBearing,
+                    IsSpace = isSpace
                 };
-                xOffset += glyphPositions[i].XAdvance * scaleX;
+                xOffset += advance;
                 yOffset += glyphPositions[i].YAdvance * scaleY;
             }
 
@@ -107,6 +115,7 @@ namespace FossPDF.Drawing
         public float Width;
         public float? RBearing { get; set; }
         public float? LBearing { get; set; }
+        public bool IsSpace { get; set; }
     }
 
     public struct DrawTextCommand
@@ -198,6 +207,7 @@ namespace FossPDF.Drawing
             public float Width { get; set; }
             public float FirstGlyphBearing { get; set; }
             public float LastGlyphBearing { get; set; }
+            public int SpaceCount { get; set; }
         }
 
         public WidthResult MeasureWidth(int startIndex, int endIndex)
@@ -207,7 +217,8 @@ namespace FossPDF.Drawing
                 {
                     Width = 0,
                     FirstGlyphBearing = 0,
-                    LastGlyphBearing = 0
+                    LastGlyphBearing = 0,
+                    SpaceCount = 0
                 };
 
             var start = this[startIndex];
@@ -216,20 +227,26 @@ namespace FossPDF.Drawing
 
 
             var sum = 0f;
+            var spaceCount = 0;
             for (var i = startIndex; i <= endIndex; i++)
             {
-                sum += this[i].Width;
+                var glyph = this[i];
+                sum += glyph.Width;
+
+                if (glyph.IsSpace)
+                    spaceCount++;
             }
 
             return new WidthResult
             {
                 Width = sum,
                 FirstGlyphBearing = start.LBearing ?? 0,
-                LastGlyphBearing = end.RBearing ?? 0
+                LastGlyphBearing = end.RBearing ?? 0,
+                SpaceCount = spaceCount
             };
         }
 
-        public DrawTextCommand? PositionText(int startIndex, int endIndex, TextStyle textStyle)
+        public DrawTextCommand? PositionText(int startIndex, int endIndex, TextStyle textStyle, float additionalWordSpacing = 0)
         {
             if (Glyphs.Length == 0)
                 return null;
@@ -237,9 +254,13 @@ namespace FossPDF.Drawing
             if (startIndex > endIndex)
                 return null;
 
-            // renormalise the fuckers
-            var minX = Glyphs[startIndex..(endIndex + 1)]
-                .Min(g => g.Position.X);
+            // Renormalize so that the leftmost rendered glyph starts at the blob origin.
+            // The indexer presents glyphs in logical order; for right-to-left content the
+            // underlying visual array is reversed and cannot be sliced with logical indices.
+            var minX = this[endIndex].Position.X;
+
+            for (var index = startIndex; index < endIndex; index++)
+                minX = Math.Min(minX, this[index].Position.X);
 
 
             using var skTextBlobBuilder = new SKTextBlobBuilder();
@@ -249,23 +270,44 @@ namespace FossPDF.Drawing
             var glyphSpan = positionedRunBuffer.Glyphs;
             var positionSpan = positionedRunBuffer.Positions;
 
-            for (var sourceIndex = startIndex; sourceIndex <= endIndex; sourceIndex++)
+            // Additional word spacing is applied to the word that follows the space glyph
+            // in logical order. Glyphs are stored in visual left-to-right order, so for
+            // right-to-left content the spacing shifts the glyphs that precede the space
+            // in logical order (those to the right of it).
+            var additionalSpacing = 0f;
+
+            if (Direction == Direction.LeftToRight)
             {
-                var runIndex = sourceIndex - startIndex;
+                for (var sourceIndex = startIndex; sourceIndex <= endIndex; sourceIndex++)
+                {
+                    var glyph = this[sourceIndex];
+                    var runIndex = sourceIndex - startIndex;
 
-                glyphSpan[runIndex] = this[sourceIndex].Codepoint;
-                positionSpan[runIndex] = new SKPoint(
-                    this[sourceIndex].Position.X - minX,
-                    this[sourceIndex].Position.Y);
+                    glyphSpan[runIndex] = glyph.Codepoint;
+                    positionSpan[runIndex] = new SKPoint(
+                        glyph.Position.X - minX + additionalSpacing,
+                        glyph.Position.Y);
+
+                    if (glyph.IsSpace)
+                        additionalSpacing += additionalWordSpacing;
+                }
             }
+            else
+            {
+                for (var sourceIndex = endIndex; sourceIndex >= startIndex; sourceIndex--)
+                {
+                    var glyph = this[sourceIndex];
+                    var runIndex = sourceIndex - startIndex;
 
-            var firstVisualCharacterIndex = Direction == Direction.LeftToRight
-                ? startIndex
-                : endIndex;
+                    glyphSpan[runIndex] = glyph.Codepoint;
+                    positionSpan[runIndex] = new SKPoint(
+                        glyph.Position.X - minX + additionalSpacing,
+                        glyph.Position.Y);
 
-            var lastVisualCharacterIndex = Direction == Direction.LeftToRight
-                ? endIndex
-                : startIndex;
+                    if (glyph.IsSpace)
+                        additionalSpacing += additionalWordSpacing;
+                }
+            }
 
             var cmd = new DrawTextCommand
             {

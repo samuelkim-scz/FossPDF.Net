@@ -12,6 +12,7 @@ namespace FossPDF.Infrastructure
         Size,
         LineHeight,
         LetterSpacing,
+        WordSpacing,
         FontWeight,
         FontPosition,
         IsItalic,
@@ -117,6 +118,19 @@ namespace FossPDF.Infrastructure
                     return origin;
 
                 return origin with { LetterSpacing = castedValue };
+            }
+
+            if (property == TextStyleProperty.WordSpacing)
+            {
+                if (!overrideValue && origin.WordSpacing != null)
+                    return origin;
+
+                var castedValue = (float?)value;
+
+                if (origin.WordSpacing == castedValue)
+                    return origin;
+
+                return origin with { WordSpacing = castedValue };
             }
 
             if (property == TextStyleProperty.FontWeight)
@@ -278,6 +292,7 @@ namespace FossPDF.Infrastructure
             result = MutateStyle(result, TextStyleProperty.Size, parent.Size, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.LineHeight, parent.LineHeight, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.LetterSpacing, parent.LetterSpacing, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.WordSpacing, parent.WordSpacing, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.FontWeight, parent.FontWeight, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.FontPosition, parent.FontPosition, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.IsItalic, parent.IsItalic, overrideStyle);

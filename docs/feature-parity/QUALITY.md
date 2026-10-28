@@ -102,6 +102,28 @@ no platform references and compared those outputs against Windows. Adding their 
 retains the Windows baseline, font pins, exact page counts/dimensions and all global tolerances;
 it does not widen tolerances or change rendering code.
 
+### FP-101 paragraph layout update (October 27, 2026)
+
+FP-101 positions each text line as a unit instead of offsetting every span independently. The
+`report` scenario's right-aligned multi-span footer previously extended past the content edge; it
+now ends at the content edge, which moved the shared text extent for `report`, `text` and `image`.
+The four scenarios were re-measured on the `win-x64` reference platform:
+
+- `report`: ink bounds `(39,40,554,757)` → `(40,40,516,757)`; ink 108263 → 108288 pixels.
+- `text`: ink bounds `(39,48,512,437)` → `(40,48,511,437)`; ink 37072 → 37067 pixels.
+- `image`: ink bounds `(39,46,512,273)` → `(40,46,511,273)`; ink 67799 → 67815 pixels.
+- `graphics`: unaffected geometry; the gray bucket moved by one pixel (53635 → 53634).
+
+The `report` PNG was reviewed before accepting the numbers: content, page geometry and colour
+distribution are unchanged apart from the corrected footer extent. No tolerance was widened and no
+scenario was added or removed.
+
+The `linux-x64` and `osx-arm64` overrides were updated to the same layout-derived ink bounds. Their
+ink and colour counts remain the October 26 platform measurements and were **not** re-measured for
+this change, so the first quality CI run on each platform must record its own run (or
+`--update-visual-baseline`) and the result must be reviewed. Until then those overrides are a layout
+reference, not fresh platform evidence.
+
 ## Performance measurements
 
 The tool records four scenarios:

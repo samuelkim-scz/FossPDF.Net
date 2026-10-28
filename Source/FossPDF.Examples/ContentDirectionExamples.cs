@@ -331,7 +331,13 @@ namespace FossPDF.Examples
                     {
                         container.Text(text =>
                         {
-                            text.Alignment = alignment; // internal API
+                            text.Alignment = alignment switch
+                            {
+                                HorizontalAlignment.Left => TextHorizontalAlignment.Left,
+                                HorizontalAlignment.Center => TextHorizontalAlignment.Center,
+                                HorizontalAlignment.Right => TextHorizontalAlignment.Right,
+                                _ => null
+                            };
                     
                             text.Span("Lorem ipsum").Bold().FontColor(Colors.Red.Medium);
                             text.Element().Width(5);

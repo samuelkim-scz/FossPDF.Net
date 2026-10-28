@@ -16,7 +16,6 @@ namespace FossPDF.Elements.Text.Items
         public string Text { get; set; } = string.Empty;
         public TextStyle Style { get; set; } = TextStyle.Default;
         private TextShapingResult? TextShapingResult { get; set; }
-        private ushort? SpaceCodepoint { get; set; }
 
         private Dictionary<MeasurementCacheKey, TextMeasurementResult?> MeasureCache = new ();
         protected virtual bool EnableTextCache => true;
@@ -62,8 +61,6 @@ namespace FossPDF.Elements.Text.Items
             TextShapingResult ??= textShaper.Shape(Text);
 
             var fontMetrics = request.PageContext.FontManager.ToFontMetrics(Style);
-            var paintAsFont = request.PageContext.FontManager.ToFont(Style);
-            SpaceCodepoint ??= paintAsFont.Typeface.GetGlyphs(" ")[0];
 
             var startIndex = request.StartIndex;
 
@@ -71,7 +68,7 @@ namespace FossPDF.Elements.Text.Items
             // ignore leading spaces
             if (request is { IsFirstElementInBlock: false, IsFirstElementInLine: true })
             {
-                while (startIndex < TextShapingResult.Length && Text[startIndex] == SpaceCodepoint)
+                while (startIndex < TextShapingResult.Length && TextShapingResult[startIndex].IsSpace)
                     startIndex++;
             }
 
@@ -112,6 +109,8 @@ namespace FossPDF.Elements.Text.Items
 
                 LineHeight = Style.LineHeight ?? 1,
 
+                SpaceCount = width.SpaceCount,
+
                 StartIndex = startIndex,
                 EndIndex = wrappedText.Value.endIndex,
                 NextIndex = wrappedText.Value.nextIndex,
@@ -140,7 +139,7 @@ namespace FossPDF.Elements.Text.Items
                 return (endIndex, endIndex + 1);
 
             // current line ends at word, next character is space, perfect place to wrap
-            if (shapingResult[endIndex].Codepoint != SpaceCodepoint && shapingResult[endIndex + 1].Codepoint == SpaceCodepoint)
+            if (!shapingResult[endIndex].IsSpace && shapingResult[endIndex + 1].IsSpace)
                 return (endIndex, endIndex + 2);
 
             // find last space within the available text to wrap
@@ -148,7 +147,7 @@ namespace FossPDF.Elements.Text.Items
 
             while (lastSpaceIndex >= startIndex)
             {
-                if (shapingResult[lastSpaceIndex].Codepoint == SpaceCodepoint)
+                if (shapingResult[lastSpaceIndex].IsSpace)
                     break;
 
                 lastSpaceIndex--;
@@ -191,7 +190,7 @@ namespace FossPDF.Elements.Text.Items
             var textShaper = request.PageContext.FontManager.ToTextShaper(Style);
             TextShapingResult ??= textShaper.Shape(Text);
 
-            var textDrawingCommand = TextShapingResult.PositionText(request.StartIndex, request.EndIndex, Style);
+            var textDrawingCommand = TextShapingResult.PositionText(request.StartIndex, request.EndIndex, Style, request.AdditionalWordSpacing);
 
             if (Style.BackgroundColor is { } backgroundColor && backgroundColor != Colors.Transparent)
                 request.Canvas.DrawRectangle(new Position(0, request.TotalAscent), new Size(request.TextSize.Width, request.TextSize.Height), backgroundColor);
