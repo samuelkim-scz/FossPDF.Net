@@ -50,6 +50,12 @@ the copied Svg.Skia (MIT) and Svg.Custom (MS-PL) licence texts under `licenses/`
 Svg.SceneGraph, Svg.Animation, ShimSkiaSharp and ExCSS travel as MIT-licensed package dependencies
 with their own package licence metadata intact.
 
+The shipped `FossPDF.PdfOperations` companion (FP-302) pins `PDFsharp` to `[6.2.4]`, targets
+`net9.0` only, and ships `THIRD-PARTY-NOTICES.md` plus the copied PDFsharp MIT licence text under
+`licenses/`. Microsoft.Extensions.Logging.Abstractions,
+Microsoft.Extensions.DependencyInjection.Abstractions and System.Security.Cryptography.Pkcs travel
+as MIT-licensed package dependencies with their own package licence metadata intact.
+
 ## License and notice decisions
 
 FossPDF's own code remains MIT. Select unchanged Svg.Skia binaries in an optional SVG companion

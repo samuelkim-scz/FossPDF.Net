@@ -4,8 +4,8 @@ FossPDF is a fork of [QuestPDF](https://github.com/QuestPDF/QuestPDF) at the las
 under an open-source licence. FossPDF itself is MIT-licensed; see [LICENSE.md](LICENSE.md).
 
 This file records the third-party components used by the FossPDF packages and examples. It is
-included in the `FossPDF`, `FossPDF.Previewer`, `FossPDF.FontSubset`, `FossPDF.FontSubset.Glue` and
-`FossPDF.Svg` NuGet packages.
+included in the `FossPDF`, `FossPDF.Previewer`, `FossPDF.FontSubset`, `FossPDF.FontSubset.Glue`,
+`FossPDF.Svg` and `FossPDF.PdfOperations` NuGet packages.
 
 ## Distributed with the FossPDF package
 
@@ -63,6 +63,22 @@ Svg.Custom is **Microsoft Public License (MS-PL)**, not MIT. Its complete licenc
 with `FossPDF.Svg` because binary distributions must retain the applicable notices. No Svg.Custom
 source is copied into or re-licensed by FossPDF. Svg.Model, Svg.SceneGraph, Svg.Animation,
 ShimSkiaSharp and ExCSS are MIT-licensed transitive dependencies of the same graph.
+
+## Distributed with the FossPDF.PdfOperations package
+
+The optional existing-PDF operations companion package targets `net9.0` and pins PDFsharp `6.2.4`
+exactly. Its full graph is recorded in
+[docs/feature-parity/NATIVE_DEPENDENCIES.md](docs/feature-parity/NATIVE_DEPENDENCIES.md).
+
+| Component | Licence | Copyright / attribution |
+| --- | --- | --- |
+| PDFsharp 6.2.4 | MIT | Copyright (c) 2001-2026 empira Software GmbH; full text in `licenses/PDFsharp-6.2.4-LICENSE.txt` |
+| Microsoft.Extensions.Logging.Abstractions 8.0.3 (transitive) | MIT | Copyright (c) .NET Foundation and Contributors |
+| Microsoft.Extensions.DependencyInjection.Abstractions 8.0.2 (transitive) | MIT | Copyright (c) .NET Foundation and Contributors |
+| System.Security.Cryptography.Pkcs 8.0.1 (transitive) | MIT | Copyright (c) .NET Foundation and Contributors |
+
+PDFsharp **6.5.0 declares AGPL-3.0-only** and is not shipped; the exact `[6.2.4]` range prevents an
+unreviewed upgrade.
 
 ## Distributed with the FossPDF font-subsetting packages
 

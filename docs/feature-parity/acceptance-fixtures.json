@@ -1235,7 +1235,10 @@
       "work_items": [
         "FP-302"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "documents": [
           "PAG-001",

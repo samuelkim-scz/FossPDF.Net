@@ -28,6 +28,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The image export guide](docs/feature-parity/IMAGE_EXPORT.md) covers PNG/JPEG/WebP quality, DPI, transparency, backgrounds and caller-owned output streams.
 
+[The PDF operations guide](docs/feature-parity/PDF_OPERATIONS.md) covers loading existing PDFs, page selectors, merging, metadata/annotation preservation and failure/ownership rules.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
@@ -129,7 +131,7 @@ Deliver SVG input, image optimization/output controls, and modern container/line
 
 ### [Parity M3 - PDF document operations](https://github.com/samuelkim-scz/FossPDF.Net/milestone/4)
 
-Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md).
+Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md). Existing-PDF loading, page selection and merging are documented in [docs/feature-parity/PDF_OPERATIONS.md](docs/feature-parity/PDF_OPERATIONS.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |
