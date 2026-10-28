@@ -38,13 +38,16 @@ namespace FossPDF.UnitTests
             var directory = QpdfProcessBackend.CreatePrivateDirectory();
             try
             {
-                var script = Path.Combine(directory, windows ? "wait.ps1" : "wait.sh");
-                File.WriteAllText(script, windows ? "Start-Sleep -Seconds 30" : "exec sleep 30\n");
+                var script = Path.Combine(directory, "wait.sh");
+                if (!windows)
+                    File.WriteAllText(script, "exec sleep 30\n");
                 var executable = windows
                     ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
                         "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
                 var arguments = windows
-                    ? new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script }
+                    // Command mode ignores the qpdf input/output arguments in its trailing
+                    // comment; -File otherwise tries to bind the standalone '-' as a parameter.
+                    ? new[] { "-NoProfile", "-NonInteractive", "-Command", "[System.Threading.Thread]::Sleep(30000); # ignore qpdf arguments" }
                     : new[] { script };
                 using var cancellation = new CancellationTokenSource();
                 if (cancel)
