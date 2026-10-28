@@ -126,6 +126,23 @@ namespace FossPDF.Fluent
         }
 
         /// <summary>
+        /// Paints a box shadow behind the container, following its corner radii. The shadow is
+        /// drawn before the background, border and content, so it never covers them. A zero blur
+        /// keeps the shadow sharp; a positive blur diffuses its edge.
+        /// </summary>
+        public static IContainer Shadow(this IContainer element, BoxShadowStyle shadow)
+        {
+            if (shadow == null)
+                throw new ArgumentNullException(nameof(shadow));
+
+            shadow.Validate();
+
+            var decoration = GetDecoration(element);
+            decoration.Shadow = shadow;
+            return decoration;
+        }
+
+        /// <summary>
         /// Clips the content to the container bounds, rounded by the configured corner radii.
         /// Backgrounds and borders are not clipped. Combine with <c>CornerRadius</c> to clip content
         /// to rounded bounds.

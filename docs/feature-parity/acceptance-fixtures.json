@@ -1154,8 +1154,14 @@
       "work_items": [
         "FP-205"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
+        "page": [
+          160,
+          120
+        ],
+        "margin": 0,
+        "dpi": 288,
         "line": {
           "from": [
             10,
@@ -1170,13 +1176,25 @@
             6,
             3
           ],
-          "phase": 2
+          "phase": 2,
+          "gradient": [
+            "#ff0000",
+            "#0000ff"
+          ]
         },
         "shadow": {
+          "box": [
+            30,
+            50,
+            60,
+            40
+          ],
+          "radius": 8,
           "offset": [
             3,
             4
           ],
+          "spread": 2,
           "blur": 5,
           "color": "#80000000"
         }

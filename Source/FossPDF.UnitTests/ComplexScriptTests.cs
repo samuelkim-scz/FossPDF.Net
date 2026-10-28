@@ -525,6 +525,8 @@ namespace FossPDF.UnitTests
 
             public void DrawRectangle(Position vector, Size size, string color) { }
             public void DrawRectangle(Position vector, Size size, RectangleStyle style) { }
+            public void DrawLine(Position start, Position end, LineStyle style) { }
+            public void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow) { }
             public void SaveState() { }
             public void RestoreState() { }
             public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius) { }

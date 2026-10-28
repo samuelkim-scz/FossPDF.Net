@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using FossPDF.Infrastructure;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
@@ -30,6 +31,192 @@ namespace FossPDF.Drawing
 
             var paint = color.ColorToPaint();
             ActiveCanvas.DrawRect(vector.X, vector.Y, size.Width, size.Height, paint);
+        }
+
+        public void DrawLine(Position start, Position end, LineStyle style)
+        {
+            if (style.Width < Size.Epsilon)
+                return;
+
+            var length = GetLineLength(start, end);
+
+            if (length < Size.Epsilon)
+                return;
+
+            using var shader = CreateLineShader(style, start, end);
+            using var paint = new SKPaint
+            {
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill,
+                Color = SKColor.Parse(style.Color ?? Helpers.Colors.Black),
+                Shader = shader
+            };
+
+            using var path = new SKPath();
+
+            if (style.DashPattern == null || style.DashPattern.Length < 2)
+            {
+                AddLineQuad(path, start, end, style.Width, 0, length);
+            }
+            else
+            {
+                // Dashes are drawn as filled quads instead of an SKPathEffect: Skia's SVG backend
+                // silently drops path effects, so this keeps dashes vector in every backend and
+                // makes the dash geometry exactly the requested lengths in points.
+                AddDashedLineQuads(path, start, end, style, length);
+            }
+
+            ActiveCanvas.DrawPath(path, paint);
+        }
+
+        private static float GetLineLength(Position start, Position end)
+        {
+            var deltaX = end.X - start.X;
+            var deltaY = end.Y - start.Y;
+
+            return (float)Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        }
+
+        private static void AddLineQuad(SKPath path, Position start, Position end, float width, float from, float to)
+        {
+            var deltaX = end.X - start.X;
+            var deltaY = end.Y - start.Y;
+            var length = GetLineLength(start, end);
+
+            if (length < Size.Epsilon || to - from <= 0)
+                return;
+
+            var directionX = deltaX / length;
+            var directionY = deltaY / length;
+            var halfWidth = width / 2;
+            var normalX = -directionY * halfWidth;
+            var normalY = directionX * halfWidth;
+
+            var startX = start.X + directionX * from;
+            var startY = start.Y + directionY * from;
+            var endX = start.X + directionX * to;
+            var endY = start.Y + directionY * to;
+
+            path.MoveTo(startX + normalX, startY + normalY);
+            path.LineTo(endX + normalX, endY + normalY);
+            path.LineTo(endX - normalX, endY - normalY);
+            path.LineTo(startX - normalX, startY - normalY);
+            path.Close();
+        }
+
+        private static void AddDashedLineQuads(SKPath path, Position start, Position end, LineStyle style, float length)
+        {
+            var pattern = style.DashPattern!;
+            var total = 0f;
+
+            foreach (var value in pattern)
+                total += value;
+
+            if (total < Size.Epsilon)
+                return;
+
+            var offset = style.DashPhase % total;
+
+            if (offset < 0)
+                offset += total;
+
+            var index = 0;
+
+            while (offset >= pattern[index])
+            {
+                offset -= pattern[index];
+                index = (index + 1) % pattern.Length;
+            }
+
+            var remaining = pattern[index] - offset;
+            var isDash = index % 2 == 0;
+            var position = 0f;
+
+            while (position < length)
+            {
+                var segment = Math.Min(remaining, length - position);
+
+                if (isDash && segment > 0)
+                    AddLineQuad(path, start, end, style.Width, position, position + segment);
+
+                position += segment;
+                remaining -= segment;
+
+                // Zero-length dashes/gaps advance immediately; at least one pattern value is
+                // positive (enforced by the fluent API), so this always terminates.
+                if (remaining <= Size.Epsilon)
+                {
+                    index = (index + 1) % pattern.Length;
+                    remaining = pattern[index];
+                    isDash = !isDash;
+                }
+            }
+        }
+
+        private static SKShader? CreateLineShader(LineStyle style, Position start, Position end)
+        {
+            if (style.GradientColors == null || style.GradientColors.Length < 2)
+                return null;
+
+            return SKShader.CreateLinearGradient(
+                new SKPoint(start.X, start.Y),
+                new SKPoint(end.X, end.Y),
+                style.GradientColors.Select(SKColor.Parse).ToArray(),
+                null,
+                SKShaderTileMode.Clamp);
+        }
+
+        public virtual void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow)
+        {
+            if (!TryCreateShadowShape(vector, size, cornerRadius, shadow, out var rect, out var radii))
+                return;
+
+            using var roundRect = CreateRoundRect(rect, radii);
+            using var maskFilter = shadow.Blur > 0
+                ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, shadow.Blur / 2)
+                : null;
+            using var paint = new SKPaint
+            {
+                IsAntialias = true,
+                Color = SKColor.Parse(shadow.Color),
+                MaskFilter = maskFilter
+            };
+
+            ActiveCanvas.DrawRoundRect(roundRect, paint);
+        }
+
+        protected static bool TryCreateShadowShape(
+            Position vector,
+            Size size,
+            BorderRadius cornerRadius,
+            BoxShadowStyle shadow,
+            out SKRect rect,
+            out SKPoint[] radii)
+        {
+            rect = default;
+            radii = Array.Empty<SKPoint>();
+
+            if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
+                return false;
+
+            var spread = shadow.Spread;
+
+            rect = new SKRect(
+                vector.X - spread + shadow.OffsetX,
+                vector.Y - spread + shadow.OffsetY,
+                vector.X + size.Width + spread + shadow.OffsetX,
+                vector.Y + size.Height + spread + shadow.OffsetY);
+
+            if (rect.Width < Size.Epsilon || rect.Height < Size.Epsilon)
+                return false;
+
+            radii = ToRadii(
+                Math.Max(0, cornerRadius.TopLeft + spread),
+                Math.Max(0, cornerRadius.TopRight + spread),
+                Math.Max(0, cornerRadius.BottomRight + spread),
+                Math.Max(0, cornerRadius.BottomLeft + spread));
+
+            return true;
         }
 
         public void DrawRectangle(Position vector, Size size, RectangleStyle style)
@@ -231,7 +418,7 @@ namespace FossPDF.Drawing
             return ToRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private static SKPoint[] ToRadii(float topLeft, float topRight, float bottomRight, float bottomLeft)
+        protected static SKPoint[] ToRadii(float topLeft, float topRight, float bottomRight, float bottomLeft)
         {
             return new[]
             {
@@ -248,7 +435,7 @@ namespace FossPDF.Drawing
             return CreateRoundRect(rect, ToRadii(radius.TopLeft, radius.TopRight, radius.BottomRight, radius.BottomLeft));
         }
 
-        private static SKRoundRect CreateRoundRect(SKRect rect, SKPoint[] radii)
+        protected static SKRoundRect CreateRoundRect(SKRect rect, SKPoint[] radii)
         {
             var roundRect = new SKRoundRect();
             roundRect.SetRectRadii(rect, radii);

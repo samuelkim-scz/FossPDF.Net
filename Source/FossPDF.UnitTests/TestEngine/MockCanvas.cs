@@ -13,6 +13,8 @@ namespace FossPDF.UnitTests.TestEngine
         public Action<SKImage, Position, Size> DrawImageFunc { get; set; }
         public Action<Position, Size, string> DrawRectFunc { get; set; }
         public Action<Position, Size, RectangleStyle> DrawRectStyleFunc { get; set; }
+        public Action<Position, Position, LineStyle> DrawLineFunc { get; set; }
+        public Action<Position, Size, BorderRadius, BoxShadowStyle> DrawShadowFunc { get; set; }
         public Action<Position, Size, BorderRadius> ClipRectFunc { get; set; }
         public Action SaveStateFunc { get; set; }
         public Action RestoreStateFunc { get; set; }
@@ -23,6 +25,8 @@ namespace FossPDF.UnitTests.TestEngine
 
         public void DrawRectangle(Position vector, Size size, string color) => DrawRectFunc(vector, size, color);
         public void DrawRectangle(Position vector, Size size, RectangleStyle style) => DrawRectStyleFunc(vector, size, style);
+        public void DrawLine(Position start, Position end, LineStyle style) => DrawLineFunc(start, end, style);
+        public void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow) => DrawShadowFunc(vector, size, cornerRadius, shadow);
         public void DrawText(SKTextBlob skTextBlob, Position position, TextStyle style, DocumentSpecificFontManager fontManager) => throw new NotImplementedException();
         public void DrawImage(SKImage image, Position position, Size size) => DrawImageFunc(image, position, size);
 

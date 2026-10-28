@@ -20,7 +20,11 @@ namespace FossPDF.Elements
         public LineType Type { get; set; } = LineType.Vertical;
         public string Color { get; set; } = Colors.Black;
         public float Size { get; set; } = 1;
-        
+
+        public string[]? GradientColors { get; set; }
+        public float[]? DashPattern { get; set; }
+        public float DashPhase { get; set; }
+
         internal override SpacePlan Measure(Size availableSpace)
         {
             if (availableSpace.IsNegative())
@@ -35,6 +39,33 @@ namespace FossPDF.Elements
         }
 
         internal override void Draw(Size availableSpace)
+        {
+            if (GradientColors == null && DashPattern == null)
+            {
+                DrawLegacyLine(availableSpace);
+                return;
+            }
+
+            var style = new LineStyle
+            {
+                Width = Size,
+                Color = Color,
+                GradientColors = GradientColors,
+                DashPattern = DashPattern,
+                DashPhase = DashPhase
+            };
+
+            if (Type == LineType.Vertical)
+            {
+                Canvas.DrawLine(Position.Zero, new Position(0, availableSpace.Height), style);
+            }
+            else if (Type == LineType.Horizontal)
+            {
+                Canvas.DrawLine(Position.Zero, new Position(availableSpace.Width, 0), style);
+            }
+        }
+
+        private void DrawLegacyLine(Size availableSpace)
         {
             if (Type == LineType.Vertical)
             {

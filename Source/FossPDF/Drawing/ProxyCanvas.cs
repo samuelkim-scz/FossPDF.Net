@@ -22,6 +22,16 @@ namespace FossPDF.Drawing
             Target.DrawRectangle(vector, size, color);
         }
 
+        public void DrawLine(Position start, Position end, LineStyle style)
+        {
+            Target.DrawLine(start, end, style);
+        }
+
+        public void DrawShadow(Position vector, Size size, BorderRadius cornerRadius, BoxShadowStyle shadow)
+        {
+            Target.DrawShadow(vector, size, cornerRadius, shadow);
+        }
+
         public void DrawRectangle(Position vector, Size size, RectangleStyle style)
         {
             Target.DrawRectangle(vector, size, style);
