@@ -27,8 +27,29 @@ namespace FossPDF.Drawing
 
             var configuration = GenerationConfiguration.Resolve(document);
             configuration.ValidatePdf();
+
+            if (configuration.Optimization != null)
+                return GenerateOptimizedPdf(stream, document, configuration);
+
             using var canvas = new PdfCanvas(stream, configuration.Metadata);
             return RenderDocument(canvas, document, configuration);
+        }
+
+        private static int GenerateOptimizedPdf(Stream stream, IDocument document, GenerationConfiguration configuration)
+        {
+            // Rendering and the external optimization step both happen before anything is written to
+            // the caller's stream, so a qpdf failure leaves it untouched.
+            using var buffer = new MemoryStream();
+            int pageCount;
+
+            using (var canvas = new PdfCanvas(buffer, configuration.Metadata))
+                pageCount = RenderDocument(canvas, document, configuration);
+
+            var optimized = PdfOptimizer.Optimize(buffer.ToArray(), configuration.Optimization!);
+
+            stream.Write(optimized, 0, optimized.Length);
+
+            return pageCount;
         }
 
         internal static void GenerateXps(Stream stream, IDocument document)

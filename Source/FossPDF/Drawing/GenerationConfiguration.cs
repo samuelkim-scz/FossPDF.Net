@@ -15,6 +15,7 @@ namespace FossPDF.Drawing
         internal bool EnableCaching { get; }
         internal bool EnableDebugging { get; }
         internal bool CheckGlyphs { get; }
+        internal PdfOptimizationSettings? Optimization { get; }
 
         private GenerationConfiguration(DocumentMetadata metadata, DocumentSettings settings)
         {
@@ -26,6 +27,7 @@ namespace FossPDF.Drawing
             EnableCaching = settings.EnableCaching ?? FossPDF.Settings.EnableCaching;
             EnableDebugging = settings.EnableDebugging ?? FossPDF.Settings.EnableDebugging;
             CheckGlyphs = settings.CheckIfAllTextGlyphsAreAvailable ?? FossPDF.Settings.CheckIfAllTextGlyphsAreAvailable;
+            Optimization = ResolveOptimization(settings);
             metadata.RasterDpi = settings.ImageRasterDpi ?? metadata.RasterDpi;
             metadata.ImageQuality = settings.ImageCompressionQuality ?? metadata.ImageQuality;
             if (settings.PdfAConformance.HasValue)
@@ -66,8 +68,27 @@ namespace FossPDF.Drawing
                 throw new NotSupportedException("Selectable PDF/A profiles require FP-402. Use Legacy only for the existing unqualified PdfA flag.");
             if (Settings.PdfUaConformance != PdfUaConformance.None)
                 throw new NotSupportedException("PDF/UA output requires FP-401/FP-403 semantic tagging and conformance support.");
-            if (!Settings.CompressDocument || Settings.EnableAdditionalCompression || Settings.Linearize)
-                throw new NotSupportedException("Compression overrides and linearization require FP-306. The current renderer uses its normal compression.");
+
+            if (Optimization != null)
+            {
+                // Fail before composition when qpdf is not available, rather than after rendering.
+                Optimization.Validate();
+                PdfOptimizer.ResolveExecutable(Optimization.QpdfExecutablePath);
+            }
+        }
+
+        private static PdfOptimizationSettings? ResolveOptimization(DocumentSettings settings)
+        {
+            if (settings.CompressDocument && !settings.EnableAdditionalCompression && !settings.Linearize)
+                return null;
+
+            return new PdfOptimizationSettings
+            {
+                DisableCompression = !settings.CompressDocument,
+                EnableAdditionalCompression = settings.EnableAdditionalCompression,
+                Linearize = settings.Linearize,
+                QpdfExecutablePath = settings.QpdfExecutablePath
+            };
         }
 
         internal void ApplyImageOutput(ImageGenerationSettings settings)

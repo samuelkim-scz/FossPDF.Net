@@ -100,15 +100,23 @@ operation extends it; embedded attachments are described in
 The declared password opens a protected input for import. Encrypting the output, writing permission
 flags and explicitly decrypting are covered by [PDF_SECURITY.md](PDF_SECURITY.md).
 
+## Optimization
+
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
+document with qpdf 11 or newer. `UseQpdfExecutable(path)` overrides discovery for one operation.
+The methods record the request; the optimizer runs when the document is saved. Because qpdf
+rewrites the document, optimization cannot be combined with encryption: such a plan throws
+`InvalidOperationException` at save time rather than silently dropping the protection. See
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for flag mapping, discovery order and failure behavior.
+
 ## Scope
 
 This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
 and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md); encryption, permissions and decryption
 are covered by [PDF_SECURITY.md](PDF_SECURITY.md); attachments and XMP extensions are covered by
-[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md). It does not include:
-
-- explicit extra compression or linearization (FP-306);
-- rasterizing or previewing existing PDF pages.
+[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md); explicit compression and linearization are covered by
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md). It does not include rasterizing or previewing existing
+PDF pages.
 
 ## Acceptance and example
 

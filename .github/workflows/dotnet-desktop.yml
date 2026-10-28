@@ -46,6 +46,17 @@ jobs:
         run: dotnet build -c Release --no-restore --warnaserror
         working-directory: ./Source
 
+      - name: Install qpdf for PDF optimization coverage
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update && sudo apt-get install -y qpdf
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            brew install qpdf
+          else
+            choco install qpdf -y --no-progress
+          fi
+
       - name: Run unit tests
         shell: bash
         run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
@@ -61,6 +72,11 @@ jobs:
         run: |
           python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-security-validation.txt
           python Source/FossPDF.UnitTests/Parity/verify_pdf_security.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-304
+      - name: Verify PDF compression and linearization with independent tools
+        shell: bash
+        run: |
+          python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-compression-validation.txt
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_compression.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-306
       - name: Run .NET 9 settings consumer example
         shell: bash
         run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity

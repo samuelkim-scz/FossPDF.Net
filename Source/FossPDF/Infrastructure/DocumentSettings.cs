@@ -18,10 +18,28 @@ namespace FossPDF.Infrastructure
         public PdfAConformance? PdfAConformance { get; init; }
         public PdfUaConformance PdfUaConformance { get; init; } = PdfUaConformance.None;
 
-        /// <summary>The current renderer uses its normal compression. False requires a future backend.</summary>
+        /// <summary>
+        /// When <see langword="false"/>, the PDF is post-processed to decompress decodable streams.
+        /// The output is larger but easier to inspect. Requires qpdf 11 or newer.
+        /// </summary>
         public bool CompressDocument { get; init; } = true;
+
+        /// <summary>
+        /// Recompresses streams at the maximum level and generates object streams. Usually reduces
+        /// the file size at the cost of processing time. Requires qpdf 11 or newer and cannot be
+        /// combined with <see cref="CompressDocument"/> set to <see langword="false"/>.
+        /// </summary>
         public bool EnableAdditionalCompression { get; init; }
+
+        /// <summary>Produces a linearized (web-optimized) PDF. Requires qpdf 11 or newer.</summary>
         public bool Linearize { get; init; }
+
+        /// <summary>
+        /// The qpdf executable used by compression and linearization settings. When omitted,
+        /// <see cref="FossPDF.Settings.QpdfExecutablePath"/> and then the <c>PATH</c> environment
+        /// variable are used.
+        /// </summary>
+        public string? QpdfExecutablePath { get; init; }
 
         public int? DocumentLayoutExceptionThreshold { get; init; }
         public bool? EnableCaching { get; init; }

@@ -34,6 +34,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The PDF attachments guide](docs/feature-parity/PDF_ATTACHMENTS.md) covers embedded files, associated-file relationships, Unicode names and XMP metadata extensions.
 
+[The PDF optimization guide](docs/feature-parity/PDF_OPTIMIZATION.md) covers explicit additional compression, intentional decompression and linearization through an external qpdf executable, including discovery, measured size behavior, interactions and failure handling.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
@@ -135,7 +137,7 @@ Deliver SVG input, image optimization/output controls, and modern container/line
 
 ### [Parity M3 - PDF document operations](https://github.com/samuelkim-scz/FossPDF.Net/milestone/4)
 
-Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md). Existing-PDF loading, page selection and merging are documented in [docs/feature-parity/PDF_OPERATIONS.md](docs/feature-parity/PDF_OPERATIONS.md), overlays and underlays in [docs/feature-parity/PDF_LAYERS.md](docs/feature-parity/PDF_LAYERS.md), encryption, permissions and decryption in [docs/feature-parity/PDF_SECURITY.md](docs/feature-parity/PDF_SECURITY.md), and attachments and XMP extensions in [docs/feature-parity/PDF_ATTACHMENTS.md](docs/feature-parity/PDF_ATTACHMENTS.md).
+Deliver generated-document merging and existing-PDF processing, security, attachments, and optimization. Generated-document merging behavior, precedence and ownership are documented in [docs/feature-parity/MERGING.md](docs/feature-parity/MERGING.md). Existing-PDF loading, page selection and merging are documented in [docs/feature-parity/PDF_OPERATIONS.md](docs/feature-parity/PDF_OPERATIONS.md), overlays and underlays in [docs/feature-parity/PDF_LAYERS.md](docs/feature-parity/PDF_LAYERS.md), encryption, permissions and decryption in [docs/feature-parity/PDF_SECURITY.md](docs/feature-parity/PDF_SECURITY.md), attachments and XMP extensions in [docs/feature-parity/PDF_ATTACHMENTS.md](docs/feature-parity/PDF_ATTACHMENTS.md), and explicit compression and linearization in [docs/feature-parity/PDF_OPTIMIZATION.md](docs/feature-parity/PDF_OPTIMIZATION.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

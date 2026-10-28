@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FossPDF.Drawing;
+using FossPDF.Infrastructure;
 using FossPDF.PdfOperations;
 using PdfSharp;
 using PdfSharp.Pdf;
@@ -33,6 +35,10 @@ namespace FossPDF.Fluent
         private readonly List<string> _metadataExtensions = new List<string>();
 
         private EncryptionSettings? _encryption;
+        private bool _enableAdditionalCompression;
+        private bool _disableCompression;
+        private bool _linearize;
+        private string? _qpdfExecutablePath;
 
         private DocumentOperation()
         {
@@ -446,6 +452,75 @@ namespace FossPDF.Fluent
         }
 
         /// <summary>
+        /// Recompresses the output with qpdf: Flate streams are recompressed at the maximum level and
+        /// object streams are generated. This usually reduces the file size at the cost of
+        /// processing time. Requires qpdf 11.0 or newer.
+        /// </summary>
+        /// <remarks>
+        /// Optimization is applied after the document is saved and cannot be combined with
+        /// encryption, because the qpdf output is written unencrypted. Attachments, metadata and
+        /// page content are preserved.
+        /// </remarks>
+        public DocumentOperation EnableAdditionalCompression()
+        {
+            if (_disableCompression)
+            {
+                throw new InvalidOperationException(
+                    "Additional compression cannot be combined with disabled compression.");
+            }
+
+            _enableAdditionalCompression = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Decompresses decodable streams and disables object streams, making the output larger but
+        /// easier to inspect. Requires qpdf 11.0 or newer.
+        /// </summary>
+        /// <remarks>
+        /// Optimization is applied after the document is saved and cannot be combined with
+        /// encryption, because the qpdf output is written unencrypted.
+        /// </remarks>
+        public DocumentOperation DisableCompression()
+        {
+            if (_enableAdditionalCompression)
+            {
+                throw new InvalidOperationException(
+                    "Disabled compression cannot be combined with additional compression.");
+            }
+
+            _disableCompression = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Produces a linearized (web-optimized) output document. Requires qpdf 11.0 or newer.
+        /// </summary>
+        /// <remarks>
+        /// Optimization is applied after the document is saved and cannot be combined with
+        /// encryption, because the qpdf output is written unencrypted.
+        /// </remarks>
+        public DocumentOperation Linearize()
+        {
+            _linearize = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the qpdf executable used by compression and linearization. When not set,
+        /// <see cref="FossPDF.Settings.QpdfExecutablePath"/> and then the <c>PATH</c> environment
+        /// variable are used.
+        /// </summary>
+        public DocumentOperation UseQpdfExecutable(string executablePath)
+        {
+            if (string.IsNullOrWhiteSpace(executablePath))
+                throw new ArgumentException("A qpdf executable path must not be empty.", nameof(executablePath));
+
+            _qpdfExecutablePath = executablePath;
+            return this;
+        }
+
+        /// <summary>
         /// Encrypts the output with 40-bit RC4. The encryption plan is copied now, so later changes
         /// to the configuration object do not affect the operation. Encryption can be set only once.
         /// </summary>
@@ -542,7 +617,16 @@ namespace FossPDF.Fluent
                     "Extending XMP metadata writes an incremental update after the document is saved.");
             }
 
-            return PdfDocumentMerger.Execute(
+            var optimized = _enableAdditionalCompression || _disableCompression || _linearize;
+
+            if (optimized && _encryption != null)
+            {
+                throw new InvalidOperationException(
+                    "PDF optimization cannot be combined with encryption. " +
+                    "qpdf rewrites the document and writes it unencrypted; call Decrypt() to save without encryption.");
+            }
+
+            var result = PdfDocumentMerger.Execute(
                 _sources,
                 _selections,
                 _underlays,
@@ -550,6 +634,19 @@ namespace FossPDF.Fluent
                 _attachments,
                 _metadataExtensions,
                 _encryption);
+
+            if (optimized)
+            {
+                result = PdfOptimizer.Optimize(result, new PdfOptimizationSettings
+                {
+                    DisableCompression = _disableCompression,
+                    EnableAdditionalCompression = _enableAdditionalCompression,
+                    Linearize = _linearize,
+                    QpdfExecutablePath = _qpdfExecutablePath
+                });
+            }
+
+            return result;
         }
 
         private DocumentOperation SetEncryption(EncryptionBase encryption, EncryptionStrength strength)

@@ -39,6 +39,15 @@ it is validation tooling only, never a FossPDF runtime dependency. Its exact ver
 `requirements-validation.txt`; its distribution includes its BSD license. Bundled Lato remains
 SIL OFL 1.1; see `Source/FossPDF/Resources/DefaultFont/OFL.txt`.
 
+**qpdf** (measured with 12.4.2, Apache-2.0) is an optional *external executable* for the FP-306
+compression and linearization controls, not a package dependency: it is not referenced by any
+project, not restored by NuGet, and not distributed by FossPDF. Applications install qpdf 11.0 or
+newer themselves and point FossPDF at it through `DocumentSettings.QpdfExecutablePath`,
+`FossPDF.Settings.QpdfExecutablePath`, the `DocumentOperation.UseQpdfExecutable` overload or `PATH`.
+Absence of qpdf is reported as `NotSupportedException` before any output is written. CI installs
+qpdf from the distribution package manager (apt, Homebrew, Chocolatey) for coverage only. See
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md).
+
 Svg.Skia 4.9.1 declares SkiaSharp 3.119.2/HarfBuzzSharp 8.3.1.3 minimums. The proof explicitly pins
 the compatible core cohort 3.119.4/8.3.1.5, including all three HarfBuzz native asset packages.
 The production SVG companion must use the reviewed cohort. Upgrading to current Svg.Skia versions

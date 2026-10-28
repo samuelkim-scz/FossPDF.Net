@@ -293,13 +293,33 @@ namespace FossPDF.UnitTests
         [TestCase("disable")]
         [TestCase("extra")]
         [TestCase("linearize")]
-        public void CompressionOverridesFailBeforeWritingUntilSupported(string mode) =>
+        public void OptimizationWithoutQpdfFailsBeforeWriting(string mode) =>
             AssertUnsupported(new DocumentSettings
             {
                 CompressDocument = mode != "disable",
                 EnableAdditionalCompression = mode == "extra",
-                Linearize = mode == "linearize"
+                Linearize = mode == "linearize",
+                QpdfExecutablePath = Path.Combine(
+                    Path.GetTempPath(), Guid.NewGuid().ToString("N"), "qpdf-missing.exe")
             });
+
+        [Test]
+        public void ContradictoryCompressionOptionsFailBeforeCompositionOrWriting()
+        {
+            var composed = false;
+            using var stream = new MemoryStream();
+            stream.WriteByte(42);
+
+            Assert.Throws<ArgumentException>(() =>
+                MarkerDocument(() => composed = true).WithSettings(new DocumentSettings
+                {
+                    CompressDocument = false,
+                    EnableAdditionalCompression = true
+                }).GeneratePdf(stream));
+
+            Assert.That(composed, Is.False);
+            Assert.That(stream.ToArray(), Is.EqualTo(new byte[] { 42 }));
+        }
 
         [TestCase(ImageOutputFormat.Png)]
         [TestCase(ImageOutputFormat.Jpeg)]

@@ -125,6 +125,30 @@ DocumentOperation
 a PDF incremental update, so the pages and the original document information stay unchanged.
 `ExtendMetadata` cannot be combined with `Encrypt`.
 
+## Compression and linearization
+
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
+document with the external [qpdf](https://qpdf.readthedocs.io/) 11.0 or newer executable, which the
+application provides (FossPDF does not distribute it). `UseQpdfExecutable(path)` overrides discovery
+for one operation; otherwise `DocumentSettings`/`FossPDF.Settings.QpdfExecutablePath` and then
+`PATH` are used. The optimizer runs after every other recorded operation, including attachments,
+XMP extensions, overlays and decryption.
+
+```csharp
+DocumentOperation
+    .LoadFile("report.pdf")
+    .EnableAdditionalCompression()
+    .Linearize()
+    .UseQpdfExecutable(@"C:\Program Files\qpdf 12.4.2\bin\qpdf.exe")
+    .Save("report-optimized.pdf");
+```
+
+Optimization cannot be combined with `Encrypt`: qpdf rewrites the document and writes it
+unencrypted, so such a plan throws `InvalidOperationException`. A missing or too-old qpdf throws
+`NotSupportedException` before any output is written. See
+[docs/feature-parity/PDF_OPTIMIZATION.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_OPTIMIZATION.md)
+for the flag mapping, measured sizes and failure behavior.
+
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
@@ -135,5 +159,5 @@ a PDF incremental update, so the pages and the original document information sta
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- This release does not linearize or apply explicit extra compression; that workflow is tracked by
-  its own work item.
+- Explicit extra compression, decompression and linearization require an installed qpdf 11.0+ and
+  fail clearly when it is unavailable; page content, page boxes and metadata stay equivalent.
