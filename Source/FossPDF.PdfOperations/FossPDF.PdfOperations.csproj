@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Authors>Samuel Kim, Silbiano Cruz, Eric Morris, Jerame Kim, FossPDF contributors</Authors>
         <Company>Santa Cruz County HSA</Company>

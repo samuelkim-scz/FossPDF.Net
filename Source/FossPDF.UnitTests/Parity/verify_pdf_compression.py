@@ -28,6 +28,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     parser.add_argument("--qpdf", default="qpdf")
+    parser.add_argument("--benchmarks", type=Path)
     parser.add_argument("--catalog", type=Path, default=Path(__file__).resolve().parents[3] /
                         "docs/feature-parity/acceptance-fixtures.json")
     args = parser.parse_args()
@@ -83,11 +84,41 @@ def main():
         name: (directory / name).stat().st_size
         for name in ("source.pdf", "generated.pdf", "optimized.pdf")
     }
+    measurements = None
+    if args.benchmarks:
+        measurements = json.loads((args.benchmarks / "measurements.json").read_text())
+        require({item["name"] for item in measurements} == {"text", "images", "attachments"},
+                "Processing measurements cover text, images and attachment-heavy input")
+        for item in measurements:
+            name = item["name"]
+            before = args.benchmarks / (name + "-source.pdf")
+            after = args.benchmarks / (name + "-optimized.pdf")
+            original, optimized = PdfReader(before, strict=True), PdfReader(after, strict=True)
+            require(page_facts(original) == page_facts(optimized), name + ": benchmark pages and painting are unchanged")
+            require(dict(original.metadata) == dict(optimized.metadata), name + ": benchmark document metadata is unchanged")
+            attachments = lambda reader: {key: list(value) for key, value in reader.attachments.items()}
+            require(attachments(original) == attachments(optimized), name + ": benchmark attachment bytes are unchanged")
+            require(item["inputBytes"] == before.stat().st_size and item["outputBytes"] == after.stat().st_size,
+                    name + ": recorded sizes match the independently inspected files")
+            require(len(item["samples"]) == 5 and item["medianMilliseconds"] == sorted(item["samples"])[2],
+                    name + ": five elapsed-time samples and their median are recorded")
+            for path in (before, after):
+                code, output = run_qpdf(args.qpdf, "--check", str(path))
+                require(code == 0, name + ": qpdf reads " + path.name + " without warnings: " + output)
+            code, output = run_qpdf(args.qpdf, "--check-linearization", str(after))
+            require(code == 0, name + ": benchmark linearization is valid: " + output)
+            if name == "attachments":
+                extracted = attachments(optimized)
+                require(set(extracted) == {"rows.csv", "binary.dat"} and len(extracted["binary.dat"][0]) == 512 * 1024,
+                        "Attachment-heavy benchmark includes the declared 512 KiB binary payload")
+                require(extracted["rows.csv"] == [b"2026-10-28,service,1200.00,EUR\n" * 40000],
+                        "Attachment-heavy benchmark preserves all 40,000 CSV rows exactly")
     report = {
         "pypdf": pypdf.__version__,
         "qpdf": version_output.splitlines()[0] if version_output else "unknown",
         "checks": checks,
         "sizes": sizes,
+        "processing_measurements": measurements,
         "sha256": {
             name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
             for name in sizes

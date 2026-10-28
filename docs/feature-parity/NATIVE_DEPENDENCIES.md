@@ -1,4 +1,4 @@
-﻿# Native backend dependency and ownership inventory
+# Native backend dependency and ownership inventory
 
 This is the versioned inventory for [ADR-0001](decisions/ADR-0001-native-backends.md) and
 [FP-002](https://github.com/samuelkim-scz/FossPDF.Net/issues/3). The isolated .NET 9 proof project is
@@ -146,6 +146,13 @@ these experiments out of production packages.
 4. A fix unavailable in MIT PDFsharp 6.2.4 requires a reviewed maintained permissive fork or a newly
    qualified replacement. Neither an AGPL update nor ignoring a security issue is automatic policy.
 5. Revisit ADR-0001 when a replacement, framework/RID addition or native bridge is selected. qpdf
-   remains an FP-306 candidate requiring a separate deployment/license/error-handling proof.
+   is qualified as an optional external executable by FP-306; see PDF_OPTIMIZATION.md and its evidence for deployment, licensing and error handling.
 6. Conformance remains gated by independent validators and the owning acceptance issues; marker
    checks or PDFsharp's high-level helper are not PDF/UA or PDF/A evidence.
+
+## FP-305 managed metadata serialization bridge
+
+The net9.0 operations companion retains the exact PDFsharp 6.2.4 package and existing licenses. Its writer regenerates XMP during save, so `PdfXmpMetadata` appends one metadata revision to the companion's own serialized output. A .NET `UnsafeAccessor` bridge binds the pinned handler's `EnterObject`, `EncryptStream` and `LeaveObject` methods for protected XMP. This uses backend password derivation and ciphers; no cryptographic implementation or vendor source is copied into FossPDF. A backend upgrade must qualify those exact managed entry points and the incremental metadata corpus again.
+
+The .NET corpus covers 40/128/256-bit encryption, deliberately clear metadata, extraction and later decrypted round trips on each CI OS. Independent pypdf/MuPDF inspection checks packaging and metadata interoperability. No NativeAOT claim follows from this managed bridge; publish-and-run evidence remains FP-503. The mechanism follows the pinned [save preparation](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf/PdfDocument.cs) and [security handler](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf.Security/PdfStandardSecurityHandler.cs) contracts.
+The qpdf staging directory uses owner-only mode 0700 on Unix. The net9.0 core target uses the framework UnixFileMode API; netstandard2.1 calls the system libc mkdir function on Linux/macOS because that target lacks the managed overload. No libc binary is distributed. Both paths are exercised by the net8.0/net9.0 CI suites. Windows uses the user temporary directory's inherited ACL.

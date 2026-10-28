@@ -94,9 +94,7 @@ the object structure before qpdf sees it.
   optimizes the document and reads the exact bytes and relationship back; extended XMP metadata is
   preserved as well.
 - **Overlays and underlays** are applied first and then optimized with the rest of the document.
-- **Encryption**: optimization cannot be combined with `DocumentOperation.Encrypt(...)`. qpdf
-  rewrites the document and writes it unencrypted, so the plan throws `InvalidOperationException`
-  at save time instead of silently dropping protection. Decrypt and optimize as separate steps.
+- **Encryption**: optimization cannot be combined with `DocumentOperation.Encrypt(...)` because this adapter does not forward passwords to the external process. The plan throws `InvalidOperationException` before producing output. Decrypt and optimize as separate steps.
 - **PDF/A and PDF/UA**: no conformance claim is made. Optimization does not validate a profile, and
   the conformance guards remain in place until FP-402/FP-403 implement their backends.
 - **Image and preview output**: the options are PDF-only. `GenerateImages`, SVG, XPS and previewer
@@ -125,7 +123,7 @@ writing as well.
 - The document is written to a uniquely named directory under the system temporary directory and
   passed to qpdf as a file path; qpdf writes the result to standard output. Input is never passed
   through stdin because qpdf requires a seekable input file.
-- The temporary directory is removed before the call returns, including on failure.
+- On Unix, the temporary directory is created atomically with owner-only mode 0700 before writing document bytes. On Windows it inherits the user temporary directory ACL. It is removed before the call returns, including on failure.
 - Document content and paths are passed as process arguments, never through a shell command string,
   so no shell metacharacter interpretation occurs.
 - Passwords are not passed to qpdf; optimization and encryption are mutually exclusive.
@@ -153,3 +151,21 @@ on every runner.
 See [Source/FossPDF.Examples/PdfCompressionExamples.cs](../../Source/FossPDF.Examples/PdfCompressionExamples.cs)
 for runnable examples and [evidence/fp-306-windows.md](evidence/fp-306-windows.md) for the recorded
 Windows validation.
+
+### Processing overhead on fixed inputs
+
+The runnable `MeasureOptimizationOverheadOnFixedInputs` example warms up once and measures five
+complete adapter calls per input, including executable/version discovery, temporary-file I/O and
+the qpdf process. Rendering is excluded because each input PDF is created once before measurement.
+The recorded Windows medians with qpdf 12.4.2 are observations, not performance budgets:
+
+| Input | Before | After | Median added processing |
+| --- | --- | --- | --- |
+| Text | 90,820 B | 88,865 B | 272.24 ms |
+| Images | 65,070 B | 64,950 B | 231.97 ms |
+| Attachments (40,000 CSV rows + 512 KiB binary) | 606,723 B | 605,326 B | 319.47 ms |
+
+`measurements.json` retains all five samples. The independent inspector verifies the recorded file
+sizes, every page's decoded painting and boxes, document metadata, exact attachment bytes, and
+qpdf structural/linearization checks. All build jobs run the five examples and upload these inputs,
+outputs and measurements; no timing threshold is imposed.

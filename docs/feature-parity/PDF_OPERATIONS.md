@@ -84,9 +84,7 @@ before it is written, so a failed operation does not leave a partially written f
 Imported pages keep their original media boxes, content streams, resources and annotations (for
 example link annotations). The following metadata fields are copied from the primary loaded
 document when present: title, author, subject, keywords, creator, and creation/modification dates.
-The output producer is set by the PDF writing library. XMP metadata is not copied unless the
-operation extends it; embedded attachments are described in
-[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md).
+The output producer is set by the PDF writing library. Primary-document XMP and attachments are preserved; see [ATTACHMENTS_XMP.md](ATTACHMENTS_XMP.md) for extension and replacement rules.
 
 | Condition | Result |
 | --- | --- |
@@ -102,21 +100,19 @@ flags and explicitly decrypting are covered by [PDF_SECURITY.md](PDF_SECURITY.md
 
 ## Optimization
 
-`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` post-process the saved
-document with qpdf 11 or newer. `UseQpdfExecutable(path)` overrides discovery for one operation.
-The methods record the request; the optimizer runs when the document is saved. Because qpdf
-rewrites the document, optimization cannot be combined with encryption: such a plan throws
-`InvalidOperationException` at save time rather than silently dropping the protection. See
-[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for flag mapping, discovery order and failure behavior.
+`EnableAdditionalCompression()`, `DisableCompression()` and `Linearize()` use qpdf 11+ after all
+other operations, including attachment and XMP updates. `UseQpdfExecutable(path)` overrides the
+global executable setting and PATH discovery. Output encryption is rejected before any bytes are
+written because this adapter does not forward passwords to qpdf. See
+[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for interactions, measured sizes and failure behavior.
 
 ## Scope
 
 This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
 and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md); encryption, permissions and decryption
-are covered by [PDF_SECURITY.md](PDF_SECURITY.md); attachments and XMP extensions are covered by
-[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md); explicit compression and linearization are covered by
-[PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md). It does not include rasterizing or previewing existing
-PDF pages.
+are covered by [PDF_SECURITY.md](PDF_SECURITY.md). It does not include:
+
+- rasterizing or previewing existing PDF pages.
 
 ## Acceptance and example
 

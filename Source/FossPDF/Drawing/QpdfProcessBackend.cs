@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using FossPDF.Drawing.Exceptions;
 
@@ -48,8 +49,7 @@ namespace FossPDF.Drawing
             // qpdf requires a seekable input file and uses "-" for standard output. The directory is
             // unique per invocation so concurrent generations never share files, and it is removed
             // before this method returns.
-            var directory = Path.Combine(Path.GetTempPath(), "fosspdf-qpdf-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(directory);
+            var directory = CreatePrivateDirectory();
 
             try
             {
@@ -78,6 +78,31 @@ namespace FossPDF.Drawing
                 }
             }
         }
+
+        internal static string CreatePrivateDirectory()
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "fosspdf-qpdf-" + Guid.NewGuid().ToString("N"));
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Directory.CreateDirectory(directory);
+            else
+            {
+                // Create atomically with mode 0700, before placing document bytes inside.
+                // The netstandard2.1 target lacks Directory.CreateDirectory's UnixFileMode overload.
+#if NET9_0
+                Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+#else
+                if (CreateUnixDirectory(directory, 448) != 0)
+                    throw new IOException("A private qpdf temporary directory could not be created.",
+                        new Win32Exception(Marshal.GetLastWin32Error()));
+#endif
+            }
+            return directory;
+        }
+
+#if !NET9_0
+        [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
+        private static extern int CreateUnixDirectory(string path, uint mode);
+#endif
 
         private static byte[] RunProcess(
             string executablePath,

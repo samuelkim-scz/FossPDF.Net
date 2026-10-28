@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import zlib
 from pathlib import Path
 
 import pypdf
@@ -48,6 +49,12 @@ def main():
     require(len(source.pages) == len(layered.pages) == 2, "Layering retains both source pages")
     for index, (before, after) in enumerate(zip(source.pages, layered.pages)):
         require(list(before.mediabox) == list(after.mediabox), f"Page {index + 1} retains its media box")
+        def encoded_streams(page):
+            contents = resolve(page.raw_get("/Contents"))
+            entries = contents if isinstance(contents, list) else [contents]
+            return [(str(resolve(entry).get("/Filter")), resolve(entry)._data) for entry in entries]
+        require(all(stream in encoded_streams(after) for stream in encoded_streams(before)),
+                f"Page {index + 1} retains the original encoded content bytes and filters")
     require(len(forms(layered.pages[0])) == 2, "Target page references two vector layer forms")
     require(source.pages[1].get_contents().get_data() == layered.pages[1].get_contents().get_data(),
             "Untargeted page keeps its decoded painting instructions")
@@ -60,6 +67,15 @@ def main():
         return (a*g + c*h, b*g + d*h, a*i + c*j, b*i + d*j, a*k + c*l + e, b*k + d*l + f)
 
     for name, reader in readers.items():
+        for number in reader.xref.get(0, {}):
+            if number == 0:
+                continue
+            obj = reader.get_object(number)
+            if hasattr(obj, "_data") and obj.get("/Filter") == "/FlateDecode":
+                decoder = zlib.decompressobj()
+                decoder.decompress(obj._data)
+                require(decoder.eof and not decoder.unused_data,
+                        f"{name}: stream {number} has a complete zlib envelope and checksum")
         for page in reader.pages:
             verify_resources(page["/Resources"].get_object())
             # Parse every page and recursively referenced form with a different PDF backend.

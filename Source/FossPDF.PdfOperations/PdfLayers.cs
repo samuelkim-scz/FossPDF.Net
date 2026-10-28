@@ -207,10 +207,11 @@ namespace FossPDF.PdfOperations
         {
             using var output = new MemoryStream();
 
-            foreach (var item in page.Contents.Elements)
+            foreach (var item in ContentItems(page))
             {
                 var dictionary = ResolveDictionary(item);
-                var stream = dictionary?.Stream;
+                // Decode a clone: importing the same stream elsewhere must not alter it.
+                var stream = dictionary?.Clone().Stream;
 
                 if (stream == null)
                     continue;
@@ -228,6 +229,21 @@ namespace FossPDF.PdfOperations
             }
 
             return output.ToArray();
+        }
+
+        private static IEnumerable<PdfItem> ContentItems(PdfPage page)
+        {
+            // PdfPage.Contents converts streams to PdfContent, decoding and recompressing them
+            // on Save. Use the raw references to preserve the original encoded bytes.
+            var item = page.Elements["/Contents"];
+            var resolved = item is PdfReference reference ? reference.Value : item;
+            if (resolved is PdfArray array)
+            {
+                foreach (var entry in array.Elements)
+                    yield return entry;
+            }
+            else if (item != null)
+                yield return item;
         }
 
         private static PdfArray CreateArray(PdfDocument document, double[] values)
@@ -441,8 +457,7 @@ namespace FossPDF.PdfOperations
                     form.Elements.SetValue("/Matrix", CreateArray(destination, matrix));
 
                 var content = ReadContent(imported);
-                form.CreateStream(content);
-                form.Stream.Zip();
+                PdfStreams.CreateCompressed(form, content);
 
                 destination.Internals.AddObject(form);
                 return form;
@@ -516,7 +531,11 @@ namespace FossPDF.PdfOperations
                 if (_forms.Count == 0)
                     return;
 
-                var contents = _page.Contents.Elements;
+                var contentArray = new PdfArray(_document);
+                foreach (var item in ContentItems(_page))
+                    contentArray.Elements.Add(item);
+                _page.Elements.SetObject("/Contents", contentArray);
+                var contents = contentArray.Elements;
                 var index = 0;
 
                 // Underlays are inserted in registration order, so the first underlay is the
