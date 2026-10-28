@@ -30,8 +30,104 @@ namespace FossPDF.Fluent
         private readonly List<LayerOperation> _underlays = new List<LayerOperation>();
         private readonly List<LayerOperation> _overlays = new List<LayerOperation>();
 
+        private EncryptionSettings? _encryption;
+
         private DocumentOperation()
         {
+        }
+
+        /// <summary>
+        /// Base settings shared by all password-based encryption strengths.
+        /// </summary>
+        public class EncryptionBase
+        {
+            /// <summary>
+            /// The password that allows opening the encrypted document. When it is
+            /// <see langword="null"/> or empty, readers can open the document without a password,
+            /// but the configured permissions still apply.
+            /// </summary>
+            public string? UserPassword { get; set; }
+
+            /// <summary>
+            /// The password that grants full access and bypasses the configured permissions. It
+            /// must not be empty. Using the same value for both passwords is insecure.
+            /// </summary>
+            public string OwnerPassword { get; set; } = null!;
+        }
+
+        /// <summary>
+        /// Legacy 40-bit RC4 encryption, kept for compatibility with old readers. Prefer
+        /// <see cref="Encryption256Bit"/> for new documents.
+        /// </summary>
+        public sealed class Encryption40Bit : EncryptionBase
+        {
+            /// <summary>Allows adding and modifying annotations. Defaults to <see langword="true"/>.</summary>
+            public bool AllowAnnotation { get; set; } = true;
+
+            /// <summary>Allows copying text and graphics. Defaults to <see langword="true"/>.</summary>
+            public bool AllowContentExtraction { get; set; } = true;
+
+            /// <summary>Allows modifying document content. Defaults to <see langword="true"/>.</summary>
+            public bool AllowModification { get; set; } = true;
+
+            /// <summary>Allows printing. Defaults to <see langword="true"/>.</summary>
+            public bool AllowPrinting { get; set; } = true;
+        }
+
+        /// <summary>
+        /// 128-bit encryption. The PDF standard security handler uses the RC4 crypt filter for this
+        /// strength, matching the pinned target; use <see cref="Encryption256Bit"/> for AES.
+        /// </summary>
+        public sealed class Encryption128Bit : EncryptionBase
+        {
+            /// <summary>Allows adding and modifying annotations. Defaults to <see langword="true"/>.</summary>
+            public bool AllowAnnotation { get; set; } = true;
+
+            /// <summary>Allows inserting, rotating or deleting pages and adding bookmarks. Defaults to <see langword="true"/>.</summary>
+            public bool AllowAssembly { get; set; } = true;
+
+            /// <summary>Allows copying text and graphics. Defaults to <see langword="true"/>.</summary>
+            public bool AllowContentExtraction { get; set; } = true;
+
+            /// <summary>Allows filling form fields. Defaults to <see langword="true"/>.</summary>
+            public bool AllowFillingForms { get; set; } = true;
+
+            /// <summary>Allows modifying document content. Defaults to <see langword="true"/>.</summary>
+            public bool AllowModification { get; set; } = true;
+
+            /// <summary>Allows printing. Defaults to <see langword="true"/>.</summary>
+            public bool AllowPrinting { get; set; } = true;
+
+            /// <summary>Encrypts metadata streams as well. Defaults to <see langword="true"/>.</summary>
+            public bool EncryptMetadata { get; set; } = true;
+        }
+
+        /// <summary>
+        /// 256-bit AES encryption, the recommended strength for new documents. The PDF standard
+        /// security handler uses the AESV3 crypt filter and revision 6.
+        /// </summary>
+        public sealed class Encryption256Bit : EncryptionBase
+        {
+            /// <summary>Allows adding and modifying annotations. Defaults to <see langword="true"/>.</summary>
+            public bool AllowAnnotation { get; set; } = true;
+
+            /// <summary>Allows inserting, rotating or deleting pages and adding bookmarks. Defaults to <see langword="true"/>.</summary>
+            public bool AllowAssembly { get; set; } = true;
+
+            /// <summary>Allows copying text and graphics. Defaults to <see langword="true"/>.</summary>
+            public bool AllowContentExtraction { get; set; } = true;
+
+            /// <summary>Allows filling form fields. Defaults to <see langword="true"/>.</summary>
+            public bool AllowFillingForms { get; set; } = true;
+
+            /// <summary>Allows modifying document content. Defaults to <see langword="true"/>.</summary>
+            public bool AllowModification { get; set; } = true;
+
+            /// <summary>Allows printing. Defaults to <see langword="true"/>.</summary>
+            public bool AllowPrinting { get; set; } = true;
+
+            /// <summary>Encrypts metadata streams as well. Defaults to <see langword="true"/>.</summary>
+            public bool EncryptMetadata { get; set; } = true;
         }
 
         /// <summary>
@@ -213,6 +309,59 @@ namespace FossPDF.Fluent
         }
 
         /// <summary>
+        /// Encrypts the output with 40-bit RC4. The encryption plan is copied now, so later changes
+        /// to the configuration object do not affect the operation. Encryption can be set only once.
+        /// </summary>
+        public DocumentOperation Encrypt(Encryption40Bit encryption)
+        {
+            return SetEncryption(encryption, EncryptionStrength.Rc4_40Bit);
+        }
+
+        /// <summary>
+        /// Encrypts the output with 128-bit RC4. The encryption plan is copied now, so later changes
+        /// to the configuration object do not affect the operation. Encryption can be set only once.
+        /// </summary>
+        public DocumentOperation Encrypt(Encryption128Bit encryption)
+        {
+            return SetEncryption(encryption, EncryptionStrength.Rc4_128Bit);
+        }
+
+        /// <summary>
+        /// Encrypts the output with 256-bit AES. This is the recommended strength. The encryption
+        /// plan is copied now, so later changes to the configuration object do not affect the
+        /// operation. Encryption can be set only once.
+        /// </summary>
+        public DocumentOperation Encrypt(Encryption256Bit encryption)
+        {
+            return SetEncryption(encryption, EncryptionStrength.Aes_256Bit);
+        }
+
+        /// <summary>
+        /// Produces an unencrypted output. An encrypted input is decrypted with the password
+        /// supplied when it was loaded. Calling this method also clears an encryption plan recorded
+        /// earlier, so the last of <see cref="Encrypt(Encryption256Bit)"/> and
+        /// <see cref="Decrypt"/> wins.
+        /// </summary>
+        public DocumentOperation Decrypt()
+        {
+            _encryption = null;
+            return this;
+        }
+
+        /// <summary>
+        /// Produces an unencrypted output and removes restrictions attached to digital signatures.
+        /// The output document is always rebuilt from its pages, so certification signatures,
+        /// approval signatures and their restrictions are not carried over; their visual
+        /// appearances remain page content. Calling this method also clears an encryption plan
+        /// recorded earlier.
+        /// </summary>
+        public DocumentOperation RemoveRestrictions()
+        {
+            _encryption = null;
+            return this;
+        }
+
+        /// <summary>
         /// Executes the recorded operations and writes the result to a file. The file is only
         /// created after the operation has completed successfully.
         /// </summary>
@@ -249,7 +398,73 @@ namespace FossPDF.Fluent
         /// </summary>
         public byte[] SaveToBytes()
         {
-            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays);
+            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption);
+        }
+
+        private DocumentOperation SetEncryption(EncryptionBase encryption, EncryptionStrength strength)
+        {
+            if (encryption == null)
+                throw new ArgumentNullException(nameof(encryption));
+
+            if (_encryption != null)
+                throw new InvalidOperationException("Encryption process can be set only once");
+
+            if (string.IsNullOrEmpty(encryption.OwnerPassword))
+                throw new ArgumentException(
+                    "An owner password is required when encrypting a PDF document.", nameof(encryption));
+
+            var userPassword = encryption.UserPassword ?? string.Empty;
+            var ownerPassword = encryption.OwnerPassword;
+
+            switch (encryption)
+            {
+                case Encryption40Bit options:
+                    _encryption = new EncryptionSettings(
+                        strength,
+                        userPassword,
+                        ownerPassword,
+                        options.AllowAnnotation,
+                        allowAssembly: true,
+                        options.AllowContentExtraction,
+                        allowFillingForms: true,
+                        options.AllowModification,
+                        options.AllowPrinting,
+                        encryptMetadata: true);
+                    break;
+
+                case Encryption128Bit options:
+                    _encryption = new EncryptionSettings(
+                        strength,
+                        userPassword,
+                        ownerPassword,
+                        options.AllowAnnotation,
+                        options.AllowAssembly,
+                        options.AllowContentExtraction,
+                        options.AllowFillingForms,
+                        options.AllowModification,
+                        options.AllowPrinting,
+                        options.EncryptMetadata);
+                    break;
+
+                case Encryption256Bit options:
+                    _encryption = new EncryptionSettings(
+                        strength,
+                        userPassword,
+                        ownerPassword,
+                        options.AllowAnnotation,
+                        options.AllowAssembly,
+                        options.AllowContentExtraction,
+                        options.AllowFillingForms,
+                        options.AllowModification,
+                        options.AllowPrinting,
+                        options.EncryptMetadata);
+                    break;
+
+                default:
+                    throw new ArgumentException("Unsupported encryption configuration.", nameof(encryption));
+            }
+
+            return this;
         }
 
         private void AddLayer(LayerConfiguration configuration, List<LayerOperation> layers)
@@ -376,6 +591,51 @@ namespace FossPDF.Fluent
             public string Selector { get; }
         }
 
+        internal enum EncryptionStrength
+        {
+            Rc4_40Bit,
+            Rc4_128Bit,
+            Aes_256Bit
+        }
+
+        internal sealed class EncryptionSettings
+        {
+            public EncryptionSettings(
+                EncryptionStrength strength,
+                string userPassword,
+                string ownerPassword,
+                bool allowAnnotation,
+                bool allowAssembly,
+                bool allowContentExtraction,
+                bool allowFillingForms,
+                bool allowModification,
+                bool allowPrinting,
+                bool encryptMetadata)
+            {
+                Strength = strength;
+                UserPassword = userPassword;
+                OwnerPassword = ownerPassword;
+                AllowAnnotation = allowAnnotation;
+                AllowAssembly = allowAssembly;
+                AllowContentExtraction = allowContentExtraction;
+                AllowFillingForms = allowFillingForms;
+                AllowModification = allowModification;
+                AllowPrinting = allowPrinting;
+                EncryptMetadata = encryptMetadata;
+            }
+
+            public EncryptionStrength Strength { get; }
+            public string UserPassword { get; }
+            public string OwnerPassword { get; }
+            public bool AllowAnnotation { get; }
+            public bool AllowAssembly { get; }
+            public bool AllowContentExtraction { get; }
+            public bool AllowFillingForms { get; }
+            public bool AllowModification { get; }
+            public bool AllowPrinting { get; }
+            public bool EncryptMetadata { get; }
+        }
+
         internal sealed class LayerOperation
         {
             public LayerOperation(
@@ -410,7 +670,8 @@ namespace FossPDF.Fluent
             IReadOnlyList<DocumentOperation.InputSource> sources,
             IReadOnlyList<DocumentOperation.PageSelection> selections,
             IReadOnlyList<DocumentOperation.LayerOperation> underlays,
-            IReadOnlyList<DocumentOperation.LayerOperation> overlays)
+            IReadOnlyList<DocumentOperation.LayerOperation> overlays,
+            DocumentOperation.EncryptionSettings? encryption)
         {
             if (sources.Count == 0)
                 throw new InvalidOperationException("Load a PDF document before saving an operation.");
@@ -446,6 +707,7 @@ namespace FossPDF.Fluent
                 CopyMetadata(opened[0], destination);
 
                 PdfLayers.Apply(destination, underlays, overlays);
+                PdfSecurity.Apply(destination, encryption);
 
                 using var buffer = new MemoryStream();
                 destination.Save(buffer, false);
@@ -481,9 +743,25 @@ namespace FossPDF.Fluent
             catch (Exception exception) when (!(exception is PdfOperationException))
             {
                 // PDFsharp reports malformed and truncated files with several different exception
-                // types, including plain System.Exception. They all mean the same thing here.
+                // types, including plain System.Exception. The message is inspected only to give
+                // security failures a precise description; it never includes the supplied password.
+                var message = exception.Message ?? string.Empty;
+
+                if (message.IndexOf("not supported", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    throw new PdfOperationException(
+                        $"'{source.Name}' is protected with a security handler that is not supported. " +
+                        "Only password-based standard security is supported.", exception);
+                }
+
+                if (message.IndexOf("password", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    throw new PdfOperationException(
+                        $"'{source.Name}' could not be opened because the password is missing or incorrect.", exception);
+                }
+
                 throw new PdfOperationException(
-                    $"'{source.Name}' could not be opened. It may be malformed, truncated or require a different password.", exception);
+                    $"'{source.Name}' could not be opened. It may be malformed or truncated.", exception);
             }
         }
 
