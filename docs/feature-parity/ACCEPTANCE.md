@@ -1,4 +1,4 @@
-﻿# Feature-parity acceptance specification
+# Feature-parity acceptance specification
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
@@ -22,6 +22,7 @@ Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-
 | `PAG-001` — Explicit page break preserves marker order | PDF reports exactly two pages; raster export has two 120x100 pages. A red 100x20 block starts at (10,10) on page 1; a blue block occupies the same rectangle on page 2. |
 | `PAG-002` — Overflow keeps ordered blocks and repeated header/footer | Two pages are produced; red and green blocks fit on page 1, blue continues on page 2. A black header occupies (10,10,100,5) and a gray footer (10,85,100,5) on both pages. |
 | `PAG-105` — Page controls keep groups, repeat markers and page-aware predicates | A 30-point group moves intact from the 20-point remainder to page 2. A repeated marker renders once on each page its row spans, and a `ShowIf` predicate sees a null total-page count during the initial pass and the resolved count during the final pass. Regenerating the document neither consumes nor duplicates content. |
+| `LAY-106` — Lazy and LazyWithCache preserve eager pages while deferring work | One thousand 12-point alternating-color items on a 240x180 page produce identical page counts, pixels and order for eager, Lazy and LazyWithCache layouts. Eager composition calls no lazy builder; Lazy recomposes sections across render passes; LazyWithCache invokes each builder once per generation. A second generation rebuilds cached content without stale or disposed state. |
 | `PDF-301` — Generated-document merging preserves order and numbering | Two two-page documents merge into four pages in red/blue/red/blue order. Original numbering yields 1/2, 2/2, 1/2, 2/2; continuous numbering yields 1/4, 2/4, 3/4, 4/4. Merged metadata/settings take precedence, and a source instance may be repeated. |
 | `LAY-108` — Content-position capture reports every fragment and page | Twelve 20-point rows on 120x100 pages produce three pages and twelve captures. Each capture reports the correct page, X=10, Y=10/30/50/70, width=100 and height=20 within 0.25 point. Repeated generation replaces rather than appends captures. |
 | `LAY-107` — Layout helpers retain axes, stack by depth and align inline content | On a 100x80 area with a 20x10 intrinsic child, horizontal shrinking draws 20x80, vertical 100x10 and both 20x10. Overlapping 30x30 markers at depths 2/0/1 show red above green and blue above green, retaining composition order for ties. Text-injected 8x8 markers at top/middle/bottom/baseline keep their logical order and meet the corresponding text edges. |
@@ -107,7 +108,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains twenty-two executable scenarios on .NET 9 (twenty-one on .NET 8, where the net9.0-scoped `IMG-201` is skipped), one catalog/traceability check, four raster-comparison checks, and 14 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains twenty-three executable scenarios on .NET 9 (twenty-two on .NET 8, where the net9.0-scoped `IMG-201` is skipped), one catalog/traceability check, four raster-comparison checks, and 13 explicitly planned/skipped contracts.
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 
 See the [initial Windows evidence](evidence/fp-001-windows.md) for the recorded local run. Other platform qualification and broader conformance/performance coverage remain tracked by their work items.

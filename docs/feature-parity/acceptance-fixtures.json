@@ -815,7 +815,7 @@
       "work_items": [
         "FP-106"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "items": 1000,
         "item_height": 12,

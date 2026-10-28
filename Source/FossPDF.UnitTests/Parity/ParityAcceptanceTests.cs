@@ -1004,6 +1004,116 @@ namespace FossPDF.UnitTests.Parity
                     .Image(sharedImage)), fixture);
         }
 
+        [ParityFixtureRunner("LAY-106")]
+        private static void RunLazyComposition(ParityFixture fixture)
+        {
+            var itemCount = fixture.Input.GetProperty("items").GetInt32();
+            var itemHeight = fixture.Input.GetProperty("item_height").GetInt32();
+            var pageSize = fixture.Input.GetProperty("page");
+            var pageWidth = pageSize[0].GetInt32();
+            var pageHeight = pageSize[1].GetInt32();
+            var modes = FixtureCatalog.ReadArray(fixture.Input, "cache_modes")
+                .Select(x => x.GetString()!)
+                .ToArray();
+
+            var results = new Dictionary<string, (int PageCount, byte[][] Pages, int Calls, byte[] Pdf)>();
+
+            foreach (var mode in modes)
+            {
+                var calls = 0;
+
+                var document = Document.Create(container => container.Page(page =>
+                {
+                    page.Size(pageWidth, pageHeight);
+                    page.Margin(0);
+                    page.PageColor("#ffffff");
+
+                    page.Content().Column(column =>
+                    {
+                        for (var index = 0; index < itemCount; index++)
+                        {
+                            var color = index % 2 == 0 ? "#ff0000" : "#0000ff";
+
+                            if (mode == "off")
+                            {
+                                column.Item().Height(itemHeight).Background(color);
+                                continue;
+                            }
+
+                            if (mode == "LazyWithCache")
+                            {
+                                column.Item().LazyWithCache(content =>
+                                {
+                                    calls++;
+                                    content.Height(itemHeight).Background(color);
+                                });
+                            }
+                            else
+                            {
+                                column.Item().Lazy(content =>
+                                {
+                                    calls++;
+                                    content.Height(itemHeight).Background(color);
+                                });
+                            }
+                        }
+                    });
+                }));
+
+                var pdf = document.GeneratePdf(out var pageCount);
+                var pages = document.GenerateImages().ToArray();
+
+                Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+                Assert.That(pages, Has.Length.EqualTo(pageCount));
+
+                results[mode] = (pageCount, pages, calls, pdf);
+
+                SaveArtifact("LAY-106", $"lazy-{mode}.pdf", pdf);
+                SaveArtifact("LAY-106", $"lazy-{mode}-page-1.png", pages.First());
+                SaveArtifact("LAY-106", $"lazy-{mode}-page-last.png", pages.Last());
+            }
+
+            var reference = results[modes[0]];
+
+            foreach (var mode in modes.Skip(1))
+            {
+                var result = results[mode];
+                Assert.That(result.PageCount, Is.EqualTo(reference.PageCount),
+                    $"{mode} must produce the same page count as {modes[0]}.");
+                Assert.That(result.Pages, Is.EqualTo(reference.Pages),
+                    $"{mode} must produce the same page pixels and ordering as {modes[0]}.");
+            }
+
+            const int generations = 2; // PDF and raster generation each compose a fresh document tree.
+
+            Assert.That(results["off"].Calls, Is.Zero);
+            Assert.That(results["LazyWithCache"].Calls, Is.EqualTo(itemCount * generations),
+                "LazyWithCache composes each section once per generation.");
+            Assert.That(results["Lazy"].Calls, Is.GreaterThanOrEqualTo(itemCount * generations),
+                "Lazy defers and recomposes sections across render passes.");
+
+            var cachedDocument = Document.Create(container => container.Page(page =>
+            {
+                page.Size(pageWidth, pageHeight);
+                page.Margin(0);
+                page.PageColor("#ffffff");
+                page.Content().Column(column =>
+                {
+                    for (var index = 0; index < itemCount; index++)
+                    {
+                        var color = index % 2 == 0 ? "#ff0000" : "#0000ff";
+                        column.Item().LazyWithCache(content => content.Height(itemHeight).Background(color));
+                    }
+                });
+            }));
+
+            var first = cachedDocument.GenerateImages().ToArray();
+            var second = cachedDocument.GenerateImages().ToArray();
+
+            Assert.That(second, Is.EqualTo(first),
+                "Repeated generations must rebuild cached sections without stale content.");
+        }
+
         private const float ParagraphGeometryTolerance = 0.01f;
 
         // Skia's text-blob bounds are conservative for descenders and antialiasing adds a
