@@ -48,11 +48,15 @@ namespace FossPDF.Fluent
 
     public class TextDescriptor
     {
+        public const string DefaultLineClampEllipsis = "…";
+
         private ICollection<TextBlock> TextBlocks { get; } = new List<TextBlock>();
         private TextStyle? DefaultStyle { get; set; }
         internal TextHorizontalAlignment? Alignment { get; set; }
         private float FirstLineIndentation { get; set; } = 0f;
         private float Spacing { get; set; } = 0f;
+        private int? LineClampValue { get; set; }
+        private string LineClampEllipsisValue { get; set; } = DefaultLineClampEllipsis;
 
         public void DefaultTextStyle(TextStyle style)
         {
@@ -128,12 +132,38 @@ namespace FossPDF.Fluent
             Spacing = value.ToPoints(unit);
         }
 
+        /// <summary>
+        /// Limits the paragraph to the given number of visible lines. When the content is truncated,
+        /// the ellipsis is appended to the last visible line. A null ellipsis uses the default "…";
+        /// an empty string renders no ellipsis.
+        /// </summary>
+        public void ClampLines(int maxLines, string ellipsis = DefaultLineClampEllipsis)
+        {
+            if (maxLines <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxLines), "The maximum line count must be greater than zero.");
+
+            LineClampValue = maxLines;
+            LineClampEllipsisValue = ellipsis ?? DefaultLineClampEllipsis;
+
+            foreach (var textBlock in TextBlocks)
+            {
+                textBlock.LineClamp = maxLines;
+                textBlock.LineClampEllipsis = LineClampEllipsisValue;
+            }
+        }
+
         private void AddItemToLastTextBlock(ITextBlockItem item)
         {
             if (!TextBlocks.Any())
                 TextBlocks.Add(new TextBlock());
 
             var lastTextBlock = TextBlocks.Last();
+
+            if (LineClampValue.HasValue)
+            {
+                lastTextBlock.LineClamp = LineClampValue;
+                lastTextBlock.LineClampEllipsis = LineClampEllipsisValue;
+            }
 
             // TextBlock with only one Span with empty text is a special case.
             // It represents an empty line with a given text style (e.g. text height).

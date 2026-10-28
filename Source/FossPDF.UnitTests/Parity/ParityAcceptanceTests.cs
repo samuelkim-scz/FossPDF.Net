@@ -326,6 +326,87 @@ namespace FossPDF.UnitTests.Parity
             }));
         }
 
+        [ParityFixtureRunner("TXT-102")]
+        private static void RunTextClamp(ParityFixture fixture)
+        {
+            var text = fixture.Input.GetProperty("text").GetString();
+            var width = fixture.Input.GetProperty("width").GetInt32();
+            var font = fixture.Input.GetProperty("font").GetString();
+            var fontSize = fixture.Input.GetProperty("font_size").GetInt32();
+            var maxLines = fixture.Input.GetProperty("max_lines").GetInt32();
+            var ellipsis = fixture.Input.GetProperty("ellipsis").GetString();
+
+            var clamped = CreateTextClampDocument(text, width, font, fontSize, maxLines, ellipsis);
+            var pdf = clamped.GeneratePdf(out var count);
+            var images = clamped.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(count, Is.EqualTo(1));
+            Assert.That(images, Has.Length.EqualTo(1));
+
+            SaveArtifact("TXT-102", "clamped.pdf", pdf);
+            SaveArtifact("TXT-102", "clamped.png", images[0]);
+
+            using var clampedBitmap = SKBitmap.Decode(images[0]);
+            var clampedHeight = InkBoundsHeight(clampedBitmap);
+
+            var unclamped = CreateTextClampDocument(text, width, font, fontSize, null, null);
+            var unclampedImages = unclamped.GenerateImages().ToArray();
+            Assert.That(unclampedImages, Has.Length.EqualTo(1));
+            SaveArtifact("TXT-102", "unclamped.png", unclampedImages[0]);
+
+            using var unclampedBitmap = SKBitmap.Decode(unclampedImages[0]);
+            var unclampedHeight = InkBoundsHeight(unclampedBitmap);
+
+            Assert.That(clampedHeight, Is.GreaterThan(0));
+            Assert.That(clampedHeight, Is.LessThanOrEqualTo(40),
+                "The clamped paragraph must not exceed two lines at 12 pt.");
+            Assert.That(clampedHeight, Is.LessThan(unclampedHeight),
+                "The clamped paragraph must render fewer lines than the unclamped paragraph.");
+
+            using var fontScope = new DocumentFontScope();
+            var block = CreateInternalTextBlock(text, font, fontSize, maxLines, ellipsis, fontScope.Manager);
+            var lines = block.CalculateLines(width, 1000, out var clampReached);
+
+            Assert.That(clampReached, Is.True);
+            Assert.That(lines, Has.Count.EqualTo(maxLines));
+            Assert.That((lines.Last().Elements.Last().Item as TextBlockSpan)?.Text, Is.EqualTo(ellipsis));
+            Assert.That(lines.Last().Width, Is.LessThanOrEqualTo(width + 0.1f));
+
+            var shortBlock = CreateInternalTextBlock("short", font, fontSize, maxLines, ellipsis, fontScope.Manager);
+            var shortLines = shortBlock.CalculateLines(width, 1000, out var shortClampReached);
+
+            Assert.That(shortClampReached, Is.False);
+            Assert.That(shortLines, Has.Count.EqualTo(1));
+            Assert.That(shortLines.SelectMany(x => x.Elements).Any(x => x.Item is TextBlockSpan span && span.Text == ellipsis),
+                Is.False);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TextDescriptor().ClampLines(0));
+        }
+
+        private static Document CreateTextClampDocument(
+            string text,
+            int width,
+            string font,
+            int fontSize,
+            int? maxLines,
+            string ellipsis)
+        {
+            return Document.Create(container => container.Page(page =>
+            {
+                page.Size(width + 20, 200);
+                page.Margin(10);
+                page.PageColor("#ffffff");
+                page.Content().Text(descriptor =>
+                {
+                    if (maxLines.HasValue)
+                        descriptor.ClampLines(maxLines.Value, ellipsis ?? TextDescriptor.DefaultLineClampEllipsis);
+
+                    descriptor.Span(text).FontFamily(font).FontSize(fontSize);
+                });
+            }));
+        }
+
         private static string[] FormatPageNumbers(IEnumerable<(int Page, int? Total)> records)
         {
             return records
@@ -334,6 +415,59 @@ namespace FossPDF.UnitTests.Parity
                 .OrderBy(x => x.Page)
                 .Select(x => $"{x.Page}/{x.Total}")
                 .ToArray();
+        }
+
+        private static TextBlock CreateInternalTextBlock(
+            string text,
+            string font,
+            int fontSize,
+            int maxLines,
+            string ellipsis,
+            DocumentSpecificFontManager manager)
+        {
+            var block = new TextBlock
+            {
+                LineClamp = maxLines,
+                LineClampEllipsis = ellipsis
+            };
+
+            block.Items.Add(new TextBlockSpan
+            {
+                Text = text,
+                Style = TextStyle.Default.FontFamily(font).FontSize(fontSize)
+            });
+
+            block.PageContext = new PageContext { FontManager = manager };
+            block.Canvas = new FreeCanvas();
+            block.ResetState();
+
+            return block;
+        }
+
+        private static int InkBoundsHeight(SKBitmap bitmap)
+        {
+            var minY = int.MaxValue;
+            var maxY = int.MinValue;
+
+            for (var y = 0; y < bitmap.Height; y++)
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var color = bitmap.GetPixel(x, y);
+
+                if (color.Red >= 245 && color.Green >= 245 && color.Blue >= 245)
+                    continue;
+
+                minY = Math.Min(minY, y);
+                maxY = Math.Max(maxY, y);
+            }
+
+            return maxY < minY ? 0 : maxY - minY + 1;
+        }
+
+        private sealed class DocumentFontScope : IDisposable
+        {
+            public DocumentSpecificFontManager Manager { get; } = FontManager.MakeDocumentSpecific();
+            public void Dispose() => Manager.DisposeDocumentSpecificObjects();
         }
         [ParityFixtureRunner("PAG-105")]
 

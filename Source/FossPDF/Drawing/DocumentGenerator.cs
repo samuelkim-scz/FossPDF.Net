@@ -348,8 +348,40 @@ namespace FossPDF.Drawing
                 foreach (var glyphCodepoint in glyphCodepoints)
                     glyphs.Add(glyphCodepoint);
 
+                if (tb.LineClamp.HasValue && !string.IsNullOrEmpty(tb.LineClampEllipsis))
+                {
+                    AddGlyphsForText(
+                        tb.LineClampEllipsis,
+                        span.Style,
+                        typeFaceToGlyphs,
+                        typeFaceToShaperFont,
+                        fontManager);
+                }
+
                 span.ClearTextShapingResult();
             }
+        }
+
+        private static void AddGlyphsForText(
+            string text,
+            TextStyle style,
+            IDictionary<SKTypeface, HashSet<uint>> typeFaceToGlyphs,
+            Dictionary<SKTypeface, Font> typeFaceToShaperFont,
+            DocumentSpecificFontManager fontManager)
+        {
+            var shapingResult = fontManager.ToTextShaper(style).Shape(text);
+            var typeface = fontManager.ToFont(style).Typeface;
+
+            typeFaceToShaperFont[typeface] = fontManager.ToShaperFont(style);
+
+            if (!typeFaceToGlyphs.TryGetValue(typeface, out var glyphs))
+            {
+                glyphs = new HashSet<uint>();
+                typeFaceToGlyphs[typeface] = glyphs;
+            }
+
+            for (var index = 0; index < shapingResult.Length; index++)
+                glyphs.Add(shapingResult[index].Codepoint);
         }
 
         internal static int RenderPass<TCanvas>(
