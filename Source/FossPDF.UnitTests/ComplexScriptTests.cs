@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using FluentAssertions;
 using FossPDF.Drawing;
@@ -502,6 +503,8 @@ namespace FossPDF.UnitTests
             public float Bottom { get; private set; } = float.MinValue;
 
             public bool HasInk => Right > Left;
+
+            public Matrix4x4 Transform => Matrix4x4.CreateTranslation(_offsetX, _offsetY, 0);
 
             public void Translate(Position vector)
             {

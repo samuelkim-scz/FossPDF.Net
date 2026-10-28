@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using FossPDF.Drawing;
 using FossPDF.Infrastructure;
 using FossPDF.UnitTests.TestEngine.Operations;
@@ -10,6 +11,7 @@ namespace FossPDF.UnitTests.TestEngine
     internal class OperationRecordingCanvas : ICanvas
     {
         public ICollection<OperationBase> Operations { get; } = new List<OperationBase>();
+        public Matrix4x4 Transform => Matrix4x4.Identity;
 
         public void Translate(Position vector) => Operations.Add(new CanvasTranslateOperation(vector));
         public void Rotate(float angle) => Operations.Add(new CanvasRotateOperation(angle));

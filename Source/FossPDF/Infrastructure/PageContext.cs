@@ -10,6 +10,7 @@ namespace FossPDF.Infrastructure
         public const string DocumentLocation = "document";
 
         private List<DocumentLocation> Locations { get; } = new();
+        private List<PageElementLocation> ContentCapturedPositions { get; } = new();
         public int CurrentPage { get; private set; }
         public int? CurrentDocumentId { get; private set; }
 
@@ -66,6 +67,21 @@ namespace FossPDF.Infrastructure
         public int GetPageNumbers()
         {
             return Locations.Count == 0 ? 0 : Locations.Max(x => x.PageEnd);
+        }
+
+        public void CaptureContentPosition(PageElementLocation location)
+        {
+            ContentCapturedPositions.Add(location);
+        }
+
+        public ICollection<PageElementLocation> GetContentCapturedPositions(string id)
+        {
+            return ContentCapturedPositions.Where(x => x.Id == id).ToList();
+        }
+
+        internal IReadOnlyCollection<PageElementLocation> GetContentCapturedPositions()
+        {
+            return ContentCapturedPositions.ToList();
         }
     }
 }

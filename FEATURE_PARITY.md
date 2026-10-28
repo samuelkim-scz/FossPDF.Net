@@ -1,4 +1,4 @@
-# FossPDF feature-parity roadmap
+﻿# FossPDF feature-parity roadmap
 
 This is the shared implementation plan for functional parity with **QuestPDF 2026.9.1**. The initial target was established on **October 26, 2026**. Work is tracked in [the master issue](https://github.com/samuelkim-scz/FossPDF.Net/issues/1), [GitHub milestones](https://github.com/samuelkim-scz/FossPDF.Net/milestones), and the linked implementation issues below.
 
@@ -93,7 +93,7 @@ Define testable contracts, compatible settings, native-backend decisions, and re
 
 ### [Parity M1 - Text and layout](https://github.com/samuelkim-scz/FossPDF.Net/milestone/2)
 
-Deliver paragraph, typography, pagination, multi-column, lazy, geometry, and layout API parity. Line clamping and custom ellipsis behavior are documented in [docs/feature-parity/TEXT_CLAMPING.md](docs/feature-parity/TEXT_CLAMPING.md).
+Deliver paragraph, typography, pagination, multi-column, lazy, geometry, and layout API parity. Line clamping and custom ellipsis behavior are documented in [docs/feature-parity/TEXT_CLAMPING.md](docs/feature-parity/TEXT_CLAMPING.md). Content-position capture behavior, units and two-pass semantics are documented in [docs/feature-parity/CONTENT_POSITIONS.md](docs/feature-parity/CONTENT_POSITIONS.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

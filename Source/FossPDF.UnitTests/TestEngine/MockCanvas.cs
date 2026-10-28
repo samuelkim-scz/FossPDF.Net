@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using FossPDF.Drawing;
 using FossPDF.Infrastructure;
 using SkiaSharp;
@@ -7,6 +8,8 @@ namespace FossPDF.UnitTests.TestEngine
 {
     internal class MockCanvas : ICanvas
     {
+        public Matrix4x4 Transform => Matrix4x4.Identity;
+
         public Action<Position> TranslateFunc { get; set; }
         public Action<float> RotateFunc { get; set; }
         public Action<float, float> ScaleFunc { get; set; }

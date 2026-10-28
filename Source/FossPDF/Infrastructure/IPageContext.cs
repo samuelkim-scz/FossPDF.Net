@@ -28,6 +28,8 @@ namespace FossPDF.Infrastructure
         /// <summary>Returns the canvas destination name, scoped to the current source document when merged.</summary>
         string GetDocumentLocationName(string locationName);
 
+        void CaptureContentPosition(PageElementLocation location);
+        ICollection<PageElementLocation> GetContentCapturedPositions(string id);
         DocumentSpecificFontManager FontManager { get; }
         bool CheckIfAllTextGlyphsAreAvailable { get; }
     }

@@ -110,6 +110,12 @@ namespace FossPDF.Elements
         public int TotalPages { get; internal set; }
         public Size AvailableSize { get; internal set; }
 
+        /// <summary>Returns all captured occurrences for the given content-position identifier.</summary>
+        public ICollection<PageElementLocation> GetContentCapturedPositions(string id)
+        {
+            return PageContext.GetContentCapturedPositions(id);
+        }
+
         public IDynamicElement CreateElement(Action<IContainer> content)
         {
             var container = new DynamicElement();
