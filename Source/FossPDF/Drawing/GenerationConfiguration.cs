@@ -44,6 +44,16 @@ namespace FossPDF.Drawing
             return new GenerationConfiguration(metadata.Snapshot(), settings);
         }
 
+        // Optional writers can render the original IDocument with a qualified configuration.
+        // Keeping the document itself preserves merged pagination and content-position sinks.
+        internal GenerationConfiguration WithSettings(DocumentSettings settings) => new(Metadata.Snapshot(), settings with
+        {
+            EnableCaching = settings.EnableCaching ?? EnableCaching,
+            EnableDebugging = settings.EnableDebugging ?? EnableDebugging,
+            CheckIfAllTextGlyphsAreAvailable = settings.CheckIfAllTextGlyphsAreAvailable ?? CheckGlyphs,
+            DocumentLayoutExceptionThreshold = settings.DocumentLayoutExceptionThreshold ?? PageLimit
+        });
+
         private static void ValidateOverrides(DocumentSettings settings)
         {
             if (settings.ImageRasterDpi <= 0)
@@ -65,7 +75,7 @@ namespace FossPDF.Drawing
             if (Settings.PdfAConformance.HasValue &&
                 Settings.PdfAConformance != PdfAConformance.None &&
                 Settings.PdfAConformance != PdfAConformance.Legacy)
-                throw new NotSupportedException("Selectable PDF/A profiles require FP-402. Use Legacy only for the existing unqualified PdfA flag.");
+                throw new NotSupportedException("Selectable PDF/A profiles require GeneratePdfA from the optional FossPDF.PdfOperations package on .NET 9, with veraPDF validation. Legacy retains the existing unqualified PdfA flag.");
             if (Settings.PdfUaConformance != PdfUaConformance.None)
                 throw new NotSupportedException("PDF/UA output requires FP-401/FP-403 semantic tagging and conformance support.");
 

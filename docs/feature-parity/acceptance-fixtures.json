@@ -205,7 +205,7 @@
     {
       "work_item": "FP-402",
       "baseline_status": "partial",
-      "current_capability": "A PdfA boolean exists; selectable validated profiles do not.",
+      "current_capability": "GeneratePdfA in the optional .NET 9 operations package writes all six PDF/A-2/3 levels and validates finished bytes with pinned veraPDF; legacy maps to PDF/A-2b.",
       "public_contract": "Select and validate all six PDF/A-2/3 conformance levels with profile-aware metadata/font/color rules.",
       "fixture_ids": [
         "ACC-402"
@@ -1421,7 +1421,10 @@
       "work_items": [
         "FP-402"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "source": "ACC-401",
         "levels": [

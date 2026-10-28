@@ -75,6 +75,9 @@ namespace FossPDF.Drawing
 
             var arguments = new List<string>();
 
+            if (settings.NewlineBeforeEndstream)
+                arguments.Add("--newline-before-endstream");
+
             if (settings.Linearize)
                 arguments.Add("--linearize");
 

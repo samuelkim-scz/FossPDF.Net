@@ -22,10 +22,12 @@ namespace FossPDF.Drawing
         }
 
         internal static int GeneratePdf(Stream stream, IDocument document)
+            => GeneratePdf(stream, document, GenerationConfiguration.Resolve(document));
+
+        internal static int GeneratePdf(Stream stream, IDocument document, GenerationConfiguration configuration)
         {
             CheckIfStreamIsCompatible(stream);
 
-            var configuration = GenerationConfiguration.Resolve(document);
             configuration.ValidatePdf();
 
             if (configuration.Optimization != null)
@@ -58,11 +60,13 @@ namespace FossPDF.Drawing
         /// PDF library.
         /// </summary>
         internal static TaggedDocumentContent GenerateTaggedContent(IDocument document)
+            => GenerateTaggedContent(document, GenerationConfiguration.Resolve(document));
+
+        internal static TaggedDocumentContent GenerateTaggedContent(IDocument document, GenerationConfiguration configuration)
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
 
-            var configuration = GenerationConfiguration.Resolve(document);
             configuration.ValidatePdf();
 
             if (configuration.Optimization != null)

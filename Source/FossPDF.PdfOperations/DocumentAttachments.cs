@@ -73,7 +73,7 @@ namespace FossPDF.Fluent
             return this;
         }
 
-        private static AttachmentInput CaptureAttachment(DocumentAttachment attachment)
+        internal static AttachmentInput CaptureAttachment(DocumentAttachment attachment)
         {
             if (attachment == null)
                 throw new ArgumentNullException(nameof(attachment));
