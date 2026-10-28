@@ -35,8 +35,7 @@ namespace FossPDF.PdfOperations
                 if (attachment.ModificationDate.HasValue)
                     parameters.Elements.SetValue("/ModDate", new PdfDate(attachment.ModificationDate.Value.ToUniversalTime()));
                 embedded.Elements.SetObject("/Params", parameters);
-                embedded.CreateStream(attachment.Data);
-                embedded.Stream.Zip();
+                PdfStreams.CreateCompressed(embedded, attachment.Data);
                 destination.Internals.AddObject(embedded);
 
                 var specification = new PdfDictionary(destination);

@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import zlib
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -30,6 +31,13 @@ def main():
     def facts(document):
         return [(list(page.mediabox), page.get_contents().get_data()) for page in document.pages]
 
+    def check_compression(stream, label):
+        require(stream.get("/Filter") == "/FlateDecode", label + ": attachment uses Flate compression")
+        decoder = zlib.decompressobj()
+        decoder.decompress(stream._data)
+        require(decoder.eof and not decoder.unused_data,
+                label + ": complete zlib envelope and checksum")
+
     source = PdfReader(directory / "source.pdf", strict=True)
     expected_pages = facts(source)
     expected_data = fixture["attachment"]["utf8"].encode("utf-8")
@@ -44,6 +52,7 @@ def main():
         specification = names[1].get_object()
         require(specification["/UF"] == fixture["attachment"]["name"], f"{relationship}: display name is preserved")
         embedded = specification["/EF"]["/UF"]
+        check_compression(embedded, relationship)
         require(embedded.get_data() == expected_data, f"{relationship}: independent extraction returns exact UTF-8 bytes")
         require(embedded["/Subtype"] == "/" + fixture["attachment"]["media_type"], f"{relationship}: MIME type is preserved")
         require(specification["/AFRelationship"] == "/" + relationship, f"{relationship}: associated-file role is correct")
@@ -60,6 +69,7 @@ def main():
         root = reader.trailer["/Root"]
         names = root["/Names"]["/EmbeddedFiles"]["/Names"]
         specification = names[1].get_object()
+        check_compression(specification["/EF"]["/UF"], path.name)
         require(specification["/EF"]["/UF"].get_data() == "invoice data: \u03b1\u03b2\u03b3".encode("utf-8"), path.name + ": attachment decrypts exactly")
         if "-True" in path.stem:
             xml = ET.fromstring(root["/Metadata"].get_data())

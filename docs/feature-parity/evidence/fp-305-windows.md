@@ -25,3 +25,7 @@ All five encrypted variants are read correctly by PDFsharp and MuPDF. pypdf 6.21
 The example emits `report-with-data.pdf` under the examples output's `pdf-operations-attachments/` directory. Unit/parity artifacts include relationship PDFs, encrypted variants, exact expected bytes, source PDFs and JSON inspection reports beneath `parity-artifacts/PDF-305/`. Existing CI artifact upload patterns include these files. The Python validator runs in all three OS build jobs; platform results are the final merge gate.
 
 Local logs are under `Source/artifacts/fp305-final/`. Reproduction commands and implementation boundaries are in [ATTACHMENTS_XMP.md](../ATTACHMENTS_XMP.md). These checks establish packaging and supported interoperability, not PDF/A, PDF/UA, invoice-profile or NativeAOT conformance.
+
+### Strict compression and encryption interoperability review
+
+Attachments now use the shared .NET ZLibStream writer introduced by FP-303, avoiding the pinned backend's omitted Adler-32 trailer. CI independently validates complete zlib streams and checksums. The final net9.0 suite passes 588 tests with 8 planned skips, and the Release build has zero warnings/errors. The independent attachment/XMP inspector passes 91 checks with MuPDF enabled. qpdf 12.4.2 --check passes all 21 PDFs across PDF-303/304/305 with exit code 0; decrypting each of the five protected/Identity-filter PDF-305 variants with qpdf and then parsing it with pypdf confirms the exact extended XMP value, covering the two documented direct-pypdf Identity-filter limitations.
