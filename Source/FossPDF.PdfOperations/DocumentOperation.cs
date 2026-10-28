@@ -21,7 +21,7 @@ namespace FossPDF.Fluent
     /// a partially written file or stream. The class targets <c>net9.0</c> and belongs to the
     /// optional <c>FossPDF.PdfOperations</c> package, which the core package does not reference.
     /// </remarks>
-    public sealed class DocumentOperation
+    public sealed partial class DocumentOperation
     {
         private const string DefaultSelector = "1-z";
 
@@ -398,7 +398,8 @@ namespace FossPDF.Fluent
         /// </summary>
         public byte[] SaveToBytes()
         {
-            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption);
+            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption,
+                _attachments, _metadataExtensions);
         }
 
         private DocumentOperation SetEncryption(EncryptionBase encryption, EncryptionStrength strength)
@@ -671,7 +672,9 @@ namespace FossPDF.Fluent
             IReadOnlyList<DocumentOperation.PageSelection> selections,
             IReadOnlyList<DocumentOperation.LayerOperation> underlays,
             IReadOnlyList<DocumentOperation.LayerOperation> overlays,
-            DocumentOperation.EncryptionSettings? encryption)
+            DocumentOperation.EncryptionSettings? encryption,
+            IReadOnlyList<AttachmentInput> attachments,
+            IReadOnlyList<System.Xml.Linq.XElement> metadataExtensions)
         {
             if (sources.Count == 0)
                 throw new InvalidOperationException("Load a PDF document before saving an operation.");
@@ -707,12 +710,14 @@ namespace FossPDF.Fluent
                 CopyMetadata(opened[0], destination);
 
                 PdfLayers.Apply(destination, underlays, overlays);
+                PdfAttachments.Apply(opened[0], destination, attachments);
                 PdfSecurity.Apply(destination, encryption);
 
                 using var buffer = new MemoryStream();
                 destination.Save(buffer, false);
 
-                return buffer.ToArray();
+                return PdfXmpMetadata.PreserveAndExtend(buffer.ToArray(), opened[0], destination,
+                    metadataExtensions, encryption != null, encryption?.EncryptMetadata ?? false);
             }
             catch (PdfSharpException exception)
             {

@@ -140,3 +140,9 @@ these experiments out of production packages.
    remains an FP-306 candidate requiring a separate deployment/license/error-handling proof.
 6. Conformance remains gated by independent validators and the owning acceptance issues; marker
    checks or PDFsharp's high-level helper are not PDF/UA or PDF/A evidence.
+
+## FP-305 managed metadata serialization bridge
+
+The net9.0 operations companion retains the exact PDFsharp 6.2.4 package and existing licenses. Its writer regenerates XMP during save, so `PdfXmpMetadata` appends one metadata revision to the companion's own serialized output. A .NET `UnsafeAccessor` bridge binds the pinned handler's `EnterObject`, `EncryptStream` and `LeaveObject` methods for protected XMP. This uses backend password derivation and ciphers; no cryptographic implementation or vendor source is copied into FossPDF. A backend upgrade must qualify those exact managed entry points and the incremental metadata corpus again.
+
+The .NET corpus covers 40/128/256-bit encryption, deliberately clear metadata, extraction and later decrypted round trips on each CI OS. Independent pypdf/MuPDF inspection checks packaging and metadata interoperability. No NativeAOT claim follows from this managed bridge; publish-and-run evidence remains FP-503. The mechanism follows the pinned [save preparation](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf/PdfDocument.cs) and [security handler](https://github.com/empira/PDFsharp/blob/v6.2.4/src/foundation/src/PDFsharp/src/PdfSharp/Pdf.Security/PdfStandardSecurityHandler.cs) contracts.

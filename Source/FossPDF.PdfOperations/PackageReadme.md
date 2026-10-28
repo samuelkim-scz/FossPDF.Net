@@ -106,9 +106,23 @@ for the strength/bit mapping, password rules and failure behavior.
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
 - Page boxes, content streams, resources and annotations are preserved. Metadata (title, author,
   subject, keywords, creator and creation/modification dates) is copied from the primary loaded
-  document; XMP metadata is not copied.
+  document. Existing primary-document attachments and XMP metadata are also preserved.
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- This release does not attach files, extend XMP metadata or linearize; those workflows are
-  tracked by their own work items.
+- Extra compression and linearization remain separate work items.
+
+## Attachments and XMP
+
+Use `AddAttachment(new DocumentOperation.DocumentAttachment { FilePath = "data.csv", MimeType = "text/csv" })`
+to capture a file, or pass bytes/a borrowed stream with a configuration object. Unicode display
+names, descriptions, timestamps, replacement keys and associated-file relationships are supported.
+An existing key requires `Replace = true`; file content and settings are captured when added.
+
+`ExtendMetadata("<custom:Value xmlns:custom='urn:example'>value</custom:Value>")` adds a qualified
+XMP property while retaining existing namespaces and document metadata. Duplicate property names
+fail instead of overwriting existing values. Encryption settings also apply to the extended XMP.
+
+See [the attachment/XMP guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/ATTACHMENTS_XMP.md)
+for ownership, naming, supported relationships, backend requirements and validation. These
+packaging primitives do not establish PDF/A, PDF/UA or invoice-profile conformance.

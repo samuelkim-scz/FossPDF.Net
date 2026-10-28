@@ -139,8 +139,7 @@ For 128- and 256-bit encryption, `EncryptMetadata = false` writes `/EncryptMetad
 leaves the XMP metadata stream unencrypted; the document content is still encrypted. The default
 is `true`. 40-bit encryption has no such switch and always encrypts metadata.
 
-XMP metadata is not copied from loaded inputs (see [PDF_OPERATIONS.md](PDF_OPERATIONS.md)); the
-output metadata is produced by the writing library and then encrypted according to this setting.
+Primary-input XMP and extensions are preserved and protected according to this setting. See [ATTACHMENTS_XMP.md](ATTACHMENTS_XMP.md) for the supported packaging and metadata workflow.
 
 ## Failure behavior
 
