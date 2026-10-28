@@ -211,7 +211,10 @@ namespace FossPDF.UnitTests.Parity
         [ParityFixtureRunner("PAG-002")]
 
         private static void RunOverflowPagination(ParityFixture fixture) =>
-            RenderAndCheck(CreatePage(fixture, page =>
+            RenderAndCheck(OverflowPagination(fixture), fixture);
+
+        private static Document OverflowPagination(ParityFixture fixture) =>
+            CreatePage(fixture, page =>
             {
                 page.Header().Height(fixture.Input.GetProperty("header_height").GetInt32()).Background("#000000");
                 page.Footer().Height(fixture.Input.GetProperty("footer_height").GetInt32()).Background("#808080");
@@ -221,7 +224,7 @@ namespace FossPDF.UnitTests.Parity
                         column.Item().Height(fixture.Input.GetProperty("block_height").GetInt32())
                             .Background(color.GetString());
                 });
-            }), fixture);
+            });
 
         [ParityFixtureRunner("PDF-301")]
         private static void RunMergedDocuments(ParityFixture fixture)

@@ -22,6 +22,8 @@
         <ProjectReference Include="..\FossPDF\FossPDF.csproj"/>
         <!-- The optional SVG companion package (net9.0). -->
         <ProjectReference Include="..\FossPDF.Svg\FossPDF.Svg.csproj"/>
+        <!-- The optional existing-PDF operations companion package (net9.0). -->
+        <ProjectReference Include="..\FossPDF.PdfOperations\FossPDF.PdfOperations.csproj"/>
     </ItemGroup>
 
 

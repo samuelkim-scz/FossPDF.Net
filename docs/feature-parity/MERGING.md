@@ -2,7 +2,8 @@
 
 [FP-301 / issue #20](https://github.com/samuelkim-scz/FossPDF.Net/issues/20) adds merging for
 generated `IDocument` instances with original or continuous page numbering. It does not load
-existing PDF files; that remains with FP-302.
+existing PDF files; that is provided by the optional `FossPDF.PdfOperations` package from FP-302
+(see [PDF_OPERATIONS.md](PDF_OPERATIONS.md)).
 
 ```csharp
 var merged = Document
@@ -56,8 +57,8 @@ truncated document.
 - Mixed page sizes are supported; each source keeps its own page geometry.
 - `MergedDocument` borrows the source `IDocument` instances and does not dispose or change them.
   Shared images, fonts and caller-owned streams follow the existing generation contracts.
-- Sources should produce at least one page. Existing-PDF page selection and merging are owned by
-  FP-302.
+- Sources should produce at least one page. Existing-PDF page selection and merging are provided by
+  the optional `FossPDF.PdfOperations` package; see [PDF_OPERATIONS.md](PDF_OPERATIONS.md).
 
 ## Framework availability and dependencies
 
@@ -80,7 +81,7 @@ Windows validation.
 ## Limitations
 
 - This feature merges **generated** documents only. Loading and merging existing PDF files is
-  FP-302.
+  provided by the optional `FossPDF.PdfOperations` package; see [PDF_OPERATIONS.md](PDF_OPERATIONS.md).
 - Source PDF metadata is not copied into the merged output; configure the merged metadata explicitly.
 - Cross-source section links and annotations are outside this contract.
 - A source document must be safe to compose again if the same instance is used more than once.
