@@ -16,7 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:
@@ -88,7 +89,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:
@@ -139,7 +141,8 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - macos-latest
+          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
+          - macos-26-intel
           - ubuntu-latest
           - windows-latest
     env:
