@@ -89,6 +89,10 @@ namespace FossPDF.Fluent
         internal IElement CreateElement()
         {
             var container = new Container();
+            HeaderTable.SemanticRole = "THead";
+            FooterTable.SemanticRole = "TFoot";
+            foreach (var cell in HeaderTable.Cells)
+                cell.SemanticRole = "TH";
 
             List<TableCell> allTableCells = new();
             var tables = new List<Table>() { HeaderTable, ContentTable, FooterTable };
@@ -121,7 +125,7 @@ namespace FossPDF.Fluent
                     decoration.After().Element(FooterTable);
                 });
 
-            return container;
+            return new AutomaticSemanticElement("Table") { Child = container };
         }
 
         private static void ConfigureTable(Table table)

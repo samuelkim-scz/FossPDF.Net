@@ -8,9 +8,9 @@ namespace FossPDF.Elements
     /// </summary>
     internal sealed class SemanticElement : ContainerElement
     {
-        internal SemanticElement(string role, string? alternativeText = null, string? language = null)
+        internal SemanticElement(string role, string? alternativeText = null, string? language = null, string? tableHeaderScope = null)
         {
-            Node = new Drawing.SemanticNode(role, alternativeText, language);
+            Node = new Drawing.SemanticNode(role, alternativeText, language) { TableHeaderScope = tableHeaderScope };
         }
 
         internal Drawing.SemanticNode Node { get; }
@@ -20,7 +20,7 @@ namespace FossPDF.Elements
             if (Child == null)
                 return;
 
-            if (Canvas is Drawing.ISemanticCanvas semanticCanvas)
+            if (Drawing.AutomaticSemanticScope.GetCanvas(Canvas) is { } semanticCanvas)
             {
                 semanticCanvas.BeginSemanticScope(Node);
 
@@ -51,7 +51,7 @@ namespace FossPDF.Elements
             if (Child == null)
                 return;
 
-            if (Canvas is Drawing.ISemanticCanvas semanticCanvas)
+            if (Drawing.AutomaticSemanticScope.GetCanvas(Canvas) is { } semanticCanvas)
             {
                 semanticCanvas.BeginArtifactScope();
 

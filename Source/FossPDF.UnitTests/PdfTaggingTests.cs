@@ -22,11 +22,85 @@ namespace FossPDF.UnitTests
     [Category("SemanticTagging")]
     public class PdfTaggingTests
     {
+        [Test]
+        public void TableCellSpansAndHeaderScopesArePreserved()
+        {
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(300, 160);
+                page.Margin(10);
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(columns => { columns.RelativeColumn(); columns.RelativeColumn(); columns.RelativeColumn(); });
+                    table.Header(header => header.Cell().ColumnSpan(3).Text("Column heading"));
+                    table.Cell().RowSpan(2).SemanticVerticalHeader().Text("Row heading");
+                    table.Cell().ColumnSpan(2).Text("Spanning value");
+                    table.Cell().Text("Second");
+                    table.Cell().Text("Third");
+                });
+            }));
+            var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "ACC-401");
+            Directory.CreateDirectory(directory);
+            File.WriteAllBytes(Path.Combine(directory, "table-spans-source.pdf"), document.GeneratePdf());
+            var tagged = document.GenerateTaggedPdf();
+            File.WriteAllBytes(Path.Combine(directory, "table-spans-tagged.pdf"), tagged);
+            using var inspected = TaggedPdfInspector.Open(tagged);
+            var headers = inspected.Nodes().Where(node => node.Role == "TH").ToArray();
+            Assert.That(headers, Has.Length.EqualTo(2));
+            var column = headers[0].Dictionary.Elements.GetDictionary("/A")!;
+            var row = headers[1].Dictionary.Elements.GetDictionary("/A")!;
+            Assert.That(column.Elements.GetName("/O"), Is.EqualTo("/Table"));
+            Assert.That(column.Elements.GetName("/Scope"), Is.EqualTo("/Column"));
+            Assert.That(column.Elements.GetInteger("/ColSpan"), Is.EqualTo(3));
+            Assert.That(row.Elements.GetName("/Scope"), Is.EqualTo("/Row"));
+            Assert.That(row.Elements.GetInteger("/RowSpan"), Is.EqualTo(2));
+            Assert.That(inspected.Nodes().Where(node => node.Role == "TD").Any(node =>
+                node.Dictionary.Elements.GetDictionary("/A")?.Elements.GetInteger("/ColSpan") == 2), Is.True);
+            inspected.AssertMarkedContentIsMapped(inspected.StructureRoot);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void MultiColumnTaggedOutputRetainsReadingOrderAndCustomDrawing(bool balanced)
+        {
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(200, 150);
+                page.Margin(5);
+                page.Content().MultiColumn(columns =>
+                {
+                    columns.Columns(2);
+                    columns.Spacing(10);
+                    columns.BalanceHeight(balanced);
+                    columns.Content().Column(column =>
+                    {
+                        column.Item().Height(20).SemanticHeading2().Text("Heading");
+                        column.Item().Width(20).Height(20).Svg("<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><rect width='20' height='20' fill='red'/></svg>");
+                        for (var row = 0; row < 14; row++)
+                            column.Item().Height(20).Text("Row " + row);
+                        column.Item().Height(20).Lazy(item => item.Text("Lazy paragraph"));
+                    });
+                });
+            }));
+            var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "ACC-401");
+            Directory.CreateDirectory(directory);
+            var prefix = Path.Combine(directory, balanced ? "multicolumn-balanced" : "multicolumn");
+            File.WriteAllBytes(prefix + "-source.pdf", document.GeneratePdf());
+            var tagged = document.GenerateTaggedPdf();
+            File.WriteAllBytes(prefix + "-tagged.pdf", tagged);
+            using var inspected = TaggedPdfInspector.Open(tagged);
+            Assert.That(inspected.Pages, Has.Count.EqualTo(2));
+            Assert.That(inspected.StructureRoot.Children.Select(node => node.Role),
+                Is.EqualTo(new[] { "H2", "Figure" }.Concat(Enumerable.Repeat("P", 15))));
+            inspected.AssertMarkedContentIsMapped(inspected.StructureRoot);
+        }
+
         [TestCase("rounded")]
         [TestCase("rotated")]
         [TestCase("empty")]
         [TestCase("canvas")]
         [TestCase("svg")]
+        [TestCase("canvas-state")]
         public void SemanticScopesPreserveClippingAndRestoredGraphicsState(string mode)
         {
             var document = Document.Create(container => container.Page(page =>
@@ -42,10 +116,15 @@ namespace FossPDF.UnitTests
                     else if (mode == "empty")
                         shape = shape.TranslateX(100).Clip();
                     var figure = shape.SemanticFigure("A clipped red shape.");
-                    if (mode == "canvas")
+                    if (mode is "canvas" or "canvas-state")
                         figure.Canvas((canvas, size) =>
                         {
                             using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Red };
+                            if (mode == "canvas-state")
+                            {
+                                canvas.Translate(5, 5);
+                                canvas.ClipRect(new SkiaSharp.SKRect(0, 0, 40, 40));
+                            }
                             canvas.DrawRect(0, 0, size.Width, size.Height, paint);
                         });
                     else if (mode == "svg")
@@ -65,6 +144,66 @@ namespace FossPDF.UnitTests
             Assert.That(inspected.StructureRoles(), Does.Contain("Figure"));
             TestContext.AddTestAttachment(prefix + "-source.pdf", "Independent renderer reference.");
             TestContext.AddTestAttachment(prefix + "-tagged.pdf", "Independent renderer must find identical pixels.");
+        }
+
+        [Test]
+        public void StandardContentHasAutomaticTagsAndNestedTableAssociations()
+        {
+            using var bitmap = new SkiaSharp.SKBitmap(1, 1);
+            bitmap.Erase(SkiaSharp.SKColors.Red);
+            using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+            var png = data.ToArray();
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(300, 360);
+                page.Margin(10);
+                page.Header().Text("Repeated header");
+                page.Footer().Text("Repeated footer");
+                page.Content().Column(column =>
+                {
+                    column.Item().Text("Automatic paragraph");
+                    column.Item().Hyperlink("https://example.com/automatic").Text("Automatic link");
+                    column.Item().Text(text =>
+                    {
+                        text.Span("Prefix ");
+                        text.Hyperlink("inline", "https://example.com/inline");
+                        text.Span(" suffix");
+                    });
+                    column.Item().Width(20).Height(20).Image(png);
+                    column.Item().Width(20).Height(20).Image(_ => png);
+                    column.Item().Width(20).Height(20).Canvas((canvas, size) =>
+                    {
+                        using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Red };
+                        canvas.DrawRect(0, 0, size.Width, size.Height, paint);
+                    });
+                    column.Item().Width(20).Height(20).Svg("<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><rect width='20' height='20' fill='red'/></svg>");
+                    column.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns => { columns.RelativeColumn(); columns.RelativeColumn(); });
+                        table.Header(header => { header.Cell().Text("Label"); header.Cell().Text("Value"); });
+                        table.Cell().Text("Outer");
+                        table.Cell().Table(nested =>
+                        {
+                            nested.ColumnsDefinition(columns => columns.RelativeColumn());
+                            nested.Cell().Text("Inner");
+                        });
+                    });
+                });
+            })).WithMetadata(new DocumentMetadata { Title = "Automatic semantics", Language = "en-US" });
+            var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "ACC-401");
+            Directory.CreateDirectory(directory);
+            File.WriteAllBytes(Path.Combine(directory, "automatic-source.pdf"), document.GeneratePdf());
+            var tagged = document.GenerateTaggedPdf();
+            File.WriteAllBytes(Path.Combine(directory, "automatic-tagged.pdf"), tagged);
+            using var inspected = TaggedPdfInspector.Open(tagged);
+            Assert.That(inspected.StructureRoot.Children.Select(node => node.Role),
+                Is.EqualTo(new[] { "P", "Link", "P", "Figure", "Figure", "Figure", "Figure", "Table" }));
+            Assert.That(inspected.Nodes().Count(node => node.Role == "Table"), Is.EqualTo(2));
+            Assert.That(inspected.Nodes().Count(node => node.Role == "TH"), Is.EqualTo(2));
+            Assert.That(inspected.Nodes().Count(node => node.Role == "TD"), Is.EqualTo(3));
+            Assert.That(inspected.Nodes().Where(node => node.Role == "Link").All(node => node.ObjectReferences.Count == 1), Is.True);
+            inspected.AssertMarkedContentIsMapped(inspected.StructureRoot);
         }
 
         [Test]
@@ -101,7 +240,7 @@ namespace FossPDF.UnitTests
 
             var artifacts = pdf.Pages.SelectMany(x => x.Forms).Where(x => x.Role == null).ToArray();
 
-            Assert.That(artifacts, Is.Not.Empty, "Unwrapped content must be captured as artifacts.");
+            Assert.That(artifacts, Is.Not.Empty, "Decorative content must be captured as artifacts.");
             Assert.That(artifacts.All(x => x.Content.StartsWith("/Artifact BMC", StringComparison.Ordinal)), Is.True);
             Assert.That(artifacts.All(x => !x.StructParents.HasValue), Is.True);
             Assert.That(pdf.StructureRoles(), Does.Not.Contain("Artifact"));
@@ -166,7 +305,10 @@ namespace FossPDF.UnitTests
             Assert.That(list.Children[1].Children[1].Children.Select(x => x.Role), Is.EqualTo(new[] { "P" }));
 
             var table = pdf.StructureRoot.Children[1];
-            Assert.That(table.Children.Select(x => x.Role), Is.EqualTo(new[] { "TH", "TH", "P", "P" }));
+            Assert.That(table.Children.Select(x => x.Role), Is.EqualTo(new[] { "THead", "TBody" }));
+            Assert.That(table.Children[0].Children.Single().Children.Select(x => x.Role), Is.EqualTo(new[] { "TH", "TH" }));
+            Assert.That(table.Children[1].Children.Single().Children.Select(x => x.Role), Is.EqualTo(new[] { "TD", "TD" }));
+            Assert.That(table.Children[1].Children.Single().Children.All(x => x.Children.Single().Role == "P"), Is.True);
 
             pdf.AssertMarkedContentIsMapped(pdf.StructureRoot);
         }
@@ -381,8 +523,8 @@ namespace FossPDF.UnitTests
             using var pdf = TaggedPdfInspector.Open(document.GenerateTaggedPdf());
 
             Assert.That(pdf.StructureRoot.Role, Is.EqualTo("Document"));
-            Assert.That(pdf.StructureRoot.Children, Is.Empty);
-            Assert.That(pdf.ParentTree, Is.Empty);
+            Assert.That(pdf.StructureRoot.Children.Select(node => node.Role), Is.EqualTo(new[] { "P" }));
+            Assert.That(pdf.ParentTree, Is.Not.Empty);
             Assert.That(pdf.Catalog.Elements.GetDictionary("/MarkInfo")?.Elements.GetBoolean("/Marked"), Is.True);
         }
 

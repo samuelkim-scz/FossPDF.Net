@@ -568,6 +568,20 @@ namespace FossPDF.PdfOperations
                 if (!string.IsNullOrWhiteSpace(node.Language))
                     dictionary.Elements.SetString("/Lang", node.Language!);
 
+                if (node.Role is "TH" or "TD" &&
+                    (node.RowSpan > 1 || node.ColumnSpan > 1 || node.TableHeaderScope != null))
+                {
+                    var attributes = new PdfDictionary(destination);
+                    attributes.Elements.SetName("/O", "/Table");
+                    if (node.RowSpan > 1)
+                        attributes.Elements.SetInteger("/RowSpan", node.RowSpan);
+                    if (node.ColumnSpan > 1)
+                        attributes.Elements.SetInteger("/ColSpan", node.ColumnSpan);
+                    if (node.Role == "TH" && node.TableHeaderScope != null)
+                        attributes.Elements.SetName("/Scope", "/" + node.TableHeaderScope);
+                    dictionary.Elements.SetObject("/A", attributes);
+                }
+
                 destination.Internals.AddObject(dictionary);
 
                 var reference = PdfInternals.GetReference(dictionary)

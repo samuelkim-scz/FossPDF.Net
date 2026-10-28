@@ -31,7 +31,7 @@ var document = Document.Create(container =>
         page.Size(320, 240);
         page.Margin(20);
 
-        // Content without a semantic wrapper is an artifact: assistive technology skips it.
+        // Page headers are decorative by default; this states that intent explicitly.
         page.Header().SemanticIgnore().Text("Quarterly report");
 
         page.Content().Column(column =>
@@ -92,14 +92,36 @@ Wrappers compose in either order. A wrapper that adds an attribute (`SemanticFig
 `SemanticLanguage`) creates its own structure element, so the attributes stay on the element that
 owns them; nesting is written as nested elements.
 
-### Artifact default
+### Automatic tags and overrides
 
-Content that is not wrapped in a semantic element is automatically marked as an artifact
-(`/Artifact BMC`) and is not placed in the structure tree. This is the safe default: untagged
-decoration, page headers/footers and background shapes are never announced as content.
-`SemanticIgnore` states that intent explicitly and suppresses nested semantic wrappers as well.
+Tagged generation assigns these defaults without changing layout:
 
-Wrap every piece of meaningful content. A document may legitimately contain only artifacts.
+| Standard content | Automatic structure |
+| --- | --- |
+| Text blocks | `P`; an explicit heading, paragraph, caption or similar role takes precedence |
+| Raster/dynamic images, Canvas callbacks and SVG | `Figure` |
+| Container and inline hyperlinks/section links | `Link`, with the annotation associated through `OBJR` |
+| Tables | `Table`, `THead`/`TBody`/`TFoot`, `TR`, `TH` and `TD`, including nested tables |
+
+Table cell row/column spans are carried into `Table` attribute dictionaries. Header cells use column
+scope by default; `SemanticHorizontalHeader` selects column scope and `SemanticVerticalHeader`
+selects row scope. These map to the [standard table attributes documented by Adobe](https://opensource.adobe.com/dc-acrobat-sdk-docs/library/accessibility/Access_DOM.html).
+
+Explicit semantic wrappers override leaf defaults, so a heading does not gain an implicit paragraph
+and a described figure does not gain another figure. `SemanticIgnore` suppresses both automatic and
+explicit semantics throughout its subtree. Add meaningful alternative text with `SemanticFigure`
+or `SemanticImage`; automatic tagging cannot infer an image description. Use the list helpers to
+identify lists built from generic rows/columns, and explicit heading methods to identify headings.
+
+Page backgrounds/foregrounds, headers/footers and multi-column spacers are decorative by default.
+An explicit semantic wrapper inside one of those regions opts meaningful content into the tree.
+Other unclassified drawing remains an artifact (`/Artifact BMC`).
+
+Automatic and explicit tags also pass through nested multi-column drawing proxies; speculative
+measurement does not create nodes. A paragraph spanning pages/columns keeps one logical identity.
+Custom Canvas callbacks run inside a saved graphics-state frame, restored on return, so callback
+clips or transforms do not affect later content. Semantic checkpoints retain full saved frames,
+curved/rotated/empty clips and exact transform ordering.
 
 ## What the writer produces
 

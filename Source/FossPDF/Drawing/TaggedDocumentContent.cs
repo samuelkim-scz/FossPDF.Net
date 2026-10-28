@@ -89,7 +89,8 @@ namespace FossPDF.Drawing
             string? alternativeText,
             string? language,
             int order,
-            IReadOnlyList<TaggedStructureNode> children)
+            IReadOnlyList<TaggedStructureNode> children,
+            int rowSpan = 1, int columnSpan = 1, string? tableHeaderScope = null)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Role = role ?? throw new ArgumentNullException(nameof(role));
@@ -97,6 +98,9 @@ namespace FossPDF.Drawing
             Language = language;
             Order = order;
             Children = children ?? throw new ArgumentNullException(nameof(children));
+            RowSpan = rowSpan;
+            ColumnSpan = columnSpan;
+            TableHeaderScope = tableHeaderScope;
         }
 
         public string Id { get; }
@@ -117,5 +121,11 @@ namespace FossPDF.Drawing
         public int Order { get; }
 
         public IReadOnlyList<TaggedStructureNode> Children { get; }
+        /// <summary>The table cell's logical row span; one for other nodes.</summary>
+        public int RowSpan { get; }
+        /// <summary>The table cell's logical column span; one for other nodes.</summary>
+        public int ColumnSpan { get; }
+        /// <summary>The table header scope, such as <c>Column</c> or <c>Row</c>.</summary>
+        public string? TableHeaderScope { get; }
     }
 }

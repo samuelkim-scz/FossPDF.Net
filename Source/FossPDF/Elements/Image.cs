@@ -7,6 +7,7 @@ namespace FossPDF.Elements
 {
     internal class Image : Element, ICacheable
     {
+        private SemanticNode? _semanticNode;
         public SKImage? InternalImage { get; set; }
 
         public int? TargetDpi { get; set; }
@@ -27,8 +28,9 @@ namespace FossPDF.Elements
             if (InternalImage == null)
                 return;
 
+            using var semantic = new AutomaticSemanticScope(Canvas, ref _semanticNode, "Figure");
             // Layout passes do not paint images; skip expensive resampling and encoding.
-            if (Canvas is FreeCanvas)
+            if (AutomaticSemanticScope.Unwrap(Canvas) is FreeCanvas)
             {
                 Canvas.DrawImage(InternalImage, Position.Zero, availableSpace);
                 return;

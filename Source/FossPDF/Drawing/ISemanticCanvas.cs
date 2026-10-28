@@ -8,6 +8,8 @@ namespace FossPDF.Drawing
     {
         void BeginSemanticScope(SemanticNode node);
         void EndSemanticScope();
+        bool BeginAutomaticScope(SemanticNode node);
+        void BeginDefaultArtifactScope();
 
         /// <summary>Starts an artifact scope that also suppresses nested semantic wrappers.</summary>
         void BeginArtifactScope();

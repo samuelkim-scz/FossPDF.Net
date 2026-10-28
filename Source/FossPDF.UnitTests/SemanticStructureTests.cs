@@ -13,6 +13,71 @@ namespace FossPDF.UnitTests
     public class SemanticStructureTests
     {
         [Test]
+        public void AutomaticAndExplicitTagsSurviveMultiColumnDrawingProxies()
+        {
+            var content = Document.Create(container => container.Page(page =>
+            {
+                page.Size(200, 150);
+                page.Margin(5);
+                page.Content().MultiColumn(columns =>
+                {
+                    columns.Columns(2);
+                    columns.Spacing(10);
+                    columns.Spacer().Text("Decoration").FontSize(4);
+                    columns.Content().Column(column =>
+                    {
+                        column.Item().Height(20).SemanticHeading2().Text("Heading");
+                        for (var row = 0; row < 14; row++)
+                            column.Item().Height(20).Text("Row " + row);
+                    });
+                });
+            })).GenerateTaggedContent();
+            Assert.That(content.PageCount, Is.GreaterThan(1));
+            Assert.That(content.Root.Children.Select(node => node.Role),
+                Is.EqualTo(new[] { "H2" }.Concat(Enumerable.Repeat("P", 14))));
+            Assert.That(content.Root.Children.Select(node => node.Id).Distinct().Count(), Is.EqualTo(15));
+        }
+
+        [Test]
+        public void AutomaticTagsRespectExplicitRolesAndDecorativeOverrides()
+        {
+            var content = Document.Create(container => container.Page(page =>
+            {
+                page.Size(300, 200);
+                page.Header().SemanticHeading1().Text("Explicit heading in a header");
+                page.Content().SemanticSection().Column(column =>
+                {
+                    column.Item().Text("Automatic paragraph");
+                    column.Item().SemanticParagraph().Text("Explicit paragraph");
+                    column.Item().SemanticIgnore().Text("Decorative text");
+                    column.Item().Hyperlink("https://example.com").Text("Automatic link");
+                });
+            })).GenerateTaggedContent();
+            Assert.That(content.Root.Children.Select(node => node.Role), Is.EqualTo(new[] { "H1", "Sect" }));
+            Assert.That(content.Root.Children[0].Children, Is.Empty, "A heading must not gain an implicit paragraph.");
+            var section = content.Root.Children[1];
+            Assert.That(section.Children.Select(node => node.Role), Is.EqualTo(new[] { "P", "P", "Link" }));
+            Assert.That(section.Children.All(node => node.Children.Count == 0), Is.True);
+        }
+
+        [Test]
+        public void AutomaticParagraphRetainsOneIdentityAcrossPages()
+        {
+            var content = Document.Create(container => container.Page(page =>
+            {
+                page.Size(200, 100);
+                page.Margin(5);
+                page.Header().Text("Repeated header").FontSize(8);
+                page.Content().Text(string.Join(" ", Enumerable.Repeat("An automatic paragraph continues across pages.", 30)));
+            })).GenerateTaggedContent();
+            Assert.That(content.PageCount, Is.GreaterThan(1));
+            var paragraph = content.Root.Children.Single();
+            Assert.That(paragraph.Role, Is.EqualTo("P"));
+            Assert.That(content.Pages.All(page => page.Batches.Any(batch => batch.NodeId == paragraph.Id)), Is.True);
+            Assert.That(content.Pages.All(page => page.Batches.Any(batch => batch.NodeId == null)), Is.True);
+        }
+
+        [Test]
         public void SemanticWrappersDoNotChangeRenderedPages()
         {
             var plain = PlainDocument().GenerateImages().ToArray();
@@ -131,7 +196,7 @@ namespace FossPDF.UnitTests
             }).GenerateTaggedContent();
 
             Assert.That(content.PageCount, Is.EqualTo(2));
-            Assert.That(content.Root.Children, Is.Empty);
+            Assert.That(content.Root.Children.Select(node => node.Role), Is.EqualTo(new[] { "P", "P" }));
 
             Assert.That(content.Pages.All(page => page.Batches.Any(x => x.NodeId == null)), Is.True);
         }

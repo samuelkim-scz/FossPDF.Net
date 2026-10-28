@@ -15,7 +15,8 @@ namespace FossPDF.Fluent
     /// <remarks>
     /// A tagged PDF keeps the visual rendering unchanged while adding a logical structure tree,
     /// marked content identifiers, alternative text and the document language. Content that is not
-    /// wrapped by a semantic element is marked as an artifact. Documents that use <c>ZIndex</c> or
+    /// handled by standard text/image/link/table tags or explicit semantics is decorative.
+    /// Documents that use <c>ZIndex</c> or
     /// the qpdf compression/linearization pass cannot be captured and are rejected by the core
     /// package before this writer runs.
     /// </remarks>

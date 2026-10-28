@@ -24,6 +24,7 @@ namespace FossPDF.Drawing
         {
             public SemanticNode? Node { get; init; }
             public bool SuppressesSemantics { get; init; }
+            public bool SuppressesAutomaticSemantics { get; init; }
             public bool IsTransparent { get; init; }
             public SKCanvas? PreviousCanvas { get; init; }
             public SKPictureRecorder? Recorder { get; set; }
@@ -88,7 +89,7 @@ namespace FossPDF.Drawing
                 node.AlternativeText,
                 node.Language,
                 order,
-                children);
+                children, node.RowSpan, node.ColumnSpan, node.TableHeaderScope);
         }
 
         public override void BeginDocument()
@@ -164,6 +165,32 @@ namespace FossPDF.Drawing
         {
             PopScope(finalize: true);
         }
+
+        public bool BeginAutomaticScope(SemanticNode node)
+        {
+            if (IsSuppressed())
+                return false;
+            foreach (var scope in _scopes)
+            {
+                if (scope.Node != null)
+                    break; // An explicit semantic override inside a default artifact owns its subtree.
+                if (scope.SuppressesAutomaticSemantics)
+                    return false;
+            }
+            var parent = _scopes.Select(scope => scope.Node).FirstOrDefault(value => value != null);
+            if (node.Role == "P" && parent != null && parent.Role is not
+                ("Document" or "Sect" or "Art" or "Div" or "L" or "LI" or "LBody" or
+                 "Table" or "THead" or "TBody" or "TFoot" or "TR" or "TOC" or "TOCI" or "Index"))
+                return false;
+            if (node.Role is "Figure" or "Link" && _scopes.Any(scope => scope.Node?.Role == node.Role))
+                return false;
+            if (node.Role == "Table" && parent?.Role == "Table")
+                return false;
+            BeginSemanticScope(node);
+            return true;
+        }
+
+        public void BeginDefaultArtifactScope() => PushRecordingScope(null, false, suppressesAutomatic: true);
 
         public void BeginArtifactScope()
         {
@@ -277,7 +304,7 @@ namespace FossPDF.Drawing
             });
         }
 
-        private void PushRecordingScope(SemanticNode? node, bool suppressesSemantics)
+        private void PushRecordingScope(SemanticNode? node, bool suppressesSemantics, bool suppressesAutomatic = false)
         {
             var parent = _scopes.Count > 0 ? _scopes.Peek() : null;
 
@@ -290,6 +317,7 @@ namespace FossPDF.Drawing
             {
                 Node = node,
                 SuppressesSemantics = suppressesSemantics,
+                SuppressesAutomaticSemantics = suppressesAutomatic,
                 PreviousCanvas = Canvas
             };
 

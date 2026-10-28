@@ -177,12 +177,12 @@ var document = Document.Create(container =>
 document.GenerateTaggedPdf("report.pdf");
 ```
 
-Content without a semantic wrapper (including repeated headers and footers) is automatically
-tagged as an artifact; use `SemanticIgnore()` to state that explicitly. `SemanticLanguage("de-DE")`
+Standard text, images, Canvas/SVG, links and tables receive automatic tags. Semantic wrappers
+override those defaults; `SemanticIgnore()` excludes a subtree. Headers/footers and page layers
+are decorative by default, with explicit semantic overrides available. `SemanticLanguage("de-DE")`
 scopes a language change, `SemanticLink` associates URL and section-link annotations with a
 `/Link` element, and a semantic element split across pages stays one structure element.
 `GenerateTaggedContent()` and `ToTaggedPdf()` expose the two stages separately. Documents that use
 `ZIndex` or the qpdf compression/linearization settings cannot be captured and throw
 `NotSupportedException`. This is structural tagging, not a PDF/UA conformance claim; see
 [docs/feature-parity/PDF_ACCESSIBILITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ACCESSIBILITY.md).
-

@@ -19,6 +19,9 @@ namespace FossPDF.Drawing
         public string Role { get; }
         public string? AlternativeText { get; }
         public string? Language { get; }
+        public int RowSpan { get; set; } = 1;
+        public int ColumnSpan { get; set; } = 1;
+        public string? TableHeaderScope { get; set; }
 
         public string? Id { get; set; }
         public int CreationOrder { get; set; }

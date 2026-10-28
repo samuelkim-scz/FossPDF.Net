@@ -41,7 +41,7 @@ namespace FossPDF.Elements
                     layers
                         .Layer()
                         .DebugPointer("Page background layer")
-                        .Element(Background);
+                        .Element(new DefaultArtifactElement { Child = Background });
                     
                     layers
                         .PrimaryLayer()
@@ -63,7 +63,7 @@ namespace FossPDF.Elements
                             decoration
                                 .Before()
                                 .DebugPointer("Page header")
-                                .Element(Header);
+                                .Element(new DefaultArtifactElement { Child = Header });
 
                             decoration
                                 .Content()
@@ -75,13 +75,13 @@ namespace FossPDF.Elements
                             decoration
                                 .After()
                                 .DebugPointer("Page footer")
-                                .Element(Footer);
+                                .Element(new DefaultArtifactElement { Child = Footer });
                         });
                     
                     layers
                         .Layer()
                         .DebugPointer("Page foreground layer")
-                        .Element(Foreground);
+                        .Element(new DefaultArtifactElement { Child = Foreground });
                 });
 
             bool IsClose(float x, float y)

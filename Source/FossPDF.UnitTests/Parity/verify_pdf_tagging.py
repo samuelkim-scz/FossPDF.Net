@@ -1,6 +1,7 @@
 """Independently verify FP-401 tagged PDF artifacts with pypdf and qpdf; validation only, never shipped with FossPDF."""
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import subprocess
 from pathlib import Path
@@ -241,29 +242,86 @@ def main():
     require("no syntax or stream encoding errors" in (result.stdout + result.stderr).lower(),
             "ACC-401: qpdf reports no syntax or stream encoding errors")
 
+    automatic = PdfReader(args.directory / "automatic-tagged.pdf", strict=True)
+    _, automatic_tree, automatic_root, automatic_nodes = read_structure_tree(automatic)
+    require([node["role"] for node in automatic_root["children"]] ==
+            ["P", "Link", "P", "Figure", "Figure", "Figure", "Figure", "Table"],
+            "Automatic text, links, raster/dynamic images, Canvas, SVG and table tags retain reading order")
+    require(sum(node["role"] == "Table" for node in automatic_nodes) == 2,
+            "Automatic nested tables remain distinct logical tables")
+    require(sum(node["role"] == "TH" for node in automatic_nodes) == 2 and
+            sum(node["role"] == "TD" for node in automatic_nodes) == 3,
+            "Automatic table headers and data cells are identified")
+    outer_table = automatic_root["children"][-1]
+    require([node["role"] for node in outer_table["children"]] == ["THead", "TBody"],
+            "Automatic table header/body groups are nested under the table")
+    require(all(row["role"] == "TR" for group in outer_table["children"] for row in group["children"]),
+            "Automatic table cells belong to logical rows")
+    inline = automatic_root["children"][2]
+    inline_order = [name(resolve(item).get("/Type")) for item in resolve(inline["dictionary"]["/K"])]
+    require(inline_order == ["MCR", "StructElem", "MCR"],
+            "Inline-link reading order interleaves surrounding paragraph content")
+    automatic_parents = read_parent_tree(automatic_tree)
+    for node in automatic_nodes:
+        if node["parent"] is not None:
+            require(resolve(node["dictionary"]["/P"]) is node["parent"]["dictionary"],
+                    "Automatic " + node["role"] + " has the correct structure parent")
+        for marked in node["marked_content"]:
+            form = resolve(marked["/Stm"])
+            owners = resolve(automatic_parents[int(form["/StructParents"])])
+            require(resolve(owners[int(marked["/MCID"])]) is node["dictionary"],
+                    "Automatic " + node["role"] + " marked content maps back through the parent tree")
+        if node["role"] == "Link":
+            require(len(node["object_references"]) == 1, "Each automatic link owns one annotation")
+            annotation = resolve(node["object_references"][0]["/Obj"])
+            require(resolve(automatic_parents[int(annotation["/StructParent"])]) is node["dictionary"],
+                    "Each automatic annotation maps back to its Link element")
+
+    spans = PdfReader(args.directory / "table-spans-tagged.pdf", strict=True)
+    _, _, _, span_nodes = read_structure_tree(spans)
+    headers = [node["dictionary"] for node in span_nodes if node["role"] == "TH"]
+    require(len(headers) == 2, "Spanning table has a column header and a row header")
+    attributes = [resolve(header["/A"]) for header in headers]
+    require(all(item["/O"] == "/Table" for item in attributes), "Header attributes identify the Table owner")
+    require(any(item.get("/Scope") == "/Column" and item.get("/ColSpan") == 3 for item in attributes),
+            "Column header scope and its three-column span are retained")
+    require(any(item.get("/Scope") == "/Row" and item.get("/RowSpan") == 2 for item in attributes),
+            "Explicit row header scope and its two-row span are retained")
+    require(any(resolve(node["dictionary"].get("/A", {})).get("/ColSpan") == 2
+                for node in span_nodes if node["role"] == "TD"), "Data-cell two-column span is retained")
+
     rendering = []
+    renderer_version = None
     if args.render:
         import pymupdf
-        for mode in ("rounded", "rotated", "empty", "canvas", "svg"):
-            prefix = args.directory / ("graphics-state-" + mode)
+        renderer_version = pymupdf.VersionBind
+        pairs = [(mode, "graphics-state-" + mode) for mode in
+                 ("rounded", "rotated", "empty", "canvas", "svg", "canvas-state")]
+        for mode, prefix_name in pairs + [("automatic", "automatic"), ("multicolumn", "multicolumn"),
+                                         ("multicolumn-balanced", "multicolumn-balanced"), ("table-spans", "table-spans")]:
+            prefix = args.directory / prefix_name
             before, after = Path(str(prefix) + "-source.pdf"), Path(str(prefix) + "-tagged.pdf")
             with pymupdf.open(before) as original, pymupdf.open(after) as tagged:
-                require(len(original) == len(tagged) == 1, mode + ": visual regression fixture retains one page")
-                left = original[0].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
-                right = tagged[0].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
-                left.save(str(prefix) + "-source.png")
-                right.save(str(prefix) + "-tagged.png")
-                require((left.width, left.height, left.n) == (right.width, right.height, right.n),
-                        mode + ": rendered page geometry is unchanged")
-                error = max(abs(x-y) for x, y in zip(left.samples, right.samples))
-                require(error <= 2, mode + ": every rendered channel differs by at most 2/255 (edge antialiasing)")
-                rendering.append({"fixture": mode, "maximum_channel_error": error,
-                                  "source_sha256": hashlib.sha256(before.read_bytes()).hexdigest(),
-                                  "tagged_sha256": hashlib.sha256(after.read_bytes()).hexdigest()})
+                expected = 2 if mode.startswith("multicolumn") else 1
+                require(len(original) == len(tagged) == expected, mode + ": expected page count is retained")
+                for index, page in enumerate(original):
+                    left = page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+                    right = tagged[index].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+                    suffix = "" if index == 0 else "-page-" + str(index + 1)
+                    left.save(str(prefix) + suffix + "-source.png")
+                    right.save(str(prefix) + suffix + "-tagged.png")
+                    require((left.width, left.height, left.n) == (right.width, right.height, right.n),
+                            mode + ": rendered page geometry is unchanged")
+                    error = max(abs(x-y) for x, y in zip(left.samples, right.samples))
+                    require(error <= 2, mode + ": every rendered channel differs by at most 2/255 (edge antialiasing)")
+                    rendering.append({"fixture": mode, "page": index+1, "maximum_channel_error": error,
+                                      "source_sha256": hashlib.sha256(before.read_bytes()).hexdigest(),
+                                      "tagged_sha256": hashlib.sha256(after.read_bytes()).hexdigest()})
             result = subprocess.run([args.qpdf, "--check", str(after)], capture_output=True, text=True)
             require(result.returncode == 0, mode + ": regression PDF passes qpdf without warnings")
     (args.directory / "independent-validation.json").write_text(json.dumps(
-        {"checks": checks, "rendering": rendering}, indent=2), encoding="utf-8")
+        {"pypdf": importlib.metadata.version("pypdf"), "pymupdf": renderer_version,
+         "checks": checks, "rendering": rendering}, indent=2), encoding="utf-8")
 
     for message in checks:
         print("PASS " + message)

@@ -10,9 +10,9 @@ namespace FossPDF.Fluent
     /// tagged content (see <c>FossPDF.PdfOperations.GenerateTaggedPdf</c>); every other output renders
     /// the wrapped element exactly as before.
     ///
-    /// Content that is not wrapped in a semantic element is treated as an artifact, so it is not
-    /// announced by assistive technology. Wrap headings, paragraphs, lists, tables, figures and links
-    /// explicitly; use <see cref="SemanticIgnore"/> to state that a region is decorative.
+    /// Standard text, links, figures and tables receive automatic tags. Semantic wrappers override
+    /// those defaults and add headings, lists, alternative text and language. Use
+    /// <see cref="SemanticIgnore"/> to exclude decorative content and its descendants.
     /// </summary>
     public static class SemanticExtensions
     {
@@ -98,7 +98,13 @@ namespace FossPDF.Fluent
 
         public static IContainer SemanticHorizontalHeader(this IContainer element)
         {
-            return Wrap(element, SemanticRoles.TableHeader);
+            return Wrap(element, SemanticRoles.TableHeader, tableHeaderScope: "Column");
+        }
+
+        /// <summary>Identifies a table header for its row.</summary>
+        public static IContainer SemanticVerticalHeader(this IContainer element)
+        {
+            return Wrap(element, SemanticRoles.TableHeader, tableHeaderScope: "Row");
         }
 
         public static IContainer SemanticTableOfContents(this IContainer element)
@@ -194,12 +200,13 @@ namespace FossPDF.Fluent
             IContainer element,
             string role,
             string? alternativeText = null,
-            string? language = null)
+            string? language = null,
+            string? tableHeaderScope = null)
         {
             if (element == null)
                 throw new ArgumentNullException(nameof(element));
 
-            return element.Element(new SemanticElement(role, alternativeText, language));
+            return element.Element(new SemanticElement(role, alternativeText, language, tableHeaderScope));
         }
     }
 
