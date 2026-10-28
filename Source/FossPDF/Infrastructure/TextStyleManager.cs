@@ -8,7 +8,9 @@ namespace FossPDF.Infrastructure
     {
         Color,
         BackgroundColor,
+        DecorationColor,
         FontFamily,
+        FontFeatures,
         Size,
         LineHeight,
         LetterSpacing,
@@ -18,6 +20,9 @@ namespace FossPDF.Infrastructure
         IsItalic,
         HasStrikethrough,
         HasUnderline,
+        HasOverline,
+        DecorationStyle,
+        DecorationThickness,
         WrapAnywhere,
         Fallback,
         Direction,
@@ -68,6 +73,19 @@ namespace FossPDF.Infrastructure
                 return origin with { BackgroundColor = castedValue };
             }
 
+            if (property == TextStyleProperty.DecorationColor)
+            {
+                if (!overrideValue && origin.DecorationColor != null)
+                    return origin;
+
+                var castedValue = (string?)value;
+
+                if (origin.DecorationColor == castedValue)
+                    return origin;
+
+                return origin with { DecorationColor = castedValue };
+            }
+
             if (property == TextStyleProperty.FontFamily)
             {
                 if (!overrideValue && origin.FontFamily != null)
@@ -79,6 +97,21 @@ namespace FossPDF.Infrastructure
                     return origin;
 
                 return origin with { FontFamily = castedValue };
+            }
+
+            if (property == TextStyleProperty.FontFeatures)
+            {
+                var incoming = (TextStyleFontFeatures?)value ?? TextStyleFontFeatures.Empty;
+                var existing = origin.FontFeatures ?? TextStyleFontFeatures.Empty;
+
+                var merged = overrideValue
+                    ? TextStyleFontFeatures.Merge(incoming.Items, existing.Items)
+                    : TextStyleFontFeatures.Merge(existing.Items, incoming.Items);
+
+                if (origin.FontFeatures != null && existing.Equals(merged))
+                    return origin;
+
+                return origin with { FontFeatures = merged };
             }
 
             if (property == TextStyleProperty.Size)
@@ -198,6 +231,45 @@ namespace FossPDF.Infrastructure
                 return origin with { HasUnderline = castedValue };
             }
 
+            if (property == TextStyleProperty.HasOverline)
+            {
+                if (!overrideValue && origin.HasOverline != null)
+                    return origin;
+
+                var castedValue = (bool?)value;
+
+                if (origin.HasOverline == castedValue)
+                    return origin;
+
+                return origin with { HasOverline = castedValue };
+            }
+
+            if (property == TextStyleProperty.DecorationStyle)
+            {
+                if (!overrideValue && origin.DecorationStyle != null)
+                    return origin;
+
+                var castedValue = (TextDecorationStyle?)value;
+
+                if (origin.DecorationStyle == castedValue)
+                    return origin;
+
+                return origin with { DecorationStyle = castedValue };
+            }
+
+            if (property == TextStyleProperty.DecorationThickness)
+            {
+                if (!overrideValue && origin.DecorationThickness != null)
+                    return origin;
+
+                var castedValue = (float?)value;
+
+                if (origin.DecorationThickness == castedValue)
+                    return origin;
+
+                return origin with { DecorationThickness = castedValue };
+            }
+
             if (property == TextStyleProperty.WrapAnywhere)
             {
                 if (!overrideValue && origin.WrapAnywhere != null)
@@ -289,6 +361,8 @@ namespace FossPDF.Infrastructure
 
             result = MutateStyle(result, TextStyleProperty.Color, parent.Color, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.BackgroundColor, parent.BackgroundColor, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.DecorationColor, parent.DecorationColor, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.FontFeatures, parent.FontFeatures, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.Size, parent.Size, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.LineHeight, parent.LineHeight, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.LetterSpacing, parent.LetterSpacing, overrideStyle);
@@ -298,6 +372,9 @@ namespace FossPDF.Infrastructure
             result = MutateStyle(result, TextStyleProperty.IsItalic, parent.IsItalic, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.HasStrikethrough, parent.HasStrikethrough, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.HasUnderline, parent.HasUnderline, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.HasOverline, parent.HasOverline, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.DecorationStyle, parent.DecorationStyle, overrideStyle);
+            result = MutateStyle(result, TextStyleProperty.DecorationThickness, parent.DecorationThickness, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.WrapAnywhere, parent.WrapAnywhere, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.Direction, parent.Direction, overrideStyle);
             result = MutateStyle(result, TextStyleProperty.RemoveExtents, parent.RemoveExtents, overrideStyle);

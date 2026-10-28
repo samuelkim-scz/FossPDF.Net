@@ -7,7 +7,9 @@ namespace FossPDF.Infrastructure
     {
         internal string? Color { get; set; }
         internal string? BackgroundColor { get; set; }
+        internal string? DecorationColor { get; set; }
         internal string? FontFamily { get; set; }
+        internal TextStyleFontFeatures? FontFeatures { get; set; }
         internal float? Size { get; set; }
         internal float? LineHeight { get; set; }
         internal float? LetterSpacing { get; set; }
@@ -17,6 +19,9 @@ namespace FossPDF.Infrastructure
         internal bool? IsItalic { get; set; }
         internal bool? HasStrikethrough { get; set; }
         internal bool? HasUnderline { get; set; }
+        internal bool? HasOverline { get; set; }
+        internal TextDecorationStyle? DecorationStyle { get; set; }
+        internal float? DecorationThickness { get; set; }
         internal bool? WrapAnywhere { get; set; }
         internal bool? RemoveExtents { get; set; }
         internal TextDirection? Direction { get; set; }
@@ -27,7 +32,9 @@ namespace FossPDF.Infrastructure
         {
             Color = Colors.Black,
             BackgroundColor = Colors.Transparent,
+            DecorationColor = null,
             FontFamily = Fonts.Lato,
+            FontFeatures = TextStyleFontFeatures.Empty,
             Size = 12,
             LineHeight = 1.2f,
             LetterSpacing = 0,
@@ -37,6 +44,9 @@ namespace FossPDF.Infrastructure
             IsItalic = false,
             HasStrikethrough = false,
             HasUnderline = false,
+            HasOverline = false,
+            DecorationStyle = Infrastructure.TextDecorationStyle.Solid,
+            DecorationThickness = 1f,
             WrapAnywhere = false,
             Direction = TextDirection.Auto,
             Fallback = null,

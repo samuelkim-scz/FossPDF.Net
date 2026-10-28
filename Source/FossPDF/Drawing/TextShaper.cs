@@ -40,7 +40,15 @@ namespace FossPDF.Drawing
             if (TextStyle.Direction == TextDirection.RightToLeft)
                 buffer.Direction = Direction.RightToLeft;
 
-            ShaperFont.Shape(buffer);
+            var features = TextStyle.FontFeatures?.Items
+                .Select(x => new Feature(
+                    Tag.Parse(x.Name),
+                    x.Enabled ? 1u : 0u,
+                    0,
+                    uint.MaxValue))
+                .ToArray() ?? Array.Empty<Feature>();
+
+            ShaperFont.Shape(buffer, features);
 
             var length = buffer.Length;
             var glyphInfos = buffer.GlyphInfos;

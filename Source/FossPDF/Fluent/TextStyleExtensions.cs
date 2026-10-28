@@ -16,7 +16,9 @@ namespace FossPDF.Fluent
         public static TextStyle FontColor(this TextStyle style, string value)
         {
             ColorValidator.Validate(value);
-            return style.Mutate(TextStyleProperty.Color, value);
+            return style
+                .Mutate(TextStyleProperty.Color, value)
+                .Mutate(TextStyleProperty.DecorationColor, value);
         }
 
         public static TextStyle BackgroundColor(this TextStyle style, string value)
@@ -86,6 +88,58 @@ namespace FossPDF.Fluent
         public static TextStyle Underline(this TextStyle style, bool value = true)
         {
             return style.Mutate(TextStyleProperty.HasUnderline, value);
+        }
+
+        public static TextStyle Overline(this TextStyle style, bool value = true)
+        {
+            return style.Mutate(TextStyleProperty.HasOverline, value);
+        }
+
+        public static TextStyle DecorationColor(this TextStyle style, string value)
+        {
+            ColorValidator.Validate(value);
+            return style.Mutate(TextStyleProperty.DecorationColor, value);
+        }
+
+        public static TextStyle DecorationThickness(this TextStyle style, float factor)
+        {
+            if (factor <= 0)
+                throw new ArgumentOutOfRangeException(nameof(factor), "The decoration thickness factor must be positive.");
+
+            return style.Mutate(TextStyleProperty.DecorationThickness, factor);
+        }
+
+        public static TextStyle DecorationSolid(this TextStyle style) =>
+            style.Mutate(TextStyleProperty.DecorationStyle, TextDecorationStyle.Solid);
+
+        public static TextStyle DecorationDouble(this TextStyle style) =>
+            style.Mutate(TextStyleProperty.DecorationStyle, TextDecorationStyle.Double);
+
+        public static TextStyle DecorationDotted(this TextStyle style) =>
+            style.Mutate(TextStyleProperty.DecorationStyle, TextDecorationStyle.Dotted);
+
+        public static TextStyle DecorationDashed(this TextStyle style) =>
+            style.Mutate(TextStyleProperty.DecorationStyle, TextDecorationStyle.Dashed);
+
+        public static TextStyle DecorationWavy(this TextStyle style) =>
+            style.Mutate(TextStyleProperty.DecorationStyle, TextDecorationStyle.Wavy);
+
+        public static TextStyle EnableFontFeature(this TextStyle style, string featureName)
+        {
+            ValidateFontFeatureName(featureName);
+            return style.Mutate(TextStyleProperty.FontFeatures, TextStyleFontFeatures.From(featureName, true));
+        }
+
+        public static TextStyle DisableFontFeature(this TextStyle style, string featureName)
+        {
+            ValidateFontFeatureName(featureName);
+            return style.Mutate(TextStyleProperty.FontFeatures, TextStyleFontFeatures.From(featureName, false));
+        }
+
+        private static void ValidateFontFeatureName(string featureName)
+        {
+            if (string.IsNullOrWhiteSpace(featureName) || featureName.Length > 4)
+                throw new ArgumentException("An OpenType feature name must contain one to four characters.", nameof(featureName));
         }
 
         public static TextStyle WrapAnywhere(this TextStyle style, bool value = true)

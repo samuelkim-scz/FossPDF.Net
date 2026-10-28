@@ -100,6 +100,67 @@ namespace FossPDF.Fluent
             return descriptor;
         }
 
+        public static T Overline<T>(this T descriptor, bool value = true) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.Overline(value));
+            return descriptor;
+        }
+
+        public static T DecorationColor<T>(this T descriptor, string value) where T : TextSpanDescriptor
+        {
+            ColorValidator.Validate(value);
+            descriptor.MutateTextStyle(x => x.DecorationColor(value));
+            return descriptor;
+        }
+
+        public static T DecorationThickness<T>(this T descriptor, float factor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationThickness(factor));
+            return descriptor;
+        }
+
+        public static T DecorationSolid<T>(this T descriptor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationSolid());
+            return descriptor;
+        }
+
+        public static T DecorationDouble<T>(this T descriptor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationDouble());
+            return descriptor;
+        }
+
+        public static T DecorationDotted<T>(this T descriptor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationDotted());
+            return descriptor;
+        }
+
+        public static T DecorationDashed<T>(this T descriptor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationDashed());
+            return descriptor;
+        }
+
+        public static T DecorationWavy<T>(this T descriptor) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DecorationWavy());
+            return descriptor;
+        }
+
+        public static T EnableFontFeature<T>(this T descriptor, string featureName) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.EnableFontFeature(featureName));
+            return descriptor;
+        }
+
+        public static T DisableFontFeature<T>(this T descriptor, string featureName) where T : TextSpanDescriptor
+        {
+            descriptor.MutateTextStyle(x => x.DisableFontFeature(featureName));
+            return descriptor;
+        }
+
         public static T WrapAnywhere<T>(this T descriptor, bool value = true) where T : TextSpanDescriptor
         {
             descriptor.MutateTextStyle(x => x.WrapAnywhere(value));

@@ -302,25 +302,83 @@ namespace FossPDF.Elements.Text.Items
                 textDrawingCommand.Value.SkTextBlob.Dispose();
             }
 
-            // draw underline
             if (Style.HasUnderline ?? false)
             {
                 var underlineOffset = Style.FontPosition == FontPosition.Superscript ? 0 : glyphOffsetY;
-                DrawLine(fontMetrics.UnderlinePosition + underlineOffset, fontMetrics.UnderlineThickness);
+                DrawDecoration(fontMetrics.UnderlinePosition + underlineOffset, fontMetrics.UnderlineThickness);
             }
 
-            // draw stroke
             if (Style.HasStrikethrough ?? false)
             {
                 var strikeoutThickness = fontMetrics.StrikeoutThickness;
                 strikeoutThickness *= (Style.FontPosition ?? FontPosition.Normal) == FontPosition.Normal ? 1f : 0.625f;
 
-                DrawLine(fontMetrics.StrikeoutPosition + glyphOffsetY, strikeoutThickness);
+                DrawDecoration(fontMetrics.StrikeoutPosition + glyphOffsetY, strikeoutThickness);
             }
 
-            void DrawLine(float offset, float thickness)
+            if (Style.HasOverline ?? false)
+                DrawDecoration(fontMetrics.Ascent + glyphOffsetY, fontMetrics.UnderlineThickness);
+
+            void DrawDecoration(float top, float baseThickness)
             {
-                request.Canvas.DrawRectangle(new Position(0, offset), new Size(request.TextSize.Width, thickness), Style.Color ?? Colors.Black);
+                var width = request.TextSize.Width;
+                if (width <= 0)
+                    return;
+
+                var thickness = Math.Max(0.1f, baseThickness * (Style.DecorationThickness ?? 1f));
+                var color = Style.DecorationColor ?? Style.Color ?? Colors.Black;
+                var decorationStyle = Style.DecorationStyle ?? TextDecorationStyle.Solid;
+
+                void Draw(float x, float y, float w, float h)
+                {
+                    if (w > 0 && h > 0)
+                        request.Canvas.DrawRectangle(new Position(x, y), new Size(w, h), color);
+                }
+
+                switch (decorationStyle)
+                {
+                    case TextDecorationStyle.Solid:
+                        Draw(0, top, width, thickness);
+                        break;
+
+                    case TextDecorationStyle.Double:
+                    {
+                        var lineThickness = Math.Max(0.1f, thickness * 0.5f);
+                        Draw(0, top, width, lineThickness);
+                        Draw(0, top + lineThickness * 2, width, lineThickness);
+                        break;
+                    }
+
+                    case TextDecorationStyle.Dotted:
+                    {
+                        var step = Math.Max(thickness * 2, 0.2f);
+                        for (var x = 0f; x < width; x += step)
+                            Draw(x, top, Math.Min(thickness, width - x), thickness);
+                        break;
+                    }
+
+                    case TextDecorationStyle.Dashed:
+                    {
+                        var dash = Math.Max(thickness * 4, 0.2f);
+                        var step = dash + Math.Max(thickness * 2, 0.2f);
+                        for (var x = 0f; x < width; x += step)
+                            Draw(x, top, Math.Min(dash, width - x), thickness);
+                        break;
+                    }
+
+                    case TextDecorationStyle.Wavy:
+                    {
+                        var step = Math.Max(thickness, 0.2f);
+                        var period = Math.Max(thickness * 6, 1f);
+                        var amplitude = Math.Max(thickness, 0.5f);
+                        for (var x = 0f; x < width; x += step)
+                        {
+                            var y = top + (float) Math.Sin(x / period * Math.PI * 2) * amplitude;
+                            Draw(x, y, Math.Min(step * 1.1f, width - x), Math.Max(thickness * 0.6f, 0.1f));
+                        }
+                        break;
+                    }
+                }
             }
 
             float GetGlyphOffset()
