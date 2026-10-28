@@ -56,7 +56,7 @@ namespace FossPDF.Drawing
         private int _nextBatchOrder;
         private bool _disposed;
 
-        internal TaggedDocumentContent BuildContent(DocumentMetadata metadata)
+        internal TaggedDocumentContent BuildContent(DocumentMetadata metadata, PdfAConformance? pdfAConformance)
         {
             var pages = _pages
                 .Select(page => new TaggedDocumentPage(
@@ -66,7 +66,7 @@ namespace FossPDF.Drawing
                 .ToArray();
 
             var root = BuildNode(_root);
-            return new TaggedDocumentContent(metadata, pages, root, pages.Length);
+            return new TaggedDocumentContent(metadata, pages, root, pages.Length, pdfAConformance);
         }
 
         private static TaggedStructureNode BuildNode(SemanticNode node)

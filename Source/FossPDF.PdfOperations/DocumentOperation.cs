@@ -400,6 +400,18 @@ namespace FossPDF.Fluent
         /// </summary>
         public DocumentOperation AddAttachment(DocumentAttachment attachment)
         {
+            _attachments.Add(CreateAttachmentOperation(attachment));
+            return this;
+        }
+
+        /// <summary>
+        /// Validates an attachment description and reads its bytes. <paramref name="defaultModificationDate"/>
+        /// supplies the modification date when the description does not set one; PDF/A-3 requires it.
+        /// </summary>
+        internal static AttachmentOperation CreateAttachmentOperation(
+            DocumentAttachment attachment,
+            DateTime? defaultModificationDate = null)
+        {
             if (attachment == null)
                 throw new ArgumentNullException(nameof(attachment));
 
@@ -419,18 +431,16 @@ namespace FossPDF.Fluent
 
             var data = ReadAttachment(attachment.FilePath);
 
-            _attachments.Add(new AttachmentOperation(
+            return new AttachmentOperation(
                 key,
                 data,
                 name,
                 attachment.CreationDate,
-                attachment.ModificationDate,
+                attachment.ModificationDate ?? defaultModificationDate,
                 mimeType,
                 string.IsNullOrWhiteSpace(attachment.Description) ? null : attachment.Description,
                 attachment.Replace,
-                attachment.Relationship));
-
-            return this;
+                attachment.Relationship);
         }
 
         /// <summary>

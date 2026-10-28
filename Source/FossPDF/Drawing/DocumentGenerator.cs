@@ -63,16 +63,16 @@ namespace FossPDF.Drawing
                 throw new ArgumentNullException(nameof(document));
 
             var configuration = GenerationConfiguration.Resolve(document);
-            configuration.ValidatePdf();
+            configuration.ValidateTaggedCapture();
 
             if (configuration.Optimization != null)
                 throw new NotSupportedException(
-                    "Post-processing with qpdf cannot be combined with tagged PDF generation because the optimizer may rewrite the structure tree. Generate the tagged PDF first and optimize it in a separate step.");
+                    "Post-processing with qpdf cannot be combined with tagged PDF or PDF/A generation because the optimizer may rewrite the structure tree and conformance metadata. Generate the document first and optimize it in a separate step.");
 
             using var canvas = new TaggedPdfCanvas();
             RenderDocument(canvas, document, configuration);
 
-            return canvas.BuildContent(configuration.Metadata);
+            return canvas.BuildContent(configuration.Metadata, configuration.SelectedPdfAConformance);
         }
 
         internal static void GenerateXps(Stream stream, IDocument document)

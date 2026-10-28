@@ -41,7 +41,7 @@ internal sealed class ConformanceResult
     public string PdfAConformance { get; init; } = "None";
     public string PdfUaConformance { get; init; } = "None";
     public string Claims { get; init; } =
-        "No PDF/A or PDF/UA conformance claim. Selectable profiles require FP-402 and FP-403.";
+        "No PDF/A or PDF/UA conformance claim. This report uses ordinary PDF output; PDF/A requires the opt-in FossPDF.PdfOperations writer and PDF/UA remains with FP-403.";
     public bool Passed { get; init; }
     public ConformanceToolPolicy? Policy { get; init; }
     public List<ConformanceToolResult> Tools { get; init; } = new();
@@ -70,8 +70,9 @@ internal static class ConformanceRunner
         {
             "qpdf performs a structural PDF check; it does not validate PDF/A or PDF/UA profiles.",
             "veraPDF output is recorded for the pinned baseline but is not a conformance claim.",
-            "The legacy DocumentMetadata.PdfA flag is not a validated PDF/A profile.",
-            "PDF/A-2/PDF/A-3 and PDF/UA-1 remain blocked by FP-402 and FP-403."
+            "The legacy DocumentMetadata.PdfA flag maps to PDF/A-2B only in the PDF/A writer and is not a validated profile on its own.",
+            "Selectable PDF/A-2/PDF/A-3 output is written only by GeneratePdfA in FossPDF.PdfOperations and is validated by the ACC-402 fixture; this report uses ordinary PDF output.",
+            "PDF/UA-1 output remains blocked by FP-403."
         };
 
         var qpdf = tools[0];

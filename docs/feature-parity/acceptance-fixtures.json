@@ -1421,7 +1421,10 @@
       "work_items": [
         "FP-402"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "source": "ACC-401",
         "levels": [

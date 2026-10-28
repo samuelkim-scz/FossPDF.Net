@@ -187,6 +187,36 @@ scopes a language change, `SemanticLink` associates URL and section-link annotat
 `NotSupportedException`. This is structural tagging, not a PDF/UA conformance claim; see
 [docs/feature-parity/PDF_ACCESSIBILITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ACCESSIBILITY.md).
 
+## PDF/A-2 and PDF/A-3
+
+`GeneratePdfA` writes one of the six selectable PDF/A profiles: `PdfA2A`, `PdfA2B`, `PdfA2U`,
+`PdfA3A`, `PdfA3B` or `PdfA3U`. Select the level in `DocumentSettings.PdfAConformance` (or pass
+`DocumentOperation.DocumentAttachment` files through `PdfAOptions` for PDF/A-3), and the writer adds
+the exact XMP identification, an sRGB output intent, embedded fonts with Unicode mappings, the
+tagged structure and the document language. `None` keeps normal output; the legacy
+`DocumentMetadata.PdfA` flag and `PdfAConformance.Legacy` map to PDF/A-2B.
+
+```csharp
+document.GeneratePdfA("invoice.pdf", PdfAConformance.PdfA3U, new PdfAOptions
+{
+    Attachments = new[]
+    {
+        new DocumentOperation.DocumentAttachment
+        {
+            FilePath = "invoice.xml",
+            MimeType = "application/xml",
+            Relationship = DocumentOperation.DocumentAttachmentRelationship.Data
+        }
+    }
+});
+```
+
+Attachments are permitted only in PDF/A-3. A-level output requires `DocumentMetadata.Language`;
+PDF/A-2 with attachments, an explicit level that conflicts with the settings, and a missing
+selection are rejected before any output is written. Tagged capture cannot be combined with the
+qpdf compression/linearization pass or with `ZIndex`. See
+[docs/feature-parity/PDF_A_CONFORMANCE.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_A_CONFORMANCE.md).
+
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.

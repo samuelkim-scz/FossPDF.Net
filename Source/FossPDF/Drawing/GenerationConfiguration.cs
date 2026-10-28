@@ -17,6 +17,14 @@ namespace FossPDF.Drawing
         internal bool CheckGlyphs { get; }
         internal PdfOptimizationSettings? Optimization { get; }
 
+        /// <summary>The selected PDF/A profile, or <see langword="null"/> when the settings did not decide.</summary>
+        internal PdfAConformance? SelectedPdfAConformance => Settings.PdfAConformance;
+
+        internal bool HasSelectablePdfA =>
+            SelectedPdfAConformance is not null &&
+            SelectedPdfAConformance != PdfAConformance.None &&
+            SelectedPdfAConformance != PdfAConformance.Legacy;
+
         private GenerationConfiguration(DocumentMetadata metadata, DocumentSettings settings)
         {
             Metadata = metadata;
@@ -62,10 +70,11 @@ namespace FossPDF.Drawing
 
         internal void ValidatePdf()
         {
-            if (Settings.PdfAConformance.HasValue &&
-                Settings.PdfAConformance != PdfAConformance.None &&
-                Settings.PdfAConformance != PdfAConformance.Legacy)
-                throw new NotSupportedException("Selectable PDF/A profiles require FP-402. Use Legacy only for the existing unqualified PdfA flag.");
+            if (HasSelectablePdfA)
+                throw new NotSupportedException(
+                    "PDF/A-2 and PDF/A-3 output is written by the optional FossPDF.PdfOperations package. " +
+                    "Use GeneratePdfA or GenerateTaggedPdf instead of GeneratePdf; the core package cannot write the " +
+                    "required output intent and PDF/A identification metadata.");
             if (Settings.PdfUaConformance != PdfUaConformance.None)
                 throw new NotSupportedException("PDF/UA output requires FP-401/FP-403 semantic tagging and conformance support.");
 
@@ -75,6 +84,17 @@ namespace FossPDF.Drawing
                 Optimization.Validate();
                 PdfOptimizer.ResolveExecutable(Optimization.QpdfExecutablePath);
             }
+        }
+
+        /// <summary>
+        /// Validates the settings for a semantic capture. Selectable PDF/A profiles are allowed here
+        /// because the companion package writes the conformance structures; the core only captures
+        /// the content.
+        /// </summary>
+        internal void ValidateTaggedCapture()
+        {
+            if (Settings.PdfUaConformance != PdfUaConformance.None)
+                throw new NotSupportedException("PDF/UA output requires FP-403 semantic tagging and conformance support.");
         }
 
         private static PdfOptimizationSettings? ResolveOptimization(DocumentSettings settings)

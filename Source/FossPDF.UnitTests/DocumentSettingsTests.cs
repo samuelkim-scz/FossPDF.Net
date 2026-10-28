@@ -281,8 +281,10 @@ namespace FossPDF.UnitTests
         [TestCase(PdfAConformance.PdfA3A)]
         [TestCase(PdfAConformance.PdfA3B)]
         [TestCase(PdfAConformance.PdfA3U)]
-        public void SelectablePdfAProfilesFailBeforeWritingUntilTheirBackendIsImplemented(PdfAConformance profile)
+        public void SelectablePdfAProfilesRequireThePdfOperationsPackage(PdfAConformance profile)
         {
+            // GeneratePdf is the core Skia writer and cannot emit PDF/A identification or output
+            // intents. FP-402 writes these profiles through FossPDF.PdfOperations instead.
             AssertUnsupported(new DocumentSettings { PdfAConformance = profile });
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FossPDF.Infrastructure;
 
 namespace FossPDF.Drawing
 {
@@ -19,16 +20,25 @@ namespace FossPDF.Drawing
             DocumentMetadata metadata,
             IReadOnlyList<TaggedDocumentPage> pages,
             TaggedStructureNode root,
-            int pageCount)
+            int pageCount,
+            PdfAConformance? pdfAConformance)
         {
             Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata));
             Pages = pages ?? throw new ArgumentNullException(nameof(pages));
             Root = root ?? throw new ArgumentNullException(nameof(root));
             PageCount = pageCount;
+            PdfAConformance = pdfAConformance;
         }
 
         /// <summary>A snapshot of the document metadata taken before rendering.</summary>
         public DocumentMetadata Metadata { get; }
+
+        /// <summary>
+        /// The PDF/A profile requested through <see cref="DocumentSettings.PdfAConformance"/>, or
+        /// <see langword="null"/> when the settings did not decide. The optional
+        /// <c>FossPDF.PdfOperations</c> package interprets this value when it writes the document.
+        /// </summary>
+        public PdfAConformance? PdfAConformance { get; }
 
         /// <summary>Pages in document order, each with its paint batches in paint order.</summary>
         public IReadOnlyList<TaggedDocumentPage> Pages { get; }

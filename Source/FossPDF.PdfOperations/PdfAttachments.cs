@@ -48,6 +48,32 @@ namespace FossPDF.PdfOperations
             Write(destination, attachments);
         }
 
+        /// <summary>
+        /// Writes attachments to a newly generated document that has no existing attachments.
+        /// Duplicate keys are rejected unless the later attachment asks to replace the earlier one.
+        /// </summary>
+        internal static void WriteGenerated(
+            PdfDocument document,
+            IReadOnlyList<DocumentOperation.AttachmentOperation> attachments)
+        {
+            var unique = new Dictionary<string, DocumentOperation.AttachmentOperation>(StringComparer.Ordinal);
+
+            foreach (var attachment in attachments)
+            {
+                if (unique.ContainsKey(attachment.Key) && !attachment.Replace)
+                {
+                    throw new PdfOperationException(
+                        $"The document already contains an attachment with the key '{attachment.Key}'. " +
+                        "Set Replace to true to replace it instead of losing one of the attachments.");
+                }
+
+                unique[attachment.Key] = attachment;
+            }
+
+            if (unique.Count > 0)
+                Write(document, unique);
+        }
+
         private static Dictionary<string, DocumentOperation.AttachmentOperation> ReadExisting(PdfDocument document)
         {
             var attachments = new Dictionary<string, DocumentOperation.AttachmentOperation>(StringComparer.Ordinal);

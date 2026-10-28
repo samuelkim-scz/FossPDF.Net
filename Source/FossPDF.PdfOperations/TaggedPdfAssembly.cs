@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FossPDF.Drawing;
+using FossPDF.Fluent;
+using FossPDF.Infrastructure;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
@@ -22,13 +24,25 @@ namespace FossPDF.PdfOperations
     {
         private const double GeometryTolerance = 0.5;
 
-        public static byte[] Assemble(TaggedDocumentContent content)
+        public static byte[] Assemble(
+            TaggedDocumentContent content,
+            PdfAConformance? requestedConformance = null,
+            PdfAOptions? options = null)
         {
             if (content == null)
                 throw new ArgumentNullException(nameof(content));
 
             if (content.PageCount <= 0 || content.Pages.Count == 0)
                 throw new PdfOperationException("A tagged PDF requires at least one page.");
+
+            var profile = PdfAProfile.Resolve(
+                requestedConformance,
+                content.PdfAConformance,
+                content.Metadata.PdfA);
+
+            var attachments = CreateAttachments(options, profile, content.Metadata);
+
+            ValidateProfile(content, profile);
 
             var fragments = new List<FragmentLease>();
 
@@ -75,6 +89,17 @@ namespace FossPDF.PdfOperations
                 }
 
                 ApplyStructure(destination, content.Root, elements, structureEntries);
+                ApplyNamedDestinations(destination, namedDestinations);
+
+                if (attachments.Count > 0)
+                    PdfAttachments.WriteGenerated(destination, attachments);
+
+                // PDFsharp's PDF/A setup installs a page-import hook and replaces the catalog's
+                // structure entries with its own accessibility tree, so it must run after every
+                // fragment page has been imported and before the tagged structure is attached.
+                if (profile.HasValue)
+                    destination.SetPdfA();
+
                 ApplyParentTree(
                     destination,
                     content.Root,
@@ -82,18 +107,152 @@ namespace FossPDF.PdfOperations
                     elements,
                     parentTree,
                     nextParentTreeKey);
-                ApplyNamedDestinations(destination, namedDestinations);
 
                 using var output = new MemoryStream();
                 destination.Save(output, false);
 
-                return output.ToArray();
+                var bytes = output.ToArray();
+
+                return profile.HasValue
+                    ? ApplyPdfAIdentification(bytes, profile.Value)
+                    : bytes;
             }
             finally
             {
                 foreach (var fragment in fragments)
                     fragment.Dispose();
             }
+        }
+
+        private static void ValidateProfile(TaggedDocumentContent content, PdfAProfile? profile)
+        {
+            if (!profile.HasValue)
+                return;
+
+            if (profile.Value.IsAccessible && string.IsNullOrWhiteSpace(content.Metadata.Language))
+            {
+                throw new PdfOperationException(
+                    $"{profile.Value.DisplayName} requires a document language because tagged content " +
+                    "must declare its natural language. Set DocumentMetadata.Language.");
+            }
+        }
+
+        private static List<DocumentOperation.AttachmentOperation> CreateAttachments(
+            PdfAOptions? options,
+            PdfAProfile? profile,
+            DocumentMetadata metadata)
+        {
+            var descriptions = options?.Attachments;
+
+            if (descriptions == null || descriptions.Count == 0)
+                return new List<DocumentOperation.AttachmentOperation>();
+
+            if (!profile.HasValue)
+            {
+                throw new ArgumentException(
+                    "Attachments can only be written for PDF/A-3 output. Select a PDF/A-3 profile.",
+                    nameof(options));
+            }
+
+            if (!profile.Value.AllowsAttachments)
+            {
+                throw new ArgumentException(
+                    $"{profile.Value.DisplayName} does not permit embedded files. Select a PDF/A-3 " +
+                    "profile to include attachments.",
+                    nameof(options));
+            }
+
+            var attachments = new List<DocumentOperation.AttachmentOperation>(descriptions.Count);
+
+            foreach (var description in descriptions)
+                attachments.Add(DocumentOperation.CreateAttachmentOperation(description, metadata.ModifiedDate));
+
+            return attachments;
+        }
+
+        private const string PdfAPartPrefix = "<pdfaid:part>";
+        private const string PdfAPartSuffix = "</pdfaid:part>";
+        private const string PdfAConformancePrefix = "<pdfaid:conformance>";
+        private const string PdfAConformanceSuffix = "</pdfaid:conformance>";
+
+        /// <summary>
+        /// Replaces the PDF/A-1 identification that PDFsharp writes with the selected part and
+        /// conformance level. Both values are single characters, so the packet keeps its exact
+        /// length and no offset in the file changes.
+        /// </summary>
+        private static byte[] ApplyPdfAIdentification(byte[] pdf, PdfAProfile profile)
+        {
+            var result = (byte[])pdf.Clone();
+
+            ReplaceValue(
+                result,
+                PdfAPartPrefix,
+                PdfAPartSuffix,
+                (char)('0' + profile.Part),
+                profile.DisplayName);
+
+            ReplaceValue(
+                result,
+                PdfAConformancePrefix,
+                PdfAConformanceSuffix,
+                profile.Conformance,
+                profile.DisplayName);
+
+            return result;
+        }
+
+        private static void ReplaceValue(
+            byte[] pdf,
+            string prefix,
+            string suffix,
+            char value,
+            string profile)
+        {
+            var prefixBytes = Encoding.ASCII.GetBytes(prefix);
+            var suffixBytes = Encoding.ASCII.GetBytes(suffix);
+
+            var start = IndexOf(pdf, prefixBytes, 0);
+
+            if (start < 0)
+            {
+                throw new PdfOperationException(
+                    $"The XMP metadata written by the PDF backend does not contain '{prefix}'. " +
+                    $"The document cannot be identified as {profile}.");
+            }
+
+            var valueIndex = start + prefixBytes.Length;
+            var end = IndexOf(pdf, suffixBytes, valueIndex);
+
+            if (end < 0 || end - valueIndex != 1)
+            {
+                throw new PdfOperationException(
+                    $"The XMP metadata written by the PDF backend has an unexpected '{prefix}' value. " +
+                    $"The document cannot be identified as {profile}.");
+            }
+
+            pdf[valueIndex] = (byte)value;
+        }
+
+        private static int IndexOf(byte[] data, byte[] pattern, int start)
+        {
+            for (var index = start; index + pattern.Length <= data.Length; index++)
+            {
+                var match = true;
+
+                for (var offset = 0; offset < pattern.Length; offset++)
+                {
+                    if (data[index + offset] != pattern[offset])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match)
+                    return index;
+            }
+
+            return -1;
         }
 
         private static void ApplyMetadata(PdfDocument document, DocumentMetadata metadata)
@@ -692,12 +851,19 @@ namespace FossPDF.PdfOperations
             markInfo.Elements.SetBoolean("/Marked", true);
             catalog.Elements.SetObject("/MarkInfo", markInfo);
 
-            var preferences = new PdfDictionary(destination);
-            preferences.Elements.SetBoolean("/DisplayDocTitle", true);
-            catalog.Elements.SetObject("/ViewerPreferences", preferences);
+            // Use PDFsharp's typed preferences object so its PDF/A setup can read it.
+            destination.ViewerPreferences.DisplayDocTitle = true;
 
             if (!string.IsNullOrWhiteSpace(language))
+            {
                 catalog.Elements.SetString("/Lang", language!);
+            }
+            else if (catalog.Elements.ContainsKey("/Lang"))
+            {
+                // The PDF/A setup writes a default language. Removing it prevents claiming a
+                // document language the caller did not declare.
+                catalog.Elements.Remove("/Lang");
+            }
         }
 
         private static void ApplyNamedDestinations(

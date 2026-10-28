@@ -1,0 +1,3 @@
+# Independent reader for PDF/A identification, structure, fonts and embedded files; validation only, never shipped with FossPDF.
+# Requires Java 17+ on PATH (or --verapdf) and downloads the pinned veraPDF release on first use.
+pypdf==6.21.2

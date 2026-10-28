@@ -38,6 +38,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The tagged PDF guide](docs/feature-parity/PDF_ACCESSIBILITY.md) covers semantic wrappers, automatic artifact tagging, alternative text and language, reading order, links, page breaks and the structure/parent-tree output produced by the optional PDF operations companion.
 
+[The PDF/A conformance guide](docs/feature-parity/PDF_A_CONFORMANCE.md) covers the six selectable PDF/A-2/PDF/A-3 levels, settings versus explicit selection, the legacy flag mapping, accessibility and Unicode requirements, PDF/A-3 attachments, rejected combinations and the pinned veraPDF validation.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
@@ -152,7 +154,7 @@ Deliver generated-document merging and existing-PDF processing, security, attach
 
 ### [Parity M4 - Accessibility and conformance](https://github.com/samuelkim-scz/FossPDF.Net/milestone/5)
 
-Deliver tagged PDF, the six PDF/A-2/PDF/A-3 conformance levels, PDF/UA-1, and validated e-invoice packaging.
+Deliver tagged PDF, the six PDF/A-2/PDF/A-3 conformance levels, PDF/UA-1, and validated e-invoice packaging. Tagged structure and artifacts are documented in [docs/feature-parity/PDF_ACCESSIBILITY.md](docs/feature-parity/PDF_ACCESSIBILITY.md), selectable PDF/A levels, attachments and profile validation in [docs/feature-parity/PDF_A_CONFORMANCE.md](docs/feature-parity/PDF_A_CONFORMANCE.md).
 
 | ID / issue | Work package | Priority | Size | Depends on |
 | --- | --- | --- | --- | --- |

@@ -152,9 +152,13 @@ from multiple runs and platforms.
 
 ## Conformance
 
-The current library does **not** claim PDF/A or PDF/UA conformance. `PdfAConformance.None` is the
-default; selectable PDF/A-2/PDF/A-3 profiles require FP-402, and PDF/UA-1 requires FP-401/FP-403.
-The legacy `DocumentMetadata.PdfA` flag is not a validated profile.
+The quality tool's conformance document uses the ordinary `GeneratePdf` path and therefore makes
+**no** PDF/A or PDF/UA conformance claim. `PdfAConformance.None` is the default. Selectable
+PDF/A-2/PDF/A-3 output is available only by explicitly calling `GeneratePdfA` through
+`FossPDF.PdfOperations` and is validated for the exact levels by the `ACC-402` fixture; this
+quality report does not exercise it. PDF/UA-1 remains with FP-403. The legacy
+`DocumentMetadata.PdfA` flag maps to PDF/A-2B only in the PDF/A writer; it is not a validated
+profile on its own.
 
 The conformance run writes `conformance.json` and records:
 
@@ -162,7 +166,8 @@ The conformance run writes `conformance.json` and records:
   passes; structural errors fail);
 - `verapdf` output when available, without treating it as a conformance claim;
 - the pinned minimum tool versions from `conformance-tools.json`;
-- explicit notes about the unimplemented profiles.
+- explicit notes that this document is not a profile claim and that PDF/A output requires the
+  separate opt-in writer.
 
 The Linux CI runner installs qpdf. verapdf is optional because it requires a Java runtime; when it
 is present, its report is retained in the artifact for future profile work.
