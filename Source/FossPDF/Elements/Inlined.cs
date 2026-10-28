@@ -26,7 +26,7 @@ namespace FossPDF.Elements
         public SpacePlan Size { get; set; }
     }
     
-    internal class Inlined : Element, IStateResettable, IContentDirectionAware
+    internal class Inlined : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
         public ContentDirection ContentDirection { get; set; }
         
@@ -42,6 +42,17 @@ namespace FossPDF.Elements
         public void ResetState()
         {
             ChildrenQueue = new Queue<InlinedElement>(Elements);
+        }
+
+        object? IStateSnapshot.CaptureState()
+        {
+            return new Queue<InlinedElement>(ChildrenQueue);
+        }
+
+        void IStateSnapshot.RestoreState(object? state)
+        {
+            if (state is Queue<InlinedElement> queue)
+                ChildrenQueue = new Queue<InlinedElement>(queue);
         }
         
         internal override IEnumerable<Element?> GetChildren()

@@ -19,7 +19,7 @@ namespace FossPDF.Elements
         public Position Offset { get; set; }
     }
     
-    internal class Column : Element, ICacheable, IStateResettable
+    internal class Column : Element, ICacheable, IStateResettable, IStateSnapshot
     {
         internal List<ColumnItem> Items { get; } = new();
         internal float Spacing { get; set; }
@@ -27,6 +27,20 @@ namespace FossPDF.Elements
         public void ResetState()
         {
             Items.ForEach(x => x.IsRendered = false);
+        }
+
+        object? IStateSnapshot.CaptureState()
+        {
+            return Items.Select(x => x.IsRendered).ToArray();
+        }
+
+        void IStateSnapshot.RestoreState(object? state)
+        {
+            if (state is not bool[] rendered)
+                return;
+
+            for (var index = 0; index < Items.Count && index < rendered.Length; index++)
+                Items[index].IsRendered = rendered[index];
         }
         
         internal override IEnumerable<Element?> GetChildren()

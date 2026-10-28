@@ -8,7 +8,7 @@ using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements
 {
-    internal class DynamicHost : Element, IStateResettable, IContentDirectionAware
+    internal class DynamicHost : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
         private DynamicComponentProxy Child { get; }
         private object InitialComponentState { get; set; }
@@ -28,6 +28,17 @@ namespace FossPDF.Elements
         public void ResetState()
         {
             Child.SetState(InitialComponentState);
+        }
+
+        object? IStateSnapshot.CaptureState()
+        {
+            return Child.GetState();
+        }
+
+        void IStateSnapshot.RestoreState(object? state)
+        {
+            if (state != null)
+                Child.SetState(state);
         }
         
         internal override SpacePlan Measure(Size availableSpace)

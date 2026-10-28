@@ -8,7 +8,7 @@ using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements.Text
 {
-    internal class TextBlock : Element, IStateResettable, IContentDirectionAware
+    internal class TextBlock : Element, IStateResettable, IStateSnapshot, IContentDirectionAware
     {
         public ContentDirection ContentDirection { get; set; }
 
@@ -51,6 +51,30 @@ namespace FossPDF.Elements.Text
                 Items = Items.ApplyFontFallback(PageContext).ToList();
                 FontFallbackApplied = true;
             }
+        }
+
+        object? IStateSnapshot.CaptureState()
+        {
+            return (
+                new Queue<ITextBlockItem>(RenderingQueue),
+                CurrentElementIndex,
+                FontFallbackApplied);
+        }
+
+        void IStateSnapshot.RestoreState(object? state)
+        {
+            if (state is not ValueTuple<Queue<ITextBlockItem>, int, bool> snapshot)
+                return;
+
+            var (queue, elementIndex, fontFallbackApplied) = snapshot;
+
+            RenderingQueue.Clear();
+
+            foreach (var item in queue)
+                RenderingQueue.Enqueue(item);
+
+            CurrentElementIndex = elementIndex;
+            FontFallbackApplied = fontFallbackApplied;
         }
 
         void SetDefaultAlignment()

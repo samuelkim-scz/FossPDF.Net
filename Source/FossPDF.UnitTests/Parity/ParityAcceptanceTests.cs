@@ -1201,6 +1201,664 @@ namespace FossPDF.UnitTests.Parity
             Assert.DoesNotThrow(() => stream.WriteByte(0));
         }
 
+        private static readonly string[] MultiColumnPalette =
+        {
+            "#ff0000", "#00ff00", "#0000ff", "#ffff00",
+            "#ff00ff", "#00ffff", "#ff8000", "#8000ff"
+        };
+
+        /// <summary>
+        /// Two-column geometry derived from the fixture input. The second-column members assume
+        /// the fixture's declared column count of two; the first-column members are generic.
+        /// </summary>
+        private readonly struct MultiColumnLayout
+        {
+            public MultiColumnLayout(int margin, int columnWidth, int contentHeight, int gapLeft, int gapRight)
+            {
+                Margin = margin;
+                ColumnWidth = columnWidth;
+                ContentHeight = contentHeight;
+                GapLeft = gapLeft;
+                GapRight = gapRight;
+            }
+
+            public int Margin { get; }
+            public int ColumnWidth { get; }
+            public int ContentHeight { get; }
+            public int GapLeft { get; }
+            public int GapRight { get; }
+
+            public int FirstColumnCenter => Margin + ColumnWidth / 2;
+            public int SecondColumnCenter => GapRight + ColumnWidth / 2;
+        }
+
+        [ParityFixtureRunner("LAY-104")]
+
+        private static void RunMultiColumn(ParityFixture fixture)
+        {
+            var columns = fixture.Input.GetProperty("columns").GetInt32();
+            var gap = fixture.Input.GetProperty("gap").GetInt32();
+            var balance = fixture.Input.GetProperty("balance").GetBoolean();
+            var layout = GetMultiColumnLayout(fixture, columns, gap);
+            var paragraphs = FixtureCatalog.ReadArray(fixture.Input, "paragraphs")
+                .Select(x => x.GetString()).ToArray();
+
+            AssertMultiColumnColoredFlow(fixture, columns, gap, layout);
+            AssertMultiColumnBalancing(fixture, columns, gap, layout);
+            AssertMultiColumnRightToLeftOrder(fixture, columns, gap, layout);
+            AssertMultiColumnSeparator(fixture, columns, gap, layout);
+            AssertMultiColumnImages(fixture, columns, gap, layout);
+            AssertMultiColumnParagraphFlow(fixture, columns, gap, balance, layout, paragraphs);
+            AssertMultiColumnEmptyContent(fixture, columns, gap);
+            AssertMultiColumnOversizedChild(fixture, columns, gap);
+        }
+
+        private static MultiColumnLayout GetMultiColumnLayout(ParityFixture fixture, int columns, int gap)
+        {
+            var margin = fixture.Input.GetProperty("margin").GetInt32();
+            var page = fixture.Input.GetProperty("page");
+            var contentWidth = page[0].GetInt32() - 2 * margin;
+            var contentHeight = page[1].GetInt32() - 2 * margin;
+            var columnWidth = (contentWidth - gap * (columns - 1)) / columns;
+            var gapLeft = margin + columnWidth;
+
+            return new MultiColumnLayout(margin, columnWidth, contentHeight, gapLeft, gapLeft + gap);
+        }
+
+        private static Document CreateMultiColumnDocument(
+            ParityFixture fixture,
+            int columns,
+            int gap,
+            bool balance,
+            Action<MultiColumnDescriptor> configure,
+            Action<IContainer> content,
+            bool rightToLeft = false)
+        {
+            var font = fixture.Input.GetProperty("font").GetString();
+            var fontSize = fixture.Input.GetProperty("font_size").GetInt32();
+
+            return CreatePage(fixture, page =>
+            {
+                if (rightToLeft)
+                    page.ContentFromRightToLeft();
+
+                page.DefaultTextStyle(style => style.FontFamily(font).FontSize(fontSize));
+
+                page.Content().MultiColumn(multiColumn =>
+                {
+                    multiColumn.Columns(columns);
+                    multiColumn.Spacing(gap);
+
+                    if (balance)
+                        multiColumn.BalanceHeight();
+
+                    configure(multiColumn);
+                    content(multiColumn.Content());
+                });
+            });
+        }
+
+        private static void AssertMultiColumnColoredFlow(
+            ParityFixture fixture, int columns, int gap, MultiColumnLayout layout)
+        {
+            const int itemHeight = 15;
+            const int totalItems = 24;
+            const int itemsOnFirstPage = 20;
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, false, _ => { }, container =>
+                container.Column(column =>
+                {
+                    for (var index = 0; index < totalItems; index++)
+                        column.Item().Height(itemHeight)
+                            .Background(MultiColumnPalette[index % MultiColumnPalette.Length]);
+                }));
+
+            var pages = RenderMultiColumnScenario(fixture, "colored-flow", document, 2);
+
+            try
+            {
+                var itemArea = layout.ColumnWidth * itemHeight;
+                Assert.That(CountPixels(pages[0], IsInk), Is.EqualTo(itemsOnFirstPage * itemArea),
+                    "LAY-104: page 1 draws the first 20 items distributed over both columns.");
+                Assert.That(CountPixels(pages[1], IsInk), Is.EqualTo((totalItems - itemsOnFirstPage) * itemArea),
+                    "LAY-104: page 2 draws only the four remaining items, without duplication.");
+                AssertGapIsEmpty(pages, layout);
+                AssertDeterministicRendering(document, "colored-flow", 2);
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnBalancing(
+            ParityFixture fixture, int columns, int gap, MultiColumnLayout layout)
+        {
+            const int itemHeight = 15;
+            const int itemCount = 8;
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, true, _ => { }, container =>
+                container.Column(column =>
+                {
+                    for (var index = 0; index < itemCount; index++)
+                        column.Item().Height(itemHeight).Background(MultiColumnPalette[index]);
+                }));
+
+            var pages = RenderMultiColumnScenario(fixture, "balanced", document, 1);
+
+            try
+            {
+                var page = pages[0];
+                var row = layout.Margin + itemHeight / 2;
+
+                for (var index = 0; index < itemCount; index++)
+                {
+                    var center = index < itemCount / 2 ? layout.FirstColumnCenter : layout.SecondColumnCenter;
+                    var offset = index % (itemCount / 2) * itemHeight;
+                    AssertPixelColor(page, center, row + offset, MultiColumnPalette[index],
+                        "balanced item " + (index + 1));
+                }
+
+                Assert.That(IsInk(page.GetPixel(layout.FirstColumnCenter, layout.Margin + itemCount / 2 * itemHeight + 10)),
+                    Is.False, "LAY-104: a balanced layout does not expand to the full offered height.");
+                Assert.That(CountPixels(page, IsInk), Is.EqualTo(itemCount * layout.ColumnWidth * itemHeight),
+                    "LAY-104: balancing distributes 4 + 4 items without consuming or duplicating content.");
+                AssertGapIsEmpty(pages, layout);
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnRightToLeftOrder(
+            ParityFixture fixture, int columns, int gap, MultiColumnLayout layout)
+        {
+            const int itemHeight = 60;
+            const int itemCount = 4;
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, false, _ => { }, container =>
+                container.Column(column =>
+                {
+                    for (var index = 0; index < itemCount; index++)
+                        column.Item().Height(itemHeight).Background(MultiColumnPalette[index]);
+                }), rightToLeft: true);
+
+            var pages = RenderMultiColumnScenario(fixture, "right-to-left", document, 1);
+
+            try
+            {
+                var page = pages[0];
+                AssertPixelColor(page, layout.FirstColumnCenter, layout.Margin + itemHeight / 2,
+                    MultiColumnPalette[2], "right-to-left third item");
+                AssertPixelColor(page, layout.FirstColumnCenter, layout.Margin + itemHeight + itemHeight / 2,
+                    MultiColumnPalette[3], "right-to-left fourth item");
+                AssertPixelColor(page, layout.SecondColumnCenter, layout.Margin + itemHeight / 2,
+                    MultiColumnPalette[0], "right-to-left first item");
+                AssertPixelColor(page, layout.SecondColumnCenter, layout.Margin + itemHeight + itemHeight / 2,
+                    MultiColumnPalette[1], "right-to-left second item");
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnSeparator(
+            ParityFixture fixture, int columns, int gap, MultiColumnLayout layout)
+        {
+            var separator = fixture.Input.GetProperty("separator");
+            var separatorWidth = separator.GetProperty("width").GetInt32();
+            var separatorColor = separator.GetProperty("color").GetString();
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, false, multiColumn =>
+                    multiColumn.Spacer().AlignCenter().LineVertical(separatorWidth).LineColor(separatorColor),
+                container => container.Column(column =>
+                {
+                    for (var index = 0; index < 12; index++)
+                        column.Item().Height(20).Background(MultiColumnPalette[index % MultiColumnPalette.Length]);
+                }));
+
+            var pages = RenderMultiColumnScenario(fixture, "separator", document, 1);
+
+            try
+            {
+                var page = pages[0];
+                var bottom = layout.Margin + layout.ContentHeight;
+
+                foreach (var y in new[] { layout.Margin + 10, layout.Margin + layout.ContentHeight / 2, bottom - 10 })
+                {
+                    Assert.That(CountGapPixels(page, y, layout), Is.EqualTo(separatorWidth),
+                        "LAY-104: the separator occupies the declared gap.");
+                    Assert.That(IsInk(page.GetPixel(layout.GapLeft + 1, y)), Is.False,
+                        "LAY-104: the separator is centered inside the gap, not touching a column.");
+                    Assert.That(IsInk(page.GetPixel(layout.GapRight - 1, y)), Is.False,
+                        "LAY-104: the separator is centered inside the gap, not touching a column.");
+                }
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnImages(
+            ParityFixture fixture, int columns, int gap, MultiColumnLayout layout)
+        {
+            const int imageHeight = 60;
+            const int imageCount = 4;
+
+            var images = new byte[imageCount][];
+            for (var index = 0; index < images.Length; index++)
+                images[index] = CreateSolidPng(layout.ColumnWidth, imageHeight, MultiColumnPalette[index]);
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, true, _ => { }, container =>
+                container.Column(column =>
+                {
+                    foreach (var image in images)
+                        column.Item().Height(imageHeight).Image(image);
+                }));
+
+            var pages = RenderMultiColumnScenario(fixture, "images", document, 1);
+
+            try
+            {
+                var page = pages[0];
+
+                for (var index = 0; index < imageCount; index++)
+                {
+                    var center = index < imageCount / 2 ? layout.FirstColumnCenter : layout.SecondColumnCenter;
+                    var offset = index % (imageCount / 2) * imageHeight + imageHeight / 2;
+                    AssertPixelColor(page, center, layout.Margin + offset, MultiColumnPalette[index],
+                        "image " + (index + 1));
+                }
+
+                Assert.That(IsInk(page.GetPixel(layout.FirstColumnCenter, layout.Margin + imageCount / 2 * imageHeight + 10)),
+                    Is.False, "LAY-104: images balance to the content height.");
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnParagraphFlow(
+            ParityFixture fixture,
+            int columns,
+            int gap,
+            bool balance,
+            MultiColumnLayout layout,
+            string[] paragraphs)
+        {
+            var colors = new[] { "#c00000", "#008000", "#0000c0" };
+            var font = fixture.Input.GetProperty("font").GetString();
+            var fontSize = fixture.Input.GetProperty("font_size").GetInt32();
+            var balanceTolerance = fixture.Input.GetProperty("balance_tolerance").GetInt32();
+
+            var document = CreateMultiColumnDocument(fixture, columns, gap, balance, _ => { }, container =>
+                container.Column(column =>
+                {
+                    for (var index = 0; index < paragraphs.Length; index++)
+                        column.Item().Text(text =>
+                            text.Span(paragraphs[index]).FontColor(colors[index % colors.Length]));
+                }));
+
+            var pdf = document.GeneratePdf(out var pageCount);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(images.Length, Is.EqualTo(pageCount));
+            Assert.That(pageCount, Is.GreaterThanOrEqualTo(2),
+                "LAY-104: the fixture paragraphs span more than one page of two columns.");
+            SaveArtifact(fixture.Id, "scenario-paragraphs/document.pdf", pdf);
+
+            var pages = new SKBitmap[images.Length];
+            for (var index = 0; index < pages.Length; index++)
+            {
+                SaveArtifact(fixture.Id, $"scenario-paragraphs/page-{index + 1}.png", images[index]);
+                pages[index] = SKBitmap.Decode(images[index]);
+                Assert.That(pages[index], Is.Not.Null, "Raster output could not be decoded.");
+            }
+
+            try
+            {
+                // The same paragraphs rendered in a single column of identical width break lines
+                // identically. Comparing per-paragraph ink therefore proves that the multi-column
+                // flow neither loses nor duplicates glyphs, independent of their placement.
+                var reference = CreateSingleColumnReference(fixture, layout.ColumnWidth, font, fontSize, paragraphs, colors);
+                var referencePdf = reference.GeneratePdf();
+                Assert.That(Encoding.ASCII.GetString(referencePdf, 0, 5), Is.EqualTo("%PDF-"));
+                SaveArtifact(fixture.Id, "scenario-paragraphs/reference-single-column.pdf", referencePdf);
+                var referenceInk = CountParagraphInk(reference.GenerateImages());
+
+                Assert.That(CountParagraphInk(images), Is.EqualTo(referenceInk),
+                    "LAY-104: every glyph renders exactly once; the flow loses and duplicates nothing.");
+
+                foreach (var page in pages)
+                {
+                    AssertInkInsideContentArea(page, layout);
+                    AssertGapIsEmpty(new[] { page }, layout);
+                    AssertParagraphReadingOrder(page, layout, colors.Length,
+                        pages[0] == page ? 0 : -1, page == pages[pages.Length - 1] ? colors.Length - 1 : -1);
+                }
+
+                AssertFirstPageFillsColumns(pages[0], layout, fontSize);
+                AssertLastPageIsBalanced(pages[pages.Length - 1], layout, balanceTolerance);
+                AssertDeterministicRendering(document, "paragraphs", pageCount);
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static Document CreateSingleColumnReference(
+            ParityFixture fixture,
+            int columnWidth,
+            string font,
+            int fontSize,
+            string[] paragraphs,
+            string[] colors)
+        {
+            return CreatePage(fixture, page =>
+            {
+                page.DefaultTextStyle(style => style.FontFamily(font).FontSize(fontSize));
+                page.Content().Width(columnWidth).Column(column =>
+                {
+                    for (var index = 0; index < paragraphs.Length; index++)
+                        column.Item().Text(text =>
+                            text.Span(paragraphs[index]).FontColor(colors[index % colors.Length]));
+                });
+            });
+        }
+
+        private static void AssertFirstPageFillsColumns(SKBitmap page, MultiColumnLayout layout, int fontSize)
+        {
+            var first = GetColumnInkBounds(page, layout, layout.Margin, layout.GapLeft);
+            var second = GetColumnInkBounds(page, layout, layout.GapRight, layout.GapRight + layout.ColumnWidth);
+
+            Assert.That(first.HasInk, Is.True, "LAY-104: page 1 starts in the first column.");
+            Assert.That(second.HasInk, Is.True, "LAY-104: page 1 continues in the second column.");
+            Assert.That(first.Top, Is.LessThanOrEqualTo(layout.Margin + fontSize + 4),
+                "LAY-104: the first column starts at the top of the content area.");
+            Assert.That(second.Top, Is.LessThanOrEqualTo(layout.Margin + fontSize + 4),
+                "LAY-104: the second column starts at the top of the content area.");
+            Assert.That(first.Bottom, Is.GreaterThan(layout.Margin + layout.ContentHeight / 2),
+                "LAY-104: the first column fills top to bottom before the flow continues.");
+        }
+
+        private static void AssertLastPageIsBalanced(SKBitmap page, MultiColumnLayout layout, int balanceTolerance)
+        {
+            var first = GetColumnInkBounds(page, layout, layout.Margin, layout.GapLeft);
+            var second = GetColumnInkBounds(page, layout, layout.GapRight, layout.GapRight + layout.ColumnWidth);
+
+            Assert.That(first.HasInk, Is.True, "LAY-104: the balanced page starts in the first column.");
+
+            if (!second.HasInk)
+                return;
+
+            Assert.That(Math.Abs(first.Top - second.Top), Is.LessThanOrEqualTo(2),
+                "LAY-104: both balanced columns start on the same line grid.");
+            Assert.That(Math.Abs(first.Bottom - second.Bottom), Is.LessThanOrEqualTo(balanceTolerance),
+                "LAY-104: balanced column heights differ by at most one line.");
+        }
+
+        private static void AssertParagraphReadingOrder(
+            SKBitmap page, MultiColumnLayout layout, int paragraphCount, int expectedFirst, int expectedLast)
+        {
+            var labels = new List<int>();
+
+            foreach (var column in new[]
+                     {
+                         (layout.Margin, layout.GapLeft),
+                         (layout.GapRight, layout.GapRight + layout.ColumnWidth)
+                     })
+            {
+                for (var y = layout.Margin; y < layout.Margin + layout.ContentHeight; y++)
+                {
+                    var label = GetParagraphColorAtRow(page, y, column.Item1, column.Item2);
+
+                    if (label < 0)
+                        continue;
+
+                    if (labels.Count == 0 || labels[labels.Count - 1] != label)
+                        labels.Add(label);
+                }
+            }
+
+            Assert.That(labels, Is.Not.Empty, "LAY-104: the page contains text ink.");
+
+            for (var index = 1; index < labels.Count; index++)
+                Assert.That(labels[index], Is.GreaterThan(labels[index - 1]),
+                    "LAY-104: reading order continues down the first column and then down the second.");
+
+            Assert.That(labels.All(x => x >= 0 && x < paragraphCount), Is.True);
+            if (expectedFirst >= 0)
+                Assert.That(labels[0], Is.EqualTo(expectedFirst),
+                    "LAY-104: reading starts with the first paragraph at the top-left.");
+            if (expectedLast >= 0)
+                Assert.That(labels[labels.Count - 1], Is.EqualTo(expectedLast),
+                    "LAY-104: the last page ends with the final paragraph.");
+        }
+
+        private static void AssertInkInsideContentArea(SKBitmap page, MultiColumnLayout layout)
+        {
+            var right = layout.GapRight + layout.ColumnWidth;
+            var bottom = layout.Margin + layout.ContentHeight;
+            var violations = 0;
+
+            for (var y = 0; y < page.Height; y++)
+            for (var x = 0; x < page.Width; x++)
+            {
+                if (!IsInk(page.GetPixel(x, y)))
+                    continue;
+
+                if (x < layout.Margin || x > right || y < layout.Margin || y > bottom)
+                    violations++;
+            }
+
+            Assert.That(violations, Is.EqualTo(0), "LAY-104: text ink escapes the content area.");
+        }
+
+        private static void AssertGapIsEmpty(IEnumerable<SKBitmap> pages, MultiColumnLayout layout)
+        {
+            var violations = 0;
+
+            foreach (var page in pages)
+            for (var y = layout.Margin; y < layout.Margin + layout.ContentHeight; y++)
+                violations += CountGapPixels(page, y, layout);
+
+            Assert.That(violations, Is.EqualTo(0), "LAY-104: content must not leak into the column gap.");
+        }
+
+        private static int CountGapPixels(SKBitmap page, int y, MultiColumnLayout layout)
+        {
+            var count = 0;
+
+            for (var x = layout.GapLeft; x < layout.GapRight; x++)
+            {
+                if (IsInk(page.GetPixel(x, y)))
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static (bool HasInk, int Top, int Bottom) GetColumnInkBounds(
+            SKBitmap page, MultiColumnLayout layout, int from, int to)
+        {
+            var top = int.MaxValue;
+            var bottom = int.MinValue;
+
+            for (var y = layout.Margin; y < layout.Margin + layout.ContentHeight; y++)
+            for (var x = from; x < to; x++)
+            {
+                if (!IsInk(page.GetPixel(x, y)))
+                    continue;
+
+                top = Math.Min(top, y);
+                bottom = Math.Max(bottom, y);
+            }
+
+            return bottom < top ? (false, 0, 0) : (true, top, bottom);
+        }
+
+        private static int[] CountParagraphInk(IEnumerable<byte[]> images)
+        {
+            var counts = new int[3];
+
+            foreach (var image in images)
+            {
+                using var bitmap = SKBitmap.Decode(image);
+
+                for (var y = 0; y < bitmap.Height; y++)
+                for (var x = 0; x < bitmap.Width; x++)
+                {
+                    var label = GetParagraphColor(bitmap.GetPixel(x, y));
+
+                    if (label >= 0)
+                        counts[label]++;
+                }
+            }
+
+            return counts;
+        }
+
+        private static int GetParagraphColorAtRow(SKBitmap page, int y, int from, int to)
+        {
+            var counts = new int[3];
+
+            for (var x = from; x < to; x++)
+            {
+                var label = GetParagraphColor(page.GetPixel(x, y));
+
+                if (label >= 0)
+                    counts[label]++;
+            }
+
+            var best = -1;
+            for (var index = 0; index < counts.Length; index++)
+            {
+                if (counts[index] > 0 && (best < 0 || counts[index] > counts[best]))
+                    best = index;
+            }
+
+            return best;
+        }
+
+        private static int GetParagraphColor(SKColor color)
+        {
+            if (color.Red > color.Green + 40 && color.Red > color.Blue + 40)
+                return 0;
+
+            if (color.Green > color.Red + 40 && color.Green > color.Blue + 40)
+                return 1;
+
+            if (color.Blue > color.Red + 40 && color.Blue > color.Green + 40)
+                return 2;
+
+            return -1;
+        }
+
+        private static void AssertMultiColumnEmptyContent(ParityFixture fixture, int columns, int gap)
+        {
+            var document = CreateMultiColumnDocument(fixture, columns, gap, true, _ => { }, _ => { });
+            var pages = RenderMultiColumnScenario(fixture, "empty-content", document, 1);
+
+            try
+            {
+                Assert.That(CountPixels(pages[0], IsInk), Is.EqualTo(0),
+                    "LAY-104: empty content leaves the page blank.");
+            }
+            finally
+            {
+                DisposePages(pages);
+            }
+        }
+
+        private static void AssertMultiColumnOversizedChild(ParityFixture fixture, int columns, int gap)
+        {
+            var document = CreateMultiColumnDocument(fixture, columns, gap, true, _ => { },
+                container => container.Height(200).Background("#ff0000"));
+
+            Assert.That(() => document.GeneratePdf(), Throws.TypeOf<DocumentLayoutException>(),
+                "LAY-104: a child taller than a column is rejected instead of silently clipped.");
+            Assert.That(() => document.GeneratePdf(), Throws.TypeOf<DocumentLayoutException>(),
+                "LAY-104: the oversized-child failure is deterministic.");
+        }
+
+        private static SKBitmap[] RenderMultiColumnScenario(
+            ParityFixture fixture, string scenario, IDocument document, int expectedPages)
+        {
+            var pdf = document.GeneratePdf(out var count);
+            var images = document.GenerateImages().ToArray();
+
+            Assert.That(Encoding.ASCII.GetString(pdf, 0, 5), Is.EqualTo("%PDF-"), scenario + " PDF header");
+            Assert.That(count, Is.EqualTo(expectedPages), scenario + " PDF-reported page count");
+            Assert.That(images.Length, Is.EqualTo(expectedPages), scenario + " raster page count");
+
+            SaveArtifact(fixture.Id, $"scenario-{scenario}/document.pdf", pdf);
+
+            var pages = new SKBitmap[images.Length];
+
+            for (var index = 0; index < images.Length; index++)
+            {
+                SaveArtifact(fixture.Id, $"scenario-{scenario}/page-{index + 1}.png", images[index]);
+                pages[index] = SKBitmap.Decode(images[index]);
+                Assert.That(pages[index], Is.Not.Null, scenario + " raster output could not be decoded.");
+            }
+
+            return pages;
+        }
+
+        private static void AssertDeterministicRendering(IDocument document, string scenario, int expectedPages)
+        {
+            var first = CountPageInk(document.GenerateImages().ToArray());
+            var second = CountPageInk(document.GenerateImages().ToArray());
+
+            Assert.That(first.Length, Is.EqualTo(expectedPages), scenario + ": repeat generation page count");
+            Assert.That(second, Is.EqualTo(first),
+                scenario + ": repeated generation must not consume or duplicate content.");
+        }
+
+        private static int[] CountPageInk(byte[][] images)
+        {
+            var result = new int[images.Length];
+
+            for (var index = 0; index < images.Length; index++)
+            {
+                using var bitmap = SKBitmap.Decode(images[index]);
+                result[index] = CountPixels(bitmap, IsInk);
+            }
+
+            return result;
+        }
+
+        private static void AssertPixelColor(SKBitmap page, int x, int y, string expected, string scenario)
+        {
+            var actual = page.GetPixel(x, y);
+            var color = SKColor.Parse(expected);
+
+            Assert.That(
+                Math.Abs(actual.Red - color.Red) <= 8 &&
+                Math.Abs(actual.Green - color.Green) <= 8 &&
+                Math.Abs(actual.Blue - color.Blue) <= 8,
+                Is.True,
+                $"{scenario}: expected {expected} at ({x},{y}) but found {actual}.");
+        }
+
+        private static byte[] CreateSolidPng(int width, int height, string color)
+        {
+            using var bitmap = new SKBitmap(width, height);
+            bitmap.Erase(SKColor.Parse(color));
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            return data.ToArray();
+        }
+
+        private static bool IsInk(SKColor color) =>
+            color.Red != 255 || color.Green != 255 || color.Blue != 255;
+
         private static byte[][] RenderAndCheck(IDocument document, ParityFixture fixture)
         {
             var pdf = document.GeneratePdf(out var count);
