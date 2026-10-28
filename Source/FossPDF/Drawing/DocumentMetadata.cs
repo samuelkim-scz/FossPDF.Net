@@ -10,6 +10,11 @@ namespace FossPDF.Drawing
         public bool PdfA { get; set; }
 
         public string? Title { get; set; }
+        /// <summary>
+        /// The document's natural language as a BCP 47 tag (for example <c>en-US</c>). It is written
+        /// to the catalog of tagged PDFs and inherited by structure elements.
+        /// </summary>
+        public string? Language { get; set; }
         public string? Author { get; set; }
         public string? Subject { get; set; }
         public string? Keywords { get; set; }

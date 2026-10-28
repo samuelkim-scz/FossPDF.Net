@@ -4,7 +4,7 @@
         <Company>Santa Cruz County HSA</Company>
         <PackageId>FossPDF.PdfOperations</PackageId>
         <Version>2026.5.1</Version>
-        <PackageDescription>Optional existing-PDF operations for FossPDF: load, select, reorder and merge pages from existing PDF files, byte arrays and borrowed streams without rasterizing them.</PackageDescription>
+        <PackageDescription>Optional advanced PDF operations for FossPDF: load, select, reorder and merge existing PDFs, apply overlays, encryption, attachments and XMP metadata, optimize with qpdf, and produce tagged PDF with a semantic structure tree without rasterizing anything.</PackageDescription>
         <PackageReleaseNotes>Initial optional PDF operations companion package for FossPDF.</PackageReleaseNotes>
         <LangVersion>10</LangVersion>
         <TargetFramework>net9.0</TargetFramework>
@@ -16,7 +16,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <Copyright>Samuel Kim and FossPDF contributors</Copyright>
-        <PackageTags>pdf merge pages existing document operations foss</PackageTags>
+        <PackageTags>pdf merge pages existing document operations tagged accessibility semantic structure foss</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>

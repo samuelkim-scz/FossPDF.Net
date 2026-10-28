@@ -48,10 +48,11 @@ Foundation deliverables remain defined by [FP-001](https://github.com/samuelkim-
 | `FAIL-001` — Malformed image produces a composition error | Rendering throws DocumentComposeException; no valid PDF output is returned. |
 | `FAIL-002` — Impossible fixed-size content produces a layout error | Rendering throws DocumentLayoutException instead of silently clipping or returning a completed PDF. |
 | `RES-001` — Caller-owned PDF output stream stays open | The stream contains a PDF header after rendering and remains readable, seekable and writable. Appending data after generation succeeds; the fixture disposes its own stream. |
+| `ACC-401` — Semantic structure and tagged PDF | On `net9.0` only (the PDF operations companion package's target framework), the fixture's `en-US` document titled `Accessible fixture` renders an H1, a paragraph, a figure with the exact alternative text `Four colored quadrants.` and decorative content. The structure tree contains `Document` with `H1`, `P` and `Figure` in reading order, the figure owns one marked-content reference and the exact `/Alt`, and the catalog declares `/MarkInfo /Marked true`, `/ViewerPreferences /DisplayDocTitle true` and `/Lang (en-US)`. Decorative content and the repeated header are `/Artifact BMC` forms with no `/StructParents` and are absent from the structure tree. A paragraph split across pages stays one structure element with one `/MCR` per page, every marked-content reference resolves through the parent tree to its owning element, and `qpdf --check` reports no syntax or stream errors. See [PDF_ACCESSIBILITY.md](PDF_ACCESSIBILITY.md). |
 
 Rectangles and dimensions in each fixture's `raster` object are authored reference data. The runner renders these references directly with Skia, independently of FossPDF layout. Expected images are never updated by copying the current FossPDF output. Raster page order and PDF-reported page count are checked independently against the catalog.
 
-A fixture may declare `frameworks` to scope it to the frameworks whose runner is compiled. `IMG-201`, `PDF-302`, `PDF-303`, `PDF-304`, `PDF-305` and `PDF-306` are scoped to `net9.0` because their companion packages (`FossPDF.Svg` and `FossPDF.PdfOperations`) target `net9.0`; the `net8.0` run reports those fixtures as skipped and the catalog consistency check compares active fixtures only against runners available on the current framework.
+A fixture may declare `frameworks` to scope it to the frameworks whose runner is compiled. `IMG-201`, `PDF-302`, `PDF-303`, `PDF-304`, `PDF-305`, `PDF-306` and `ACC-401` are scoped to `net9.0` because their companion packages (`FossPDF.Svg` and `FossPDF.PdfOperations`) target `net9.0`; the `net8.0` run reports those fixtures as skipped and the catalog consistency check compares active fixtures only against runners available on the current framework.
 
 The PDF baseline checks establish successful generation and reported page count; the geometric comparisons inspect raster output. Future PDF-processing and conformance fixtures require independent PDF inspection/validators, as specified in their work items.
 
@@ -89,7 +90,7 @@ Each catalog entry records the current capability, initial assessment, concrete 
 | [FP-502](https://github.com/samuelkim-scz/FossPDF.Net/issues/31) | `DEV-502` | Provide interactive hierarchy inspection, measurement, search, source navigation and diagnostics. |
 | [FP-503](https://github.com/samuelkim-scz/FossPDF.Net/issues/32) | `RUN-503` | Qualify supported trimmed/NativeAOT consumers and native assets by publishing and executing them. |
 
-PDF-operation inputs reuse the generated PAG-001/PAG-002 documents, whose page colors make selection/order observable. ACC-401 declares independently authored semantic content, language, heading order and figure alternatives; the PDF/A/PDF/UA contracts build on it. PDF-305 supplies exact attachment bytes/XMP values. These inputs define future acceptance scenarios; they do not claim current tagged or conforming output.
+PDF-operation inputs reuse the generated PAG-001/PAG-002 documents, whose page colors make selection/order observable. ACC-401 declares independently authored semantic content, language, heading order and figure alternatives; the PDF/A/PDF/UA contracts build on it. PDF-305 supplies exact attachment bytes/XMP values. The PDF/A and PDF/UA contracts remain planned; their inputs do not claim conforming output.
 
 ## Visual tolerances
 
@@ -114,7 +115,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains twenty-nine executable scenarios on .NET 9 (twenty-three on .NET 8, where the net9.0-scoped `IMG-201`, `PDF-302`, `PDF-303`, `PDF-304`, `PDF-305` and `PDF-306` are skipped), one catalog/traceability check, four raster-comparison checks, and 7 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains thirty executable scenarios on .NET 9 (twenty-three on .NET 8, where the net9.0-scoped `IMG-201`, `PDF-302`, `PDF-303`, `PDF-304`, `PDF-305`, `PDF-306` and `ACC-401` are skipped), one catalog/traceability check, four raster-comparison checks, and 6 explicitly planned/skipped contracts.
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 
 See the [initial Windows evidence](evidence/fp-001-windows.md) for the recorded local run. Other platform qualification and broader conformance/performance coverage remain tracked by their work items.

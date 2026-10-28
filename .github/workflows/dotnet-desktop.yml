@@ -77,6 +77,11 @@ jobs:
         run: |
           python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-compression-validation.txt
           python Source/FossPDF.UnitTests/Parity/verify_pdf_compression.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-306
+      - name: Verify tagged PDF structure with independent tools
+        shell: bash
+        run: |
+          python -m pip install -r Source/FossPDF.UnitTests/Parity/requirements-tagging-validation.txt
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_tagging.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/ACC-401
       - name: Run .NET 9 settings consumer example
         shell: bash
         run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity

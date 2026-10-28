@@ -36,6 +36,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The PDF optimization guide](docs/feature-parity/PDF_OPTIMIZATION.md) covers explicit additional compression, intentional decompression and linearization through an external qpdf executable, including discovery, measured size behavior, interactions and failure handling.
 
+[The tagged PDF guide](docs/feature-parity/PDF_ACCESSIBILITY.md) covers semantic wrappers, automatic artifact tagging, alternative text and language, reading order, links, page breaks and the structure/parent-tree output produced by the optional PDF operations companion.
+
 ## Confirmed gaps and capabilities to validate
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
