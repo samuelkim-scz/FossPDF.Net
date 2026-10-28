@@ -100,10 +100,9 @@ decryption is FP-304 and is not part of this API.
 
 ## Scope
 
-This work item delivers loading, selection, reordering, extraction, merging and saving. It does not
-include:
+This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
+and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md). It does not include:
 
-- overlays and underlays (FP-303);
 - encryption, permissions and decryption controls (FP-304);
 - attachments, associated files and XMP extensions (FP-305);
 - explicit extra compression or linearization (FP-306);

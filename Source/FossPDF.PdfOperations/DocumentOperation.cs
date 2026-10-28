@@ -23,11 +23,50 @@ namespace FossPDF.Fluent
     /// </remarks>
     public sealed class DocumentOperation
     {
+        private const string DefaultSelector = "1-z";
+
         private readonly List<InputSource> _sources = new List<InputSource>();
         private readonly List<PageSelection> _selections = new List<PageSelection>();
+        private readonly List<LayerOperation> _underlays = new List<LayerOperation>();
+        private readonly List<LayerOperation> _overlays = new List<LayerOperation>();
 
         private DocumentOperation()
         {
+        }
+
+        /// <summary>
+        /// Describes one overlay or underlay source: the layer PDF file and how its pages are
+        /// mapped onto the output pages.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="TargetPages"/> selects output pages and defaults to all of them.
+        /// <see cref="SourcePages"/> selects the layer pages used for the first output pages and
+        /// defaults to all layer pages. <see cref="RepeatSourcePages"/> cycles after the initial
+        /// source pages are exhausted; when it is supplied without <see cref="SourcePages"/>, the
+        /// repetition starts with the first target page.
+        /// </remarks>
+        public sealed class LayerConfiguration
+        {
+            /// <summary>
+            /// The path of the overlay or underlay PDF file. The file is read immediately.
+            /// </summary>
+            public string FilePath { get; set; } = string.Empty;
+
+            /// <summary>
+            /// The output pages that receive the layer. Defaults to all output pages.
+            /// </summary>
+            public string? TargetPages { get; set; }
+
+            /// <summary>
+            /// The layer pages used first, in selector order. Defaults to all layer pages.
+            /// </summary>
+            public string? SourcePages { get; set; }
+
+            /// <summary>
+            /// Layer pages that repeat after <see cref="SourcePages"/> is exhausted. No repetition
+            /// happens when this is not set.
+            /// </summary>
+            public string? RepeatSourcePages { get; set; }
         }
 
         /// <summary>
@@ -154,6 +193,26 @@ namespace FossPDF.Fluent
         }
 
         /// <summary>
+        /// Applies a PDF file beneath the selected output pages. Every underlay is drawn in the
+        /// order the methods were called, before the page's own content.
+        /// </summary>
+        public DocumentOperation UnderlayFile(LayerConfiguration configuration)
+        {
+            AddLayer(configuration, _underlays);
+            return this;
+        }
+
+        /// <summary>
+        /// Applies a PDF file above the selected output pages. Every overlay is drawn in the order
+        /// the methods were called, after the page's own content.
+        /// </summary>
+        public DocumentOperation OverlayFile(LayerConfiguration configuration)
+        {
+            AddLayer(configuration, _overlays);
+            return this;
+        }
+
+        /// <summary>
         /// Executes the recorded operations and writes the result to a file. The file is only
         /// created after the operation has completed successfully.
         /// </summary>
@@ -190,7 +249,37 @@ namespace FossPDF.Fluent
         /// </summary>
         public byte[] SaveToBytes()
         {
-            return PdfDocumentMerger.Execute(_sources, _selections);
+            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays);
+        }
+
+        private void AddLayer(LayerConfiguration configuration, List<LayerOperation> layers)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
+            var targetPages = ValidateSelector(configuration.TargetPages, nameof(configuration.TargetPages));
+            var sourcePages = ValidateSelector(configuration.SourcePages, nameof(configuration.SourcePages));
+            var repeatSourcePages = ValidateSelector(configuration.RepeatSourcePages, nameof(configuration.RepeatSourcePages));
+
+            var data = ReadFile(configuration.FilePath, nameof(configuration.FilePath));
+
+            layers.Add(new LayerOperation(
+                data,
+                configuration.FilePath,
+                targetPages,
+                sourcePages,
+                repeatSourcePages));
+        }
+
+        private static string? ValidateSelector(string? selector, string parameterName)
+        {
+            if (selector == null)
+                return null;
+
+            if (string.IsNullOrWhiteSpace(selector))
+                throw new ArgumentException("A page selector must not be empty.", parameterName);
+
+            return selector;
         }
 
         private static DocumentOperation Load(byte[] data, string name, string? password = null)
@@ -213,8 +302,6 @@ namespace FossPDF.Fluent
 
             _selections.Add(new PageSelection(sourceIndex, pageSelector ?? DefaultSelector));
         }
-
-        private const string DefaultSelector = "1-z";
 
         private static byte[] ReadFile(string filePath, string parameterName)
         {
@@ -288,6 +375,29 @@ namespace FossPDF.Fluent
             public int SourceIndex { get; }
             public string Selector { get; }
         }
+
+        internal sealed class LayerOperation
+        {
+            public LayerOperation(
+                byte[] data,
+                string name,
+                string? targetPages,
+                string? sourcePages,
+                string? repeatSourcePages)
+            {
+                Data = data;
+                Name = name;
+                TargetPages = targetPages;
+                SourcePages = sourcePages;
+                RepeatSourcePages = repeatSourcePages;
+            }
+
+            public byte[] Data { get; }
+            public string Name { get; }
+            public string? TargetPages { get; }
+            public string? SourcePages { get; }
+            public string? RepeatSourcePages { get; }
+        }
     }
 
     /// <summary>
@@ -298,7 +408,9 @@ namespace FossPDF.Fluent
     {
         public static byte[] Execute(
             IReadOnlyList<DocumentOperation.InputSource> sources,
-            IReadOnlyList<DocumentOperation.PageSelection> selections)
+            IReadOnlyList<DocumentOperation.PageSelection> selections,
+            IReadOnlyList<DocumentOperation.LayerOperation> underlays,
+            IReadOnlyList<DocumentOperation.LayerOperation> overlays)
         {
             if (sources.Count == 0)
                 throw new InvalidOperationException("Load a PDF document before saving an operation.");
@@ -332,6 +444,8 @@ namespace FossPDF.Fluent
                     throw new PdfOperationException("The page selection produced no pages.");
 
                 CopyMetadata(opened[0], destination);
+
+                PdfLayers.Apply(destination, underlays, overlays);
 
                 using var buffer = new MemoryStream();
                 destination.Save(buffer, false);

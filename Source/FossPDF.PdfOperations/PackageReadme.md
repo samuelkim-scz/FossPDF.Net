@@ -46,6 +46,34 @@ Merging another document appends a new source: `MergeFile(path)`, `MergeFile(pat
 `Merge(byte[])`, `Merge(byte[], selector)`, `Merge(Stream)` and `Merge(Stream, selector)`. When no
 selection has been recorded for the loaded document yet, all of its pages are kept first.
 
+## Overlays and underlays
+
+`UnderlayFile(configuration)` draws another PDF beneath selected output pages;
+`OverlayFile(configuration)` draws it above them. Both accept a page selector, an optional source
+page list and optional repetition:
+
+```csharp
+DocumentOperation
+    .LoadFile("report.pdf")
+    .UnderlayFile(new DocumentOperation.LayerConfiguration
+    {
+        FilePath = "letterhead.pdf",
+        TargetPages = "1"
+    })
+    .OverlayFile(new DocumentOperation.LayerConfiguration
+    {
+        FilePath = "stamp.pdf",
+        TargetPages = "2-z",
+        RepeatSourcePages = "1"
+    })
+    .Save("stamped.pdf");
+```
+
+Layer pages are imported as form XObjects and fitted uniformly into the destination trim box,
+centered, with source and destination rotation handled. Underlays are drawn in registration order
+below the original content; overlays are drawn in registration order above it. The layer file is
+read when the method is called.
+
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
@@ -55,5 +83,5 @@ selection has been recorded for the loaded document yet, all of its pages are ke
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- This release does not encrypt, decrypt, attach files, extend XMP metadata, linearize, or overlay
-  pages; those workflows are tracked by their own work items.
+- This release does not encrypt, decrypt, attach files, extend XMP metadata or linearize; those
+  workflows are tracked by their own work items.

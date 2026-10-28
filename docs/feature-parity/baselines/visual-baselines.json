@@ -343,6 +343,115 @@
           ]
         }
       }
+    },
+    "osx-x64": {
+      "measuredOn": "osx-x64",
+      "scenarios": {
+        "report": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 109329,
+              "inkBounds": {
+                "x": 40,
+                "y": 40,
+                "width": 516,
+                "height": 757
+              },
+              "colorPixels": {
+                "red": 0,
+                "green": 0,
+                "blue": 17299,
+                "yellow": 0,
+                "dark": 6192,
+                "gray": 75260,
+                "other": 10578
+              }
+            }
+          ]
+        },
+        "text": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 44024,
+              "inkBounds": {
+                "x": 40,
+                "y": 48,
+                "width": 511,
+                "height": 437
+              },
+              "colorPixels": {
+                "red": 138,
+                "green": 0,
+                "blue": 0,
+                "yellow": 0,
+                "dark": 18987,
+                "gray": 24881,
+                "other": 18
+              }
+            }
+          ]
+        },
+        "graphics": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 104424,
+              "inkBounds": {
+                "x": 39,
+                "y": 46,
+                "width": 517,
+                "height": 262
+              },
+              "colorPixels": {
+                "red": 5000,
+                "green": 5000,
+                "blue": 5228,
+                "yellow": 5000,
+                "dark": 26085,
+                "gray": 53430,
+                "other": 4681
+              }
+            }
+          ]
+        },
+        "image": {
+          "pageCount": 1,
+          "pages": [
+            {
+              "page": 1,
+              "width": 595,
+              "height": 842,
+              "inkPixels": 68633,
+              "inkBounds": {
+                "x": 40,
+                "y": 46,
+                "width": 511,
+                "height": 273
+              },
+              "colorPixels": {
+                "red": 15000,
+                "green": 15000,
+                "blue": 15000,
+                "yellow": 15000,
+                "dark": 3195,
+                "gray": 5438,
+                "other": 0
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }
