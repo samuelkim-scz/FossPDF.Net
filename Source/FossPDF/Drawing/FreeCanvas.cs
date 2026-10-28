@@ -1,4 +1,4 @@
-﻿using FossPDF.Infrastructure;
+using FossPDF.Infrastructure;
 using SkiaSharp;
 
 namespace FossPDF.Drawing
@@ -41,12 +41,32 @@ namespace FossPDF.Drawing
 
         }
 
+        public void DrawRectangle(Position vector, Size size, RectangleStyle style)
+        {
+
+        }
+
         public void DrawText(SKTextBlob skTextBlob, Position position, TextStyle style, DocumentSpecificFontManager fontManager)
         {
 
         }
 
         public void DrawImage(SKImage image, Position position, Size size)
+        {
+
+        }
+
+        public void SaveState()
+        {
+
+        }
+
+        public void RestoreState()
+        {
+
+        }
+
+        public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
         {
 
         }

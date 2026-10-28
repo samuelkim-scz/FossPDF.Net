@@ -524,6 +524,10 @@ namespace FossPDF.UnitTests
             }
 
             public void DrawRectangle(Position vector, Size size, string color) { }
+            public void DrawRectangle(Position vector, Size size, RectangleStyle style) { }
+            public void SaveState() { }
+            public void RestoreState() { }
+            public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius) { }
             public void DrawImage(SKImage image, Position position, Size size) { }
             public void DrawHyperlink(string url, Size size) { }
             public void DrawSectionLink(string sectionName, Size size) { }

@@ -1,16 +1,13 @@
 using FossPDF.Helpers;
-using FossPDF.Infrastructure;
 
 namespace FossPDF.Elements
 {
-    internal class Background : ContainerElement
+    internal class Background : RectangleDecoration
     {
-        public string Color { get; set; } = Colors.Black;
-        
-        internal override void Draw(Size availableSpace)
+        public string Color
         {
-            Canvas.DrawRectangle(Position.Zero, availableSpace, Color);
-            base.Draw(availableSpace);
+            get => FillColor ?? Colors.Black;
+            set => FillColor = value;
         }
     }
 }

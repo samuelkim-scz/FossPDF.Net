@@ -16,6 +16,12 @@ namespace FossPDF.UnitTests.TestEngine
         public void Scale(float scaleX, float scaleY) => Operations.Add(new CanvasScaleOperation(scaleX, scaleY));
 
         public void DrawRectangle(Position vector, Size size, string color) => Operations.Add(new CanvasDrawRectangleOperation(vector, size, color));
+
+        public void DrawRectangle(Position vector, Size size, RectangleStyle style) => Operations.Add(new CanvasDrawRectangleStyleOperation(vector, size, style));
+
+        public void SaveState() => Operations.Add(new CanvasSaveStateOperation());
+        public void RestoreState() => Operations.Add(new CanvasRestoreStateOperation());
+        public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius) => Operations.Add(new CanvasClipRectangleOperation(vector, size, cornerRadius));
         public void DrawText(SKTextBlob skTextBlob, Position position, TextStyle style, DocumentSpecificFontManager fontManager) => throw new NotImplementedException();
         public void DrawImage(SKImage image, Position position, Size size) => Operations.Add(new CanvasDrawImageOperation(position, size));
 

@@ -22,6 +22,11 @@ namespace FossPDF.Drawing
             Target.DrawRectangle(vector, size, color);
         }
 
+        public void DrawRectangle(Position vector, Size size, RectangleStyle style)
+        {
+            Target.DrawRectangle(vector, size, style);
+        }
+
         public void DrawText(SKTextBlob skTextBlob, Position position, TextStyle style, DocumentSpecificFontManager fontManager)
         {
             Target.DrawText(skTextBlob, position, style, fontManager);
@@ -45,6 +50,21 @@ namespace FossPDF.Drawing
         public void DrawSection(string sectionName)
         {
             Target.DrawSection(sectionName);
+        }
+
+        public void SaveState()
+        {
+            Target.SaveState();
+        }
+
+        public void RestoreState()
+        {
+            Target.RestoreState();
+        }
+
+        public void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
+        {
+            Target.ClipRectangle(vector, size, cornerRadius);
         }
 
         public void Rotate(float angle)
