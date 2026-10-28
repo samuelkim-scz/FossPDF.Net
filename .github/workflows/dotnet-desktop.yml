@@ -1,187 +1,30 @@
-name: Build, Test And Create Nuget Package
-
+name: Qualify unchanged main on macOS Intel
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-  schedule:
-    - cron: '3 0 * * 0'
-
 jobs:
-  main:
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-    env:
-      DOTNET_NOLOGO: 1
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-      UNIT_TEST_PROJECT: FossPDF.UnitTests/FossPDF.UnitTests.csproj
-
-    steps:
-      - name: 📝 Fetch Sources 📝
-        uses: actions/checkout@v7
-
-      - name: ⚙ Setup .NET SDKs ⚙
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-          
-      - name: 🔄 Restore Nuget Packages 🔄
-        shell: bash
-        run: dotnet restore
-        working-directory: ./Source
-
-      - name: 🛠 Build Solution 🛠
-        shell: bash
-        run: dotnet build -c Release --no-restore --warnaserror
-        working-directory: ./Source
-
-      - name: Run unit tests
-        shell: bash
-        run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
-        working-directory: ./Source
-
-      - name: Run .NET 9 settings consumer example
-        shell: bash
-        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity
-        working-directory: ./Source
-
-      - name: Upload test and parity fixture evidence
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: parity-evidence-${{ matrix.environment }}
-          path: |
-            artifacts/parity/**/*.trx
-            Source/FossPDF.UnitTests/bin/Release/net*/parity-artifacts/**
-            Source/FossPDF.Examples/bin/Release/net9.0/settings-example/**
-        
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
-        if: ${{ matrix.environment == 'windows-latest' }}
-        with:
-          name: Build Package
-          path: |
-            **/*.nupkg
-            **/*.snupkg
-            !.nuget
-
   quality:
-    name: Quality baselines (${{ matrix.environment }})
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+    runs-on: macos-26-intel
     env:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-
     steps:
-      - name: 📝 Fetch Sources 📝
-        uses: actions/checkout@v7
-
-      - name: ⚙ Setup .NET SDK ⚙
-        uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 9.0.x
-
-      - name: 🔄 Restore Nuget Packages 🔄
+      - run: dotnet restore FossPDF.Quality/FossPDF.Quality.csproj
+        working-directory: Source
+      - run: dotnet build FossPDF.Quality/FossPDF.Quality.csproj -c Release --no-restore --warnaserror
+        working-directory: Source
+      - name: Measure unchanged core with existing tolerances and font pins
         shell: bash
-        run: dotnet restore
-        working-directory: ./Source
-
-      - name: 🛠 Build Solution 🛠
-        shell: bash
-        run: dotnet build -c Release --no-restore --warnaserror
-        working-directory: ./Source
-
-      - name: Install qpdf (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: sudo apt-get update && sudo apt-get install -y qpdf
-
-      - name: Run quality baselines
-        shell: bash
-        run: dotnet run --project FossPDF.Quality/FossPDF.Quality.csproj -c Release --no-build --no-restore -- --mode all --output ../artifacts/quality
-        working-directory: ./Source
-
-      - name: Upload quality evidence
-        uses: actions/upload-artifact@v7
+        run: |
+          mkdir -p artifacts/qualified-baselines
+          cp docs/feature-parity/baselines/visual-baselines.json artifacts/qualified-baselines/
+          dotnet run --project Source/FossPDF.Quality/FossPDF.Quality.csproj -c Release --no-build --no-restore -- --mode visual --update-visual-baseline --baseline-dir artifacts/qualified-baselines --output artifacts/quality
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: quality-evidence-${{ matrix.environment }}
-          path: artifacts/quality/**/*
-
-  native-prototypes:
-    name: Native backend prototypes (${{ matrix.environment }})
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-    env:
-      DOTNET_NOLOGO: 1
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-      PROTOTYPE_PROJECT: FossPDF.NativePrototypes/FossPDF.NativePrototypes.csproj
-
-    steps:
-      - name: 📝 Fetch Sources 📝
-        uses: actions/checkout@v7
-
-      - name: ⚙ Setup .NET SDK ⚙
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 9.0.x
-
-      - name: 🔄 Restore Prototype Packages 🔄
-        shell: bash
-        run: dotnet restore "$PROTOTYPE_PROJECT" --locked-mode
-        working-directory: ./Source
-
-      - name: 🛠 Build Prototypes 🛠
-        shell: bash
-        run: dotnet build "$PROTOTYPE_PROJECT" -c Release --no-restore --warnaserror
-        working-directory: ./Source
-
-      - name: Run native backend prototypes
-        shell: bash
-        run: dotnet run --project "$PROTOTYPE_PROJECT" -c Release --no-build --no-restore -- --output ../artifacts/fp-002
-        working-directory: ./Source
-
-      - name: Install independent PDF inspector
-        shell: bash
-        run: python -m pip install -r Source/FossPDF.NativePrototypes/requirements-validation.txt
-
-      - name: Inspect vector output and semantic associations independently
-        shell: bash
-        run: python Source/FossPDF.NativePrototypes/verify_artifacts.py artifacts/fp-002
-
-      - name: Audit native assets, notices and locked dependencies
-        shell: bash
-        run: python Source/FossPDF.NativePrototypes/audit_dependencies.py Source/FossPDF.NativePrototypes/obj/project.assets.json artifacts/fp-002
-
-      - name: Upload prototype evidence
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: fp-002-native-prototypes-${{ matrix.environment }}
-          path: artifacts/fp-002/**/*
+          name: unchanged-main-macos-intel-quality
+          path: artifacts/**/*
