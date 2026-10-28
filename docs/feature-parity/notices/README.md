@@ -1,7 +1,8 @@
 ﻿# Pinned third-party notices
 
-These are unchanged upstream license/notice files for the FP-002 cohort. They document the decision;
-they do not make the prototype a shipped package or replace the full production distribution manifest.
+These are unchanged upstream license/notice files for the FP-002 cohort. They document the decision
+and are the exact copies packed with the `FossPDF.Svg` companion package under `licenses/` when the
+component is distributed; the prototype itself is still not a shipped package.
 
 | Files | Provenance |
 | --- | --- |

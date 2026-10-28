@@ -4,8 +4,8 @@ FossPDF is a fork of [QuestPDF](https://github.com/QuestPDF/QuestPDF) at the las
 under an open-source licence. FossPDF itself is MIT-licensed; see [LICENSE.md](LICENSE.md).
 
 This file records the third-party components used by the FossPDF packages and examples. It is
-included in the `FossPDF`, `FossPDF.Previewer`, `FossPDF.FontSubset` and `FossPDF.FontSubset.Glue`
-NuGet packages.
+included in the `FossPDF`, `FossPDF.Previewer`, `FossPDF.FontSubset`, `FossPDF.FontSubset.Glue` and
+`FossPDF.Svg` NuGet packages.
 
 ## Distributed with the FossPDF package
 
@@ -48,6 +48,22 @@ AvaloniaUI Project). WebAssembly native asset packages for SkiaSharp/HarfBuzzSha
 included in the desktop tool archive. The previewer-specific notice file and the files under
 `licenses/` are shipped only with the `FossPDF.Previewer` package.
 
+## Distributed with the FossPDF.Svg package
+
+The optional SVG companion package targets `net9.0` and ships the reviewed Svg.Skia cohort. Its
+full graph is recorded in [docs/feature-parity/NATIVE_DEPENDENCIES.md](docs/feature-parity/NATIVE_DEPENDENCIES.md);
+the table below lists the components that require attribution in binary distributions.
+
+| Component | Licence | Copyright / attribution |
+| --- | --- | --- |
+| Svg.Skia 4.9.1 | MIT | Copyright (c) 2020 Wiesław Šoltés; full text in `licenses/Svg.Skia-4.9.1-LICENSE.txt` |
+| Svg.Custom 4.9.1 (transitive) | **MS-PL** | Copyright (c) Wiesław Šoltés and Svg.Skia contributors; full text in `licenses/Svg.Custom-4.9.1-LICENSE.txt` |
+
+Svg.Custom is **Microsoft Public License (MS-PL)**, not MIT. Its complete licence text is packed
+with `FossPDF.Svg` because binary distributions must retain the applicable notices. No Svg.Custom
+source is copied into or re-licensed by FossPDF. Svg.Model, Svg.SceneGraph, Svg.Animation,
+ShimSkiaSharp and ExCSS are MIT-licensed transitive dependencies of the same graph.
+
 ## Distributed with the FossPDF font-subsetting packages
 
 | Component | Licence | Copyright / attribution |
@@ -66,7 +82,6 @@ These components are not redistributed in the FossPDF packages:
 | FluentAssertions 6.12.0 | Apache-2.0 | Copyright Dennis Doomen 2010-2023 |
 | BenchmarkDotNet 0.13.9 / 0.15.8 | MIT | .NET Foundation and contributors |
 | Avalonia.BuildServices 11.3.2 | MIT | Copyright 2023-2025 © The AvaloniaUI Project |
-| Svg.Skia 1.0.0.3 | MIT | Copyright © Wiesław Šoltés 2023 |
 | Microcharts 0.9.5.9 | MIT | Copyright 2020 |
 | Microsoft.NET.Test.Sdk | MIT | Copyright (c) .NET Foundation and contributors |
 | NUnit3TestAdapter | MIT | Copyright (c) 2022 Charlie Poole, Rob Prouse |

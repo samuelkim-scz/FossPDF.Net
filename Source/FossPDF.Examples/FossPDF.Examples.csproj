@@ -13,7 +13,6 @@
         <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2"/>
         <PackageReference Include="SkiaSharp" Version="3.119.4"/>
-        <PackageReference Include="Svg.Skia" Version="1.0.0.3"/>
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4"/>
         <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5"/>
     </ItemGroup>
@@ -21,6 +20,8 @@
     <ItemGroup>
         <ProjectReference Include="..\FossPDF.PlatformUtils\FossPDF.PlatformUtils.csproj"/>
         <ProjectReference Include="..\FossPDF\FossPDF.csproj"/>
+        <!-- The optional SVG companion package (net9.0). -->
+        <ProjectReference Include="..\FossPDF.Svg\FossPDF.Svg.csproj"/>
     </ItemGroup>
 
 

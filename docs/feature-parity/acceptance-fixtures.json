@@ -980,14 +980,76 @@
       "work_items": [
         "FP-201"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"40\" viewBox=\"0 0 80 40\"><rect width=\"40\" height=\"40\" fill=\"#ff0000\"/><rect x=\"40\" width=\"40\" height=\"40\" fill=\"#0000ff\"/></svg>",
         "size": [
           80,
           40
         ],
-        "reuse_count": 3
+        "page": [
+          160,
+          80
+        ],
+        "margin": 0,
+        "reuse_count": 3,
+        "raster_dpi": 144,
+        "fit_modes": [
+          {
+            "mode": "FitWidth",
+            "available": [
+              300,
+              200
+            ],
+            "expected": [
+              300,
+              150
+            ]
+          },
+          {
+            "mode": "FitHeight",
+            "available": [
+              500,
+              200
+            ],
+            "expected": [
+              400,
+              200
+            ]
+          },
+          {
+            "mode": "FitArea",
+            "available": [
+              300,
+              200
+            ],
+            "expected": [
+              300,
+              150
+            ]
+          },
+          {
+            "mode": "Resize",
+            "available": [
+              300,
+              200
+            ],
+            "expected": [
+              300,
+              200
+            ]
+          }
+        ],
+        "rejected_inputs": [
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect></svg>",
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><script>alert(1)</script></svg>",
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><use href=\"file:///etc/passwd\"/></svg>",
+          "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\"/>"
+        ]
       },
       "expected": [
         "Intrinsic dimensions, viewBox and aspect ratio preserve the red-left/blue-right geometry.",

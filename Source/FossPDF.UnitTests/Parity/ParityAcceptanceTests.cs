@@ -21,7 +21,7 @@ namespace FossPDF.UnitTests.Parity
     [TestFixture]
     [NonParallelizable]
     [Category("FeatureParity")]
-    public class ParityAcceptanceTests
+    public partial class ParityAcceptanceTests
     {
         private static readonly IReadOnlyDictionary<string, Action<ParityFixture>> Runners = CreateRunners();
 
@@ -57,7 +57,10 @@ namespace FossPDF.UnitTests.Parity
                 var test = new TestCaseData(fixture.Id)
                     .SetName($"Parity_{fixture.Id}_{fixture.Execution}")
                     .SetDescription(fixture.Title);
-                if (fixture.Execution == "planned")
+                if (!fixture.ExecutesOnCurrentFramework)
+                    test.Ignore($"Fixture contract is scoped to {string.Join(", ", fixture.Frameworks)}; " +
+                        $"this run targets {ParityFixture.CurrentFramework}.");
+                else if (fixture.Execution == "planned")
                     test.Ignore("Planned acceptance contract; implement and activate with " +
                         string.Join(", ", fixture.WorkItems) + ". This is not a parity pass.");
                 yield return test;
@@ -98,7 +101,9 @@ namespace FossPDF.UnitTests.Parity
                 Assert.That(catalog.Capabilities.Select(x => x.WorkItem), Is.Unique);
                 Assert.That(catalog.Capabilities.Select(x => x.WorkItem), Is.EquivalentTo(features));
                 Assert.That(catalog.Fixtures.Select(x => x.Id), Is.Unique);
-                Assert.That(catalog.Fixtures.Where(x => x.Execution == "active").Select(x => x.Id),
+                Assert.That(catalog.Fixtures
+                        .Where(x => x.Execution == "active" && x.ExecutesOnCurrentFramework)
+                        .Select(x => x.Id),
                     Is.EquivalentTo(Runners.Keys));
                 Assert.That(catalog.VisualPolicy.SolidChannelTolerance, Is.InRange(0, 8));
                 Assert.That(catalog.VisualPolicy.MaxChangedPixelFraction, Is.InRange(0, 0.01));
@@ -130,6 +135,8 @@ namespace FossPDF.UnitTests.Parity
                 Assert.That(fixture.Input.ValueKind, Is.EqualTo(JsonValueKind.Object), fixture.Id);
                 Assert.That(fixture.Expected, Is.Not.Empty, fixture.Id);
                 Assert.That(fixture.Expected.All(x => !string.IsNullOrWhiteSpace(x)), Is.True, fixture.Id);
+                Assert.That(fixture.Frameworks.All(x => x is "net8.0" or "net9.0"), Is.True,
+                    "Unknown framework scope: " + fixture.Id);
                 if (fixture.Execution == "planned")
                     Assert.That(catalog.Capabilities.Any(x => x.FixtureIds.Contains(fixture.Id)),
                         Is.True, "Planned fixtures must trace to a feature contract: " + fixture.Id);

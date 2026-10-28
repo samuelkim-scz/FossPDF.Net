@@ -124,6 +124,25 @@ namespace FossPDF.Drawing
             }
         }
 
+        /// <summary>
+        /// Resolves a typeface registered with this font manager by family name and style.
+        /// Used by companion packages that must render text with the same fonts as the document.
+        /// The returned typeface is owned by the font manager and must not be disposed by the caller.
+        /// </summary>
+        internal static bool TryResolveRegisteredTypeface(string fontFamily, SKFontStyle fontStyle, out SKTypeface? typeface)
+        {
+            if (fontFamily != null &&
+                StyleSets.TryGetValue(fontFamily, out var fontStyleSet) &&
+                fontStyleSet.Match(fontStyle) is { } registeredTypeface)
+            {
+                typeface = registeredTypeface;
+                return true;
+            }
+
+            typeface = null;
+            return false;
+        }
+
         public static DocumentSpecificFontManager MakeDocumentSpecific()
         {
             // we must clone the dictionaries to avoid sharing the same instances between different documents
