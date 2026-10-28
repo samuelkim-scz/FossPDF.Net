@@ -58,3 +58,13 @@ dotnet run --project FossPDF.Quality/FossPDF.Quality.csproj -c Release -- --mode
 - `/UserUnit` is not applied when placing layers.
 - Existing PDF pages and layers are not rasterized or rendered for comparison. Validation inspects content streams, form dictionaries, page boxes and rotation with PDFsharp rather than comparing pixels.
 - qpdf and veraPDF were unavailable, so no independent PDF conformance claim is made. The feature contract is covered by object-level assertions in `PDF-303` and the 20 overlay/underlay unit tests.
+
+## October 28 review: graphics-state isolation and independent inspection
+
+Two new regression cases reproduce overlays shifted by the original page CTM or hidden by its clip. Original page streams share a graphics state, so saving state only around each layer invocation was insufficient. Separate `q`/`Q` streams now enclose the unchanged original painting instructions before overlays. A third fixture uses a transparent primary page, a visible yellow underlay, red original content and a half-transparent green overlay.
+
+Release build: zero warnings/errors. Full suites: .NET 8, 463 passed / 13 skipped; .NET 9, 544 passed / 10 skipped. All 23 layer tests plus PDF-303 pass on .NET 9. Both layer examples pass. Visual scenarios and performance budgets pass; qpdf/veraPDF remain unavailable locally.
+
+`Source/FossPDF.UnitTests/Parity/verify_pdf_layers.py` uses pinned pypdf 6.21.2 independently of PDFsharp. Its 21 structural/content checks pass and now run in each OS build job. Optional local `--render` uses MuPDF (PyMuPDF 2.0), emits PNGs and adds pixel assertions; all 35 checks pass. Visual inspection confirms the expected stamp placement, clipping isolation, painting order and alpha blending. The original white PAG-001 page correctly hides its underlay; the transparent fixture makes the underlay visible.
+
+The alpha fixture checks an untouched yellow pixel, an original red pixel, the red/green half-opacity blend and the yellow/green half-opacity blend. The CTM and clipping fixtures check a green stamp at the requested position and white at the formerly shifted position. Reports include tool versions and input SHA-256 hashes, and are uploaded alongside generated parity artifacts. These checks establish supported painting behavior and parseability, not PDF/A or PDF/UA conformance.

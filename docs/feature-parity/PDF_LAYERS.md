@@ -64,6 +64,8 @@ the overlay list. Per output page, the content is painted in this order:
 2. the page's original content streams, unchanged;
 3. overlays, in registration order (the first call is above the underlays but below later overlays).
 
+When overlays are present, separate `q`/`Q` streams surround the original painting instructions. This restores the default page graphics state before overlays, so transforms, clipping and transparency left by the original content cannot shift, hide or fade a layer.
+
 The order is implemented with separate content streams rather than by rewriting the original page
 content. Layer forms are registered under per-page resource names (`/L0`, `/L1`, ...), and the page
 resource dictionary is cloned before those names are added, so an untargeted page never inherits a
@@ -129,3 +131,12 @@ both layers keep their declared rectangles/colors, and pages, dimensions and rot
 See [Source/FossPDF.Examples/PdfLayerExamples.cs](../../Source/FossPDF.Examples/PdfLayerExamples.cs)
 for runnable examples (including repeating one layer page across the remaining pages) and
 [evidence/fp-303-windows.md](evidence/fp-303-windows.md) for the recorded Windows validation.
+
+Independent validation uses the pinned pypdf reader in all three OS CI jobs:
+
+```powershell
+python -m pip install -r FossPDF.NativePrototypes/requirements-validation.txt
+python FossPDF.UnitTests/Parity/verify_pdf_layers.py FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-303
+```
+
+After running the full suite (or `PdfLayerTests` plus `PDF-303`), the script parses pages and forms, checks vector resources, page preservation, graphics-state isolation and transparency. With PyMuPDF installed locally, add `--render` to check pixel colors and emit review PNGs. The primary `PAG-001` document has an opaque white background, which correctly hides the yellow underlay; a separate transparent fixture proves visible underlay, original content and half-transparent overlay composition. These checks do not claim PDF/A or PDF/UA conformance.

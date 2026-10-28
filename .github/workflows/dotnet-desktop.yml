@@ -51,6 +51,11 @@ jobs:
         run: dotnet test "$UNIT_TEST_PROJECT" -c Release --no-build --no-restore --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
+      - name: Inspect PDF layers with an independent reader
+        shell: bash
+        run: |
+          python -m pip install -r Source/FossPDF.NativePrototypes/requirements-validation.txt
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_layers.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/PDF-303
       - name: Run .NET 9 settings consumer example
         shell: bash
         run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~DocumentSettingsExamples --logger trx --results-directory ../artifacts/parity

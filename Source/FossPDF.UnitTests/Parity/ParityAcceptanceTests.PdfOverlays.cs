@@ -212,6 +212,9 @@ namespace FossPDF.UnitTests.Parity
                 .Select(ResolveLayerItem)
                 .Where(x => x?.Stream?.Value != null)
                 .Select(x => DecodeLayerStream(x!.Stream!.Value))
+                // Count painting streams separately from the save/restore wrappers that isolate
+                // original page state. PdfLayerTests verifies those wrappers explicitly.
+                .Where(x => x.Trim() != "q" && x.Trim() != "Q")
                 .ToArray();
         }
 

@@ -24,6 +24,84 @@ namespace FossPDF.UnitTests
     [NonParallelizable]
     public class PdfLayerTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public void OverlayFile_IsolatesTheOriginalPageGraphicsState(bool clip)
+        {
+            using var document = new PdfDocument();
+            var page = document.AddPage();
+            page.Width = XUnit.FromPoint(120);
+            page.Height = XUnit.FromPoint(100);
+            var originalContent = "1 0 0 rg\n10 10 20 20 re f\n1 0 0 1 40 0 cm\n" +
+                                  (clip ? "0 0 15 15 re W n\n" : string.Empty);
+            var content = new PdfDictionary(document);
+            content.CreateStream(Encoding.ASCII.GetBytes(originalContent));
+            document.Internals.AddObject(content);
+            page.Contents.Elements.Add(PdfInternals.GetReference(content));
+            using var buffer = new MemoryStream();
+            document.Save(buffer, false);
+            var source = buffer.ToArray();
+            var layerPath = WriteTemporaryFile(CreateLayer(120, 100, "#00ff00", (15, 15, 20, 20)));
+            try
+            {
+                var result = DocumentOperation.Load(source)
+                    .OverlayFile(new DocumentOperation.LayerConfiguration { FilePath = layerPath })
+                    .SaveToBytes();
+
+                var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "PDF-303");
+                Directory.CreateDirectory(directory);
+                var path = Path.Combine(directory, clip ? "state-clip.pdf" : "state-transform.pdf");
+                File.WriteAllBytes(path, result);
+                TestContext.AddTestAttachment(path, "Overlay must not inherit the original page transform or clip.");
+
+                var streams = ReadStreams(result, 0, includeStateWrappers: true);
+                var originalIndex = Array.IndexOf(streams, originalContent);
+                Assert.That(originalIndex, Is.GreaterThan(0));
+                Assert.That(streams[originalIndex - 1].Trim(), Is.EqualTo("q"));
+                Assert.That(streams[originalIndex + 1].Trim(), Is.EqualTo("Q"));
+                Assert.That(streams[^1], Does.Contain("/L0 Do"));
+            }
+            finally
+            {
+                File.Delete(layerPath);
+            }
+        }
+
+        [Test]
+        public void TransparentLayers_PreservePaintingOrderAndOpacity()
+        {
+            using var document = new PdfDocument();
+            var page = document.AddPage();
+            page.Width = XUnit.FromPoint(120);
+            page.Height = XUnit.FromPoint(100);
+            var content = new PdfDictionary(document);
+            content.CreateStream(Encoding.ASCII.GetBytes("1 0 0 rg\n10 10 20 20 re f\n"));
+            document.Internals.AddObject(content);
+            page.Contents.Elements.Add(PdfInternals.GetReference(content));
+            using var buffer = new MemoryStream();
+            document.Save(buffer, false);
+            var underlayPath = WriteTemporaryFile(CreateLayer(120, 100, "#ffff00"));
+            var overlayPath = WriteTemporaryFile(CreateLayer(120, 100, "#00ff00", (15, 15, 20, 20), alpha: 128));
+            try
+            {
+                var result = DocumentOperation.Load(buffer.ToArray())
+                    .UnderlayFile(new DocumentOperation.LayerConfiguration { FilePath = underlayPath })
+                    .OverlayFile(new DocumentOperation.LayerConfiguration { FilePath = overlayPath })
+                    .SaveToBytes();
+                Assert.That(ReadForms(result, 0).Length, Is.EqualTo(2));
+                var directory = Path.Combine(TestContext.CurrentContext.TestDirectory, "parity-artifacts", "PDF-303");
+                Directory.CreateDirectory(directory);
+                var path = Path.Combine(directory, "transparent-layers.pdf");
+                File.WriteAllBytes(path, result);
+                TestContext.AddTestAttachment(path, "Independent inspection checks yellow, red and alpha-blended green regions.");
+            }
+            finally
+            {
+                File.Delete(underlayPath);
+                File.Delete(overlayPath);
+            }
+        }
+
         [Test]
         public void OverlayFile_ChangesOnlyTheTargetedPages()
         {
@@ -765,7 +843,7 @@ namespace FossPDF.UnitTests
             return Decode(form!.Stream!.Value);
         }
 
-        private static string[] ReadStreams(byte[] pdf, int pageIndex)
+        private static string[] ReadStreams(byte[] pdf, int pageIndex, bool includeStateWrappers = false)
         {
             using var document = Open(pdf);
 
@@ -773,6 +851,9 @@ namespace FossPDF.UnitTests
                 .Select(Resolve)
                 .Where(x => x?.Stream?.Value != null)
                 .Select(x => Decode(x!.Stream!.Value))
+                // Existing assertions compare painting streams. The graphics-state regression
+                // explicitly includes the separate save/restore wrappers around original content.
+                .Where(x => includeStateWrappers || (x.Trim() != "q" && x.Trim() != "Q"))
                 .ToArray();
         }
 
