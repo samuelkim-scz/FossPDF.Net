@@ -1329,7 +1329,10 @@
       "work_items": [
         "FP-305"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "source": "PAG-001",
         "attachment": {

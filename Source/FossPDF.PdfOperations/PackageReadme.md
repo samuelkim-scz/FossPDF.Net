@@ -101,14 +101,39 @@ readers, not copy protection. Encrypted PDFs cannot be PDF/A conforming. See
 [docs/feature-parity/PDF_SECURITY.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_SECURITY.md)
 for the strength/bit mapping, password rules and failure behavior.
 
+## Attachments and XMP metadata
+
+`AddAttachment` embeds a file with its exact bytes and lists it in both the embedded-files name
+tree and the catalog's associated-files array. The name, media type, description, timestamps and
+associated-file relationship (`Data`, `Source`, `Alternative`, `Supplement` or `Unspecified`) are
+written into the PDF. Attachments carried by the primary loaded document are kept; a duplicate key
+throws `PdfOperationException` unless `Replace` is set.
+
+```csharp
+DocumentOperation
+    .LoadFile("report.pdf")
+    .AddAttachment(new DocumentOperation.DocumentAttachment
+    {
+        FilePath = "terms.txt",
+        MimeType = "text/plain",
+        Relationship = DocumentOperation.DocumentAttachmentRelationship.Supplement
+    })
+    .Save("report-with-attachment.pdf");
+```
+
+`ExtendMetadata` appends a well-formed XML fragment to the XMP packet. The extension is written as
+a PDF incremental update, so the pages and the original document information stay unchanged.
+`ExtendMetadata` cannot be combined with `Encrypt`.
+
 ## Behavior
 
 - Page order follows the selectors exactly, including descending ranges and repeated pages.
 - Page boxes, content streams, resources and annotations are preserved. Metadata (title, author,
   subject, keywords, creator and creation/modification dates) is copied from the primary loaded
-  document; XMP metadata is not copied.
+  document. XMP metadata is not copied unless `ExtendMetadata` is used; see
+  [docs/feature-parity/PDF_ATTACHMENTS.md](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ATTACHMENTS.md).
 - A malformed, truncated or wrong-password input throws `PdfOperationException`. A syntax error in
   a selector throws `ArgumentException`; a selector that references a page outside the document or
   that produces no pages throws `PdfOperationException`.
-- This release does not attach files, extend XMP metadata or linearize; those workflows are
-  tracked by their own work items.
+- This release does not linearize or apply explicit extra compression; that workflow is tracked by
+  its own work item.

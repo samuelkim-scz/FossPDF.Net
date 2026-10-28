@@ -29,6 +29,8 @@ namespace FossPDF.Fluent
         private readonly List<PageSelection> _selections = new List<PageSelection>();
         private readonly List<LayerOperation> _underlays = new List<LayerOperation>();
         private readonly List<LayerOperation> _overlays = new List<LayerOperation>();
+        private readonly List<AttachmentOperation> _attachments = new List<AttachmentOperation>();
+        private readonly List<string> _metadataExtensions = new List<string>();
 
         private EncryptionSettings? _encryption;
 
@@ -163,6 +165,82 @@ namespace FossPDF.Fluent
             /// happens when this is not set.
             /// </summary>
             public string? RepeatSourcePages { get; set; }
+        }
+
+        /// <summary>
+        /// The role of an attached file relative to the PDF document, written as the file
+        /// specification's <c>/AFRelationship</c> entry when the attachment is also listed in the
+        /// document's associated-files array.
+        /// </summary>
+        public enum DocumentAttachmentRelationship
+        {
+            /// <summary>The attachment contains data used by the document.</summary>
+            Data,
+
+            /// <summary>The attachment is a source document from which the PDF was produced.</summary>
+            Source,
+
+            /// <summary>The attachment is an alternative representation of the document's content.</summary>
+            Alternative,
+
+            /// <summary>The attachment supplements the document.</summary>
+            Supplement,
+
+            /// <summary>The relationship is not specified. This is the default.</summary>
+            Unspecified
+        }
+
+        /// <summary>
+        /// Describes a file embedded in the output document.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="FilePath"/> is read when <see cref="AddAttachment"/> is called, so the file is
+        /// not locked afterwards and later changes to the file do not affect the operation. The
+        /// attachment is stored with its exact bytes; it is not re-encoded.
+        /// </remarks>
+        public sealed class DocumentAttachment
+        {
+            /// <summary>
+            /// The unique key of the attachment in the embedded-files name tree. Defaults to
+            /// <see cref="AttachmentName"/>.
+            /// </summary>
+            public string? Key { get; set; }
+
+            /// <summary>
+            /// The path of the file to embed. Required.
+            /// </summary>
+            public string FilePath { get; set; } = string.Empty;
+
+            /// <summary>
+            /// The file name shown to readers. Defaults to the file name of <see cref="FilePath"/>.
+            /// Unicode names are supported and written as a Unicode text string.
+            /// </summary>
+            public string? AttachmentName { get; set; }
+
+            /// <summary>The creation date of the attached file. Omitted when not set.</summary>
+            public DateTime? CreationDate { get; set; }
+
+            /// <summary>The modification date of the attached file. Omitted when not set.</summary>
+            public DateTime? ModificationDate { get; set; }
+
+            /// <summary>
+            /// The media type of the attachment, such as <c>text/plain</c>, written as the embedded
+            /// file stream's subtype. Defaults to <c>application/octet-stream</c>.
+            /// </summary>
+            public string? MimeType { get; set; }
+
+            /// <summary>A description of the attachment. Omitted when not set.</summary>
+            public string? Description { get; set; }
+
+            /// <summary>
+            /// Replaces an attachment that already uses the same key. When this is
+            /// <see langword="false"/> and the key is already present, saving throws
+            /// <see cref="PdfOperationException"/> instead of losing either attachment.
+            /// </summary>
+            public bool Replace { get; set; }
+
+            /// <summary>The relationship of the attachment to the document.</summary>
+            public DocumentAttachmentRelationship Relationship { get; set; } = DocumentAttachmentRelationship.Unspecified;
         }
 
         /// <summary>
@@ -309,6 +387,65 @@ namespace FossPDF.Fluent
         }
 
         /// <summary>
+        /// Embeds a file in the output document and lists it in the embedded-files name tree and in
+        /// the document's associated-files array. The attachment plan is copied now, including the
+        /// file bytes, so later changes to the configuration object or to the file do not affect the
+        /// operation. Attachments carried by the primary loaded document are kept as well.
+        /// </summary>
+        public DocumentOperation AddAttachment(DocumentAttachment attachment)
+        {
+            if (attachment == null)
+                throw new ArgumentNullException(nameof(attachment));
+
+            if (string.IsNullOrWhiteSpace(attachment.FilePath))
+                throw new ArgumentException("An attachment file path must not be empty.", nameof(attachment));
+
+            var name = string.IsNullOrWhiteSpace(attachment.AttachmentName)
+                ? Path.GetFileName(attachment.FilePath)
+                : attachment.AttachmentName!;
+
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(
+                    "An attachment name could not be derived from the file path.", nameof(attachment));
+
+            var key = string.IsNullOrWhiteSpace(attachment.Key) ? name : attachment.Key!;
+            var mimeType = ValidateMimeType(attachment.MimeType);
+
+            var data = ReadAttachment(attachment.FilePath);
+
+            _attachments.Add(new AttachmentOperation(
+                key,
+                data,
+                name,
+                attachment.CreationDate,
+                attachment.ModificationDate,
+                mimeType,
+                string.IsNullOrWhiteSpace(attachment.Description) ? null : attachment.Description,
+                attachment.Replace,
+                attachment.Relationship));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a well-formed XML fragment to the output document's XMP metadata. The fragment is
+        /// appended, in call order, inside the metadata packet's first <c>rdf:Description</c>
+        /// element. When the primary loaded document has XMP metadata, that packet is extended and
+        /// kept; otherwise the metadata generated for the output is extended.
+        /// </summary>
+        /// <remarks>
+        /// The fragment must contain at least one XML element and declare every namespace prefix it
+        /// uses. Extending metadata writes a small PDF incremental update after the document is
+        /// saved, so it cannot be combined with <see cref="Encrypt(Encryption256Bit)"/>.
+        /// </remarks>
+        public DocumentOperation ExtendMetadata(string metadata)
+        {
+            PdfXmp.Validate(metadata);
+            _metadataExtensions.Add(metadata);
+            return this;
+        }
+
+        /// <summary>
         /// Encrypts the output with 40-bit RC4. The encryption plan is copied now, so later changes
         /// to the configuration object do not affect the operation. Encryption can be set only once.
         /// </summary>
@@ -398,7 +535,21 @@ namespace FossPDF.Fluent
         /// </summary>
         public byte[] SaveToBytes()
         {
-            return PdfDocumentMerger.Execute(_sources, _selections, _underlays, _overlays, _encryption);
+            if (_metadataExtensions.Count > 0 && _encryption != null)
+            {
+                throw new InvalidOperationException(
+                    "Metadata extensions cannot be combined with encryption. " +
+                    "Extending XMP metadata writes an incremental update after the document is saved.");
+            }
+
+            return PdfDocumentMerger.Execute(
+                _sources,
+                _selections,
+                _underlays,
+                _overlays,
+                _attachments,
+                _metadataExtensions,
+                _encryption);
         }
 
         private DocumentOperation SetEncryption(EncryptionBase encryption, EncryptionStrength strength)
@@ -484,6 +635,49 @@ namespace FossPDF.Fluent
                 targetPages,
                 sourcePages,
                 repeatSourcePages));
+        }
+
+        private static string ValidateMimeType(string? mimeType)
+        {
+            if (string.IsNullOrWhiteSpace(mimeType))
+                return "application/octet-stream";
+
+            var value = mimeType;
+            var separator = value.IndexOf('/');
+
+            if (separator <= 0 || separator == value.Length - 1)
+            {
+                throw new ArgumentException(
+                    $"'{mimeType}' is not a valid media type. Use a type and subtype such as 'text/plain'.",
+                    nameof(DocumentAttachment.MimeType));
+            }
+
+            foreach (var character in value)
+            {
+                // The media type is written as a PDF name, so only printable ASCII without spaces or
+                // delimiters is accepted. Parameters such as "; charset=utf-8" are not supported.
+                if (character < 0x21 || character > 0x7E)
+                {
+                    throw new ArgumentException(
+                        $"'{mimeType}' is not a valid media type. Only printable ASCII without spaces is supported.",
+                        nameof(DocumentAttachment.MimeType));
+                }
+            }
+
+            return value;
+        }
+
+        private static byte[] ReadAttachment(string filePath)
+        {
+            try
+            {
+                return File.ReadAllBytes(filePath);
+            }
+            catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException)
+            {
+                throw new PdfOperationException(
+                    $"The attachment file '{filePath}' could not be read.", exception);
+            }
         }
 
         private static string? ValidateSelector(string? selector, string parameterName)
@@ -658,6 +852,41 @@ namespace FossPDF.Fluent
             public string? SourcePages { get; }
             public string? RepeatSourcePages { get; }
         }
+
+        internal sealed class AttachmentOperation
+        {
+            public AttachmentOperation(
+                string key,
+                byte[] data,
+                string name,
+                DateTime? creationDate,
+                DateTime? modificationDate,
+                string mimeType,
+                string? description,
+                bool replace,
+                DocumentAttachmentRelationship relationship)
+            {
+                Key = key;
+                Data = data;
+                Name = name;
+                CreationDate = creationDate;
+                ModificationDate = modificationDate;
+                MimeType = mimeType;
+                Description = description;
+                Replace = replace;
+                Relationship = relationship;
+            }
+
+            public string Key { get; }
+            public byte[] Data { get; }
+            public string Name { get; }
+            public DateTime? CreationDate { get; }
+            public DateTime? ModificationDate { get; }
+            public string MimeType { get; }
+            public string? Description { get; }
+            public bool Replace { get; }
+            public DocumentAttachmentRelationship Relationship { get; }
+        }
     }
 
     /// <summary>
@@ -671,6 +900,8 @@ namespace FossPDF.Fluent
             IReadOnlyList<DocumentOperation.PageSelection> selections,
             IReadOnlyList<DocumentOperation.LayerOperation> underlays,
             IReadOnlyList<DocumentOperation.LayerOperation> overlays,
+            IReadOnlyList<DocumentOperation.AttachmentOperation> attachments,
+            IReadOnlyList<string> metadataExtensions,
             DocumentOperation.EncryptionSettings? encryption)
         {
             if (sources.Count == 0)
@@ -706,13 +937,25 @@ namespace FossPDF.Fluent
 
                 CopyMetadata(opened[0], destination);
 
+                PdfAttachments.Apply(destination, opened[0], attachments);
                 PdfLayers.Apply(destination, underlays, overlays);
                 PdfSecurity.Apply(destination, encryption);
+
+                // The base XMP packet is read from the primary input before the source documents are
+                // disposed. PDFsharp regenerates the output metadata when the destination is saved,
+                // so preserving an input packet has to happen in the appended update.
+                var baseMetadata = metadataExtensions.Count == 0
+                    ? null
+                    : PdfXmp.Read(opened[0], sources[0].Name);
 
                 using var buffer = new MemoryStream();
                 destination.Save(buffer, false);
 
-                return buffer.ToArray();
+                var result = buffer.ToArray();
+
+                return metadataExtensions.Count == 0
+                    ? result
+                    : PdfXmp.Apply(result, sources[0].Name, baseMetadata, metadataExtensions);
             }
             catch (PdfSharpException exception)
             {

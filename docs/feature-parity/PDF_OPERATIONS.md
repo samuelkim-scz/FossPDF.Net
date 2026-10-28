@@ -84,7 +84,9 @@ before it is written, so a failed operation does not leave a partially written f
 Imported pages keep their original media boxes, content streams, resources and annotations (for
 example link annotations). The following metadata fields are copied from the primary loaded
 document when present: title, author, subject, keywords, creator, and creation/modification dates.
-The output producer is set by the PDF writing library, and XMP metadata is not copied.
+The output producer is set by the PDF writing library. XMP metadata is not copied unless the
+operation extends it; embedded attachments are described in
+[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md).
 
 | Condition | Result |
 | --- | --- |
@@ -102,9 +104,9 @@ flags and explicitly decrypting are covered by [PDF_SECURITY.md](PDF_SECURITY.md
 
 This work item delivers loading, selection, reordering, extraction, merging and saving. Overlays
 and underlays build on it in [PDF_LAYERS.md](PDF_LAYERS.md); encryption, permissions and decryption
-are covered by [PDF_SECURITY.md](PDF_SECURITY.md). It does not include:
+are covered by [PDF_SECURITY.md](PDF_SECURITY.md); attachments and XMP extensions are covered by
+[PDF_ATTACHMENTS.md](PDF_ATTACHMENTS.md). It does not include:
 
-- attachments, associated files and XMP extensions (FP-305);
 - explicit extra compression or linearization (FP-306);
 - rasterizing or previewing existing PDF pages.
 
