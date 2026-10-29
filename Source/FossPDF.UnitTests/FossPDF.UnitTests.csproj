@@ -34,6 +34,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="Resources\AccessibilityReview\*" CopyToOutputDirectory="PreserveNewest" />
       <Content Include="Resources\FontContent.ttf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>

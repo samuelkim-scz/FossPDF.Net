@@ -77,7 +77,7 @@ namespace FossPDF.Drawing
                 Settings.PdfAConformance != PdfAConformance.Legacy)
                 throw new NotSupportedException("Selectable PDF/A profiles require GeneratePdfA from the optional FossPDF.PdfOperations package on .NET 9, with veraPDF validation. Legacy retains the existing unqualified PdfA flag.");
             if (Settings.PdfUaConformance != PdfUaConformance.None)
-                throw new NotSupportedException("PDF/UA output requires FP-401/FP-403 semantic tagging and conformance support.");
+                throw new NotSupportedException("PDF/UA output requires GeneratePdfUa from the optional FossPDF.PdfOperations package on .NET 9, with machine validation and author accessibility checks.");
 
             if (Optimization != null)
             {

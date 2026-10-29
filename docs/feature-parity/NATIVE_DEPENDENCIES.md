@@ -175,3 +175,11 @@ hash, so another validator build cannot silently change acceptance. Upgrade the 
 installer manifest and qualification corpus together after reviewing the official release and
 licenses. No vendor code or profile XML is copied into the MIT library. See
 [deployment and limitations](PDF_ARCHIVAL.md) and [qualification evidence](evidence/fp-402-windows.md).
+
+
+FP-403 reuses the same unmodified veraPDF 1.30.3 CLI and external Java deployment for PDF/UA-1
+machine checks. The installer additionally pins PDFUA-1.xml SHA-256
+`794c9f6bf53c8cb89e532807e74fea58331a0d9a935c52cb054b63853bdd8b2a`; the full JAR hash already
+covers that profile. No new engine, binary dependency or license cohort is introduced. The
+machine qualification does not replace the human checkpoints required for accessibility; see
+[PDF/UA responsibilities and status](PDF_UNIVERSAL_ACCESSIBILITY.md).

@@ -64,7 +64,7 @@ namespace FossPDF.UnitTests
         }
 
         [Test]
-        public void IncompatibleSettingsAndAssociatedFilesFailBeforeComposition()
+        public void AssociatedFilesAndMissingAccessibilityMetadataFailBeforeComposition()
         {
             var document = Document.Create(_ => Assert.Fail("Must fail before composition."))
                 .WithSettings(new DocumentSettings { PdfAConformance = PdfAConformance.PdfA2B });
@@ -72,7 +72,7 @@ namespace FossPDF.UnitTests
             var options = new PdfAOptions { Attachments = new[] { new PdfAAttachment(new byte[] { 42 }, metadata) } };
             Assert.Throws<NotSupportedException>(() => document.GeneratePdfA(options));
             document.WithSettings(new DocumentSettings { PdfAConformance = PdfAConformance.PdfA3A, PdfUaConformance = PdfUaConformance.PdfUa1 });
-            Assert.Throws<NotSupportedException>(() => document.GeneratePdfA());
+            Assert.That(() => document.GeneratePdfA(), Throws.ArgumentException.With.Message.Contains("Title"));
             metadata.ModificationDate = null;
             Assert.Throws<ArgumentException>(() => new PdfAAttachment(new byte[] { 42 }, metadata));
         }

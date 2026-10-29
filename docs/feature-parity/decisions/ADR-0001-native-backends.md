@@ -186,3 +186,16 @@ profile before publication. Core remains independent and directs selected-profil
 calls to the companion. Legacy GeneratePdf behavior is preserved without retroactively claiming
 all legacy documents conform. PDF/UA remains gated by FP-403. See
 [PDF_ARCHIVAL.md](../PDF_ARCHIVAL.md) and [FP-402 evidence](../evidence/fp-402-windows.md).
+
+
+## FP-403 machine qualification update
+
+The optional .NET 9 `GeneratePdfUa` writer completes structure-root parent links, annotation
+descriptions and structure tab order, adds PDF/UA-1 identification and the extension declaration
+required by combined archival output, and enforces final pinned veraPDF machine checks. Both
+profiles must pass for combined output. Core remains independent and directs PDF/UA requests
+to the companion. The logical model and Skia painting mechanisms remain those chosen above.
+Human reading-order/alternative/language/usability evidence is required for FP-403
+acceptance. The user-reported Acrobat review of the immutable fixture is recorded with its
+unreported-version limitation; no automated report substitutes for it. See
+[PDF_UNIVERSAL_ACCESSIBILITY.md](../PDF_UNIVERSAL_ACCESSIBILITY.md).

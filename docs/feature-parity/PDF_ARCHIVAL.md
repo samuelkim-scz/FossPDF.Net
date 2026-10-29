@@ -114,4 +114,5 @@ bundled in FossPDF packages; retain their applicable licenses/notices. See the
 - A levels require document language, figure alternatives and supported semantic associations.
   Existing tagging restrictions, including ZIndex, apply. Content authors remain responsible for
   correct language, reading order and meaningful alternatives. PDF/A-A is not a PDF/UA claim;
-  combined PDF/A and PDF/UA requests remain unsupported pending FP-403.
+  combined PDF/A and PDF/UA requests use the qualified machine checks in
+  [GeneratePdfUa](PDF_UNIVERSAL_ACCESSIBILITY.md), with human accessibility review still required.

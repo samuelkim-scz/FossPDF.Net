@@ -4,7 +4,7 @@
         <Company>Santa Cruz County HSA</Company>
         <PackageId>FossPDF.PdfOperations</PackageId>
         <Version>2026.5.1</Version>
-        <PackageDescription>Optional advanced PDF operations for FossPDF: load, select, reorder and merge PDFs, apply overlays, encryption, attachments and XMP, optimize with qpdf, produce tagged PDF, and generate PDF/A-2/3 with final veraPDF validation.</PackageDescription>
+        <PackageDescription>Optional advanced PDF operations for FossPDF: page operations, overlays, encryption, attachments, XMP, qpdf optimization, tagged PDF, PDF/A-2/3 and PDF/UA-1 with final veraPDF machine validation.</PackageDescription>
         <PackageReleaseNotes>Initial optional PDF operations companion package for FossPDF.</PackageReleaseNotes>
         <LangVersion>10</LangVersion>
         <TargetFramework>net9.0</TargetFramework>

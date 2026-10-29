@@ -16,6 +16,28 @@ namespace FossPDF.PdfOperations
         public string Json { get; }
 
         internal PdfAValidationReport(string json, PdfAConformance profile)
+            : this(new PdfValidationReportData(json, "PDF/A-" + PdfAValidator.Flavour(profile) + " validation profile"), profile)
+        {
+        }
+
+        private PdfAValidationReport(PdfValidationReportData data, PdfAConformance profile)
+        {
+            Profile = profile;
+            IsCompliant = data.IsCompliant;
+            FailedRules = data.FailedRules;
+            FailedChecks = data.FailedChecks;
+            Json = data.Json;
+        }
+    }
+
+    internal sealed class PdfValidationReportData
+    {
+        internal bool IsCompliant { get; }
+        internal int FailedRules { get; }
+        internal int FailedChecks { get; }
+        internal string Json { get; }
+
+        internal PdfValidationReportData(string json, string expected)
         {
             try
             {
@@ -37,7 +59,6 @@ namespace FossPDF.PdfOperations
                 if (results.GetArrayLength() != 1)
                     throw new JsonException("Expected one validation result.");
                 var result = results[0];
-                var expected = "PDF/A-" + PdfAValidator.Flavour(profile) + " validation profile";
                 if (!string.Equals(result.GetProperty("profileName").GetString(), expected, StringComparison.OrdinalIgnoreCase) ||
                     result.GetProperty("jobEndStatus").GetString() != "normal")
                     throw new JsonException("Unexpected validation profile or job status.");
@@ -47,7 +68,6 @@ namespace FossPDF.PdfOperations
                 if (FailedRules < 0 || FailedChecks < 0 || details.GetProperty("passedChecks").GetInt32() <= 0)
                     throw new JsonException("The validation checks are incomplete.");
                 IsCompliant = result.GetProperty("compliant").GetBoolean() && FailedRules == 0 && FailedChecks == 0;
-                Profile = profile;
                 Json = json;
             }
             catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException or FormatException or OverflowException)

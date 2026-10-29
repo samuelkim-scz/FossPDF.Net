@@ -8,12 +8,12 @@ namespace FossPDF.Drawing
     {
         private readonly ISemanticCanvas? _canvas;
 
-        internal AutomaticSemanticScope(ICanvas canvas, ref SemanticNode? node, string role)
+        internal AutomaticSemanticScope(ICanvas canvas, ref SemanticNode? node, string role, string? alternativeText = null)
         {
             _canvas = null;
             if (GetCanvas(canvas) is not { } semantic)
                 return;
-            node ??= new SemanticNode(role, null, null);
+            node ??= new SemanticNode(role, alternativeText, null);
             if (semantic.BeginAutomaticScope(node))
                 _canvas = semantic;
         }

@@ -5,7 +5,7 @@ using FossPDF.Fluent;
 namespace FossPDF.PdfOperations
 {
     /// <summary>External validation and associated files for the optional .NET 9 archival writer.</summary>
-    public sealed record PdfAOptions
+    public record PdfAOptions
     {
         /// <summary>Path to the unmodified veraPDF 1.30.3 cli-1.30.3.jar. Defaults to FOSSPDF_VERAPDF_JAR.</summary>
         public string? VeraPdfJarPath { get; init; }

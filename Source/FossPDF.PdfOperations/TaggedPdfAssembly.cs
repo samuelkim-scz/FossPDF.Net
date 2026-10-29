@@ -127,6 +127,7 @@ namespace FossPDF.PdfOperations
                 var page = document.AddPage();
                 page.Width = XUnit.FromPoint(source.Width);
                 page.Height = XUnit.FromPoint(source.Height);
+                page.Elements.SetName("/Tabs", "/S");
 
                 pages.Add(new PagePlan(document, page, source));
             }
@@ -220,6 +221,8 @@ namespace FossPDF.PdfOperations
 
             foreach (var annotation in annotations)
             {
+                if (element.Role == "Link" && !string.IsNullOrWhiteSpace(element.Node.AlternativeText))
+                    annotation.Elements.SetValue("/Contents", ToText(element.Node.AlternativeText!));
                 var annotationReference = PdfInternals.GetReference(annotation);
 
                 if (annotationReference == null)
@@ -696,6 +699,7 @@ namespace FossPDF.PdfOperations
             structTreeRoot.Elements.SetInteger("/ParentTreeNextKey", nextParentTreeKey);
 
             destination.Internals.AddObject(structTreeRoot);
+            rootElement.Dictionary.Elements.SetReference("/P", structTreeRoot);
 
             var catalog = destination.Internals.Catalog
                 ?? throw new PdfOperationException("The output PDF does not expose a document catalog.");
