@@ -203,3 +203,18 @@ failure throws `PdfAConformanceException` with `Report.Json`; the destination is
 Legacy PdfA selections map to validated PDF/A-2b in this API; ordinary `GeneratePdf` keeps the
 existing unvalidated legacy behavior. See
 [PDF/A deployment, example and limitations](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_ARCHIVAL.md).
+
+### PDF/UA-1 machine validation and author review
+
+Set `DocumentSettings.PdfUaConformance = PdfUaConformance.PdfUa1`, provide a meaningful document
+title and language, and call `GeneratePdfUa`. The writer completes the structure parent chain,
+sets structure tab order and link descriptions, requires figure/formula alternatives, and checks
+the finished file with the pinned veraPDF 1.30.3 PDF/UA-1 profile. Inline links use their supplied
+text; container links need `SemanticLink(description)`.
+
+All six PDF/A profiles can be selected simultaneously; both profiles must pass before output is
+returned. `PdfUaOptions` inherits the validator, XMP and associated-file settings from `PdfAOptions`.
+`GeneratePdfUa(out var report)` returns `MachineChecksPassed`, the original JSON and the optional
+`ArchivalReport`. Human checks of reading order, language, meaningful descriptions and assistive
+usability remain an author responsibility; machine reports cannot perform them. See the
+[PDF/UA guide and acceptance status](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_UNIVERSAL_ACCESSIBILITY.md).

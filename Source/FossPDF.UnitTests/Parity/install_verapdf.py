@@ -19,6 +19,7 @@ PROFILES = {
     "3A": "4eac441409c0523ded5d29d77e567f63ae3ac285d82505f673d2992286da674a",
     "3B": "fc6f5c9cccc8c52af8584f98505fe62979522e66acd525a67ce391c36d8dbc17",
     "3U": "2ac7b14a789681c4dc9d53ec66e9a28f6efa2cd61a4633487b4c15c111281bf2",
+    "UA1": "794c9f6bf53c8cb89e532807e74fea58331a0d9a935c52cb054b63853bdd8b2a",
 }
 
 
@@ -62,7 +63,8 @@ def install(directory):
         raise RuntimeError("veraPDF CLI SHA-256 mismatch")
     with zipfile.ZipFile(cli) as package:
         for profile, expected in PROFILES.items():
-            data = package.read(f"org/verapdf/pdfa/validation/PDFA-{profile}.xml")
+            filename = "PDFUA-1.xml" if profile == "UA1" else f"PDFA-{profile}.xml"
+            data = package.read(f"org/verapdf/pdfa/validation/{filename}")
             if hashlib.sha256(data).hexdigest() != expected:
                 raise RuntimeError(f"veraPDF {profile} profile SHA-256 mismatch")
     manifest = {"version": VERSION, "archive_sha256": ARCHIVE_SHA256, "cli_sha256": JAR_SHA256, "profiles_sha256": PROFILES}

@@ -214,7 +214,7 @@
     {
       "work_item": "FP-403",
       "baseline_status": "missing",
-      "current_capability": "Tagged PDF and universal-accessibility output are missing.",
+      "current_capability": "Optional .NET 9 GeneratePdfUa passes pinned PDF/UA-1 checks, including combined PDF/A profiles; ACC-403 records the user-reported Acrobat review of the immutable qualification fixture, with version unreported.",
       "public_contract": "Generate PDF/UA-1 output with machine validation and recorded human accessibility review.",
       "fixture_ids": [
         "ACC-403"
@@ -1449,7 +1449,10 @@
       "work_items": [
         "FP-403"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [
+        "net9.0"
+      ],
       "input": {
         "source": "ACC-401",
         "standard": "PDF/UA-1",

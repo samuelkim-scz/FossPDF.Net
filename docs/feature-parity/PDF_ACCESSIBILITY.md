@@ -183,3 +183,12 @@ python Source/FossPDF.UnitTests/Parity/verify_pdf_tagging.py Source/FossPDF.Unit
 The independent script needs `pypdf` (`Source/FossPDF.UnitTests/Parity/requirements-tagging-validation.txt`)
 and `qpdf` on `PATH` (or pass `--qpdf <path>`). See
 [fp-401-windows.md](evidence/fp-401-windows.md) for recorded results.
+
+
+## PDF/UA-1 generation
+
+`GenerateTaggedPdf` remains the structural-tagging API. For PDF/UA-1 identification, final
+validator checks, required author information and optional combined archival output, use
+[`GeneratePdfUa`](PDF_UNIVERSAL_ACCESSIBILITY.md). Its machine report does not replace human
+reading-order, alternative-text, language and assistive-usability checks. FP-403 acceptance
+is tracked separately from the FP-401 tagging mechanism.

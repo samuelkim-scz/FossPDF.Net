@@ -16,11 +16,16 @@ namespace FossPDF.Infrastructure
         public int? ImageCompressionQuality { get; init; }
         public ContentDirection? ContentDirection { get; init; }
         /// <summary>
-        /// Selects an archival profile for GeneratePdfA in the optional .NET 9 PdfOperations package.
+        /// Selects an archival profile for GeneratePdfA or GeneratePdfUa in the optional .NET 9 PdfOperations package.
         /// That method validates the final output with veraPDF. Ordinary GeneratePdf accepts only
         /// None and Legacy; null inherits DocumentMetadata.PdfA.
         /// </summary>
         public PdfAConformance? PdfAConformance { get; init; }
+        /// <summary>
+        /// Selects PDF/UA-1 for GeneratePdfUa in the optional .NET 9 operations package. Final
+        /// machine checks are mandatory; authors also review reading order and assistive usability.
+        /// Can be combined with the archival profiles through either conformance generation API.
+        /// </summary>
         public PdfUaConformance PdfUaConformance { get; init; } = PdfUaConformance.None;
 
         /// <summary>

@@ -45,7 +45,7 @@ namespace FossPDF.PdfOperations
                 throw new ArgumentException("A Java executable is required.", nameof(options));
             var path = options.VeraPdfJarPath ?? Environment.GetEnvironmentVariable("FOSSPDF_VERAPDF_JAR");
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-                throw new NotSupportedException("GeneratePdfA requires veraPDF 1.30.3. Set PdfAOptions.VeraPdfJarPath or FOSSPDF_VERAPDF_JAR to cli-1.30.3.jar, and install Java 8 or newer.");
+                throw new NotSupportedException("Conformance generation requires veraPDF 1.30.3. Set PdfAOptions/PdfUaOptions.VeraPdfJarPath or FOSSPDF_VERAPDF_JAR to cli-1.30.3.jar, and install Java 8 or newer.");
             path = Path.GetFullPath(path);
             using (var input = File.OpenRead(path))
                 if (Convert.ToHexString(SHA256.HashData(input)) != JarSha256)
@@ -54,6 +54,10 @@ namespace FossPDF.PdfOperations
         }
 
         internal static PdfAValidationReport ValidatePrepared(byte[] document, PdfAConformance profile,
+            PdfAOptions options, string jar, CancellationToken cancellationToken)
+            => new(ReadReport(document, Flavour(profile), options, jar, cancellationToken), profile);
+
+        internal static string ReadReport(byte[] document, string flavour,
             PdfAOptions options, string jar, CancellationToken cancellationToken)
         {
             var directory = Path.Combine(Path.GetTempPath(), "fosspdf-pdfa-" + Guid.NewGuid().ToString("N"));
@@ -67,10 +71,10 @@ namespace FossPDF.PdfOperations
                 var path = Path.Combine(directory, "document.pdf");
                 File.WriteAllBytes(path, document);
                 var start = new ProcessStartInfo(options.JavaExecutablePath);
-                foreach (var argument in new[] { "-Xmx512m", "-jar", jar, "--format", "json", "--maxfailuresdisplayed", "5", "--flavour", Flavour(profile), path })
+                foreach (var argument in new[] { "-Xmx512m", "-jar", jar, "--format", "json", "--maxfailuresdisplayed", "5", "--flavour", flavour, path })
                     start.ArgumentList.Add(argument);
                 var json = RunProcess(start, options.ProcessTimeout, cancellationToken);
-                return new PdfAValidationReport(json, profile);
+                return json;
             }
             finally
             {

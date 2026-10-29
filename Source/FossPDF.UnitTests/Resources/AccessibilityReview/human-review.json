@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "pdf": "quarterly-service-report-r1.pdf",
+  "pdf_sha256": "7f954761d56222cc8c8cb42f61c9d17041451e923ea75ece88436ef7c8189b68",
+  "tool": "Adobe Acrobat",
+  "tool_version": null,
+  "reviewer": "Repository user, reported in the task conversation",
+  "reviewed_at_utc": null,
+  "checks": {
+    "reading_order": true,
+    "headings": true,
+    "list": true,
+    "table_headers": true,
+    "figure_alternative": true,
+    "links": true,
+    "language": true,
+    "decorative_content": true
+  },
+  "notes": [
+    "The reviewer replied \"its fine\" to the exact-file request covering all eight checklist items.",
+    "When asked which accessibility tool was used, the reviewer replied \"acrobat\".",
+    "The Acrobat version and exact inspection time were not reported; no local installation version was detected. The timestamp records receipt of the report.",
+    "These are user-reported human observations, not an Acrobat automated-check report or an agent-performed screen-reader test.",
+    "The exact PDF independently passes veraPDF 1.30.3 PDF/UA-1 and PDF/A-3a plus qpdf checks."
+  ],
+  "tool_version_status": "not_reported",
+  "reported_at_utc": "2026-10-29T04:06:15.514380+00:00",
+  "evidence_type": "reviewer_self_report"
+}

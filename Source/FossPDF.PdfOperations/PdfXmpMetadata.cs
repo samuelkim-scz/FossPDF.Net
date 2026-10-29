@@ -146,6 +146,8 @@ namespace FossPDF.PdfOperations
             XNamespace xmp = "http://ns.adobe.com/xap/1.0/";
             XNamespace pdf = "http://ns.adobe.com/pdf/1.3/";
             return new XDocument(new XElement(Xmp + "xmpmeta", new XAttribute(XNamespace.Xmlns + "x", Xmp),
+                new XAttribute(XNamespace.Xmlns + "dc", dc), new XAttribute(XNamespace.Xmlns + "xmp", xmp),
+                new XAttribute(XNamespace.Xmlns + "pdf", pdf),
                 new XElement(Rdf + "RDF", new XAttribute(XNamespace.Xmlns + "rdf", Rdf),
                     new XElement(Rdf + "Description", new XAttribute(Rdf + "about", string.Empty),
                         new XElement(dc + "title", new XElement(Rdf + "Alt", new XElement(Rdf + "li",
@@ -161,16 +163,62 @@ namespace FossPDF.PdfOperations
 
         internal static byte[] ApplyArchivalIdentification(byte[] saved, PdfDocument document, string flavour,
             IReadOnlyList<XElement> extensions)
+            => ApplyConformanceIdentification(saved, document, flavour, false, extensions);
+
+        internal static byte[] ApplyConformanceIdentification(byte[] saved, PdfDocument document, string? flavour,
+            bool pdfUa, IReadOnlyList<XElement> extensions)
         {
             var packet = Create(document.Info);
             var description = packet.Root!.Element(Rdf + "RDF")!.Element(Rdf + "Description")!;
             XNamespace pdfaid = "http://www.aiim.org/pdfa/ns/id/";
-            description.Add(new XAttribute(XNamespace.Xmlns + "pdfaid", pdfaid),
-                new XElement(pdfaid + "part", flavour[0].ToString()),
-                new XElement(pdfaid + "conformance", flavour[1].ToString().ToUpperInvariant()));
+            if (flavour != null)
+                description.Add(new XAttribute(XNamespace.Xmlns + "pdfaid", pdfaid),
+                    new XElement(pdfaid + "part", flavour[0].ToString()),
+                    new XElement(pdfaid + "conformance", flavour[1].ToString().ToUpperInvariant()));
+            XNamespace pdfuaid = "http://www.aiim.org/pdfua/ns/id/";
+            XNamespace extension = "http://www.aiim.org/pdfa/ns/extension/";
+            XNamespace schema = "http://www.aiim.org/pdfa/ns/schema#";
+            XNamespace propertyNamespace = "http://www.aiim.org/pdfa/ns/property#";
+            if (pdfUa)
+            {
+                description.Add(new XAttribute(XNamespace.Xmlns + "pdfuaid", pdfuaid), new XElement(pdfuaid + "part", 1));
+                if (flavour != null)
+                {
+                    description.Add(new XAttribute(XNamespace.Xmlns + "pdfaExtension", extension),
+                        new XAttribute(XNamespace.Xmlns + "pdfaSchema", schema),
+                        new XAttribute(XNamespace.Xmlns + "pdfaProperty", propertyNamespace),
+                        new XElement(extension + "schemas", new XElement(Rdf + "Bag",
+                            new XElement(Rdf + "li", new XAttribute(Rdf + "parseType", "Resource"),
+                                new XElement(schema + "schema", "PDF/UA identification schema"),
+                                new XElement(schema + "namespaceURI", pdfuaid.NamespaceName),
+                                new XElement(schema + "prefix", "pdfuaid"),
+                                new XElement(schema + "property", new XElement(Rdf + "Seq",
+                                    new XElement(Rdf + "li", new XAttribute(Rdf + "parseType", "Resource"),
+                                        new XElement(propertyNamespace + "name", "part"),
+                                        new XElement(propertyNamespace + "valueType", "Integer"),
+                                        new XElement(propertyNamespace + "category", "internal"),
+                                        new XElement(propertyNamespace + "description", "Part number of the PDF/UA standard."))))))));
+                }
+            }
             var names = description.Elements().Select(x => x.Name).ToHashSet();
             foreach (var property in extensions)
             {
+                if (property.Name == extension + "schemas" && description.Element(property.Name) is { } existing)
+                {
+                    var additions = property.Element(Rdf + "Bag");
+                    if (property.Elements().Count() != 1 || additions == null)
+                        throw new ArgumentException("PDF/A extension schemas require one RDF Bag.", nameof(extensions));
+                    var target = existing.Element(Rdf + "Bag")!;
+                    var namespaces = target.Elements().Select(x => (string?)x.Element(schema + "namespaceURI")).ToHashSet();
+                    foreach (var item in additions.Elements())
+                    {
+                        var uri = (string?)item.Element(schema + "namespaceURI");
+                        if (string.IsNullOrWhiteSpace(uri) || !namespaces.Add(uri))
+                            throw new ArgumentException("An extension schema has a missing or duplicate namespace URI.", nameof(extensions));
+                        target.Add(new XElement(item));
+                    }
+                    continue;
+                }
                 if (!names.Add(property.Name))
                     throw new ArgumentException($"The metadata property '{property.Name}' already exists.", nameof(extensions));
                 description.Add(new XElement(property));

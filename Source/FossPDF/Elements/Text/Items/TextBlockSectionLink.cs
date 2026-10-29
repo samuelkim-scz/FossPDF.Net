@@ -16,7 +16,7 @@ namespace FossPDF.Elements.Text.Items
 
         public override void Draw(TextDrawingRequest request)
         {
-            using var semantic = new AutomaticSemanticScope(request.Canvas, ref _semanticNode, "Link");
+            using var semantic = new AutomaticSemanticScope(request.Canvas, ref _semanticNode, "Link", Text);
             request.Canvas.Translate(new Position(0, request.TotalAscent));
             request.Canvas.DrawSectionLink(
                 request.PageContext.GetDocumentLocationName(SectionName),

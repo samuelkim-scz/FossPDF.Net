@@ -287,7 +287,7 @@ namespace FossPDF.UnitTests
         }
 
         [Test]
-        public void PdfUaFailsBeforeWritingUntilSemanticTaggingIsImplemented() =>
+        public void PdfUaDirectsCallersToTheOptionalConformanceWriter() =>
             AssertUnsupported(new DocumentSettings { PdfUaConformance = PdfUaConformance.PdfUa1 });
 
         [TestCase("disable")]

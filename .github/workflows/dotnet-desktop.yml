@@ -77,7 +77,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Install the pinned veraPDF CLI and verify all six profile hashes
+      - name: Install the pinned veraPDF CLI and verify PDF/A and PDF/UA profile hashes
         shell: bash
         run: python Source/FossPDF.UnitTests/Parity/install_verapdf.py --output artifacts/parity/verapdf --github-env "$GITHUB_ENV"
       - name: Run unit tests
@@ -114,9 +114,12 @@ jobs:
       - name: Verify archival profiles, rendering and expected failures independently
         shell: bash
         run: python Source/FossPDF.UnitTests/Parity/verify_pdfa.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/ACC-402
+      - name: Verify PDF/UA semantics, rendering and expected failures independently
+        shell: bash
+        run: python Source/FossPDF.UnitTests/Parity/verify_pdfua.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/ACC-403
       - name: Run .NET 9 settings and accessibility examples
         shell: bash
-        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples|FullyQualifiedName~PdfAExamples" --logger trx --results-directory ../artifacts/parity
+        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples|FullyQualifiedName~PdfAExamples|FullyQualifiedName~PdfUaExamples" --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
       - name: Upload test and parity fixture evidence
@@ -128,6 +131,8 @@ jobs:
             artifacts/parity/**/*.trx
             artifacts/parity/verapdf/qualification-manifest.json
             Source/FossPDF.Examples/bin/Release/net9.0/pdfa-example/**
+            Source/FossPDF.Examples/bin/Release/net9.0/pdfua-example/**
+            Source/FossPDF.UnitTests/Resources/AccessibilityReview/**
             Source/FossPDF.UnitTests/bin/Release/net*/parity-artifacts/**
             Source/FossPDF.Examples/bin/Release/net9.0/settings-example/**
             Source/FossPDF.Examples/bin/Release/net9.0/pdf-optimization-*/**
