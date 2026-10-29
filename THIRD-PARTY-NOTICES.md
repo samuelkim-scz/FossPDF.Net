@@ -131,3 +131,14 @@ SOFTWARE.
 
 Each component's copyright notice is listed in the tables above and is retained in this file as
 required by the licence.
+
+## Application-deployed invoice validator (FP-404)
+
+GenerateEInvoice invokes the unmodified Mustang CLI 2.26.0 (Apache-2.0), deployed by the
+application alongside Java 17+ and veraPDF 1.30.3. Mustang, its bundled dependencies, Java
+and veraPDF are never redistributed in FossPDF packages. Retain the upstream distribution
+licenses/notices, including the bundled veraPDF components' GPLv3+/MPLv2+ terms.
+The complete Mustang JAR and EN16931 XSD/Schematron/code-list hashes are pinned in
+`Source/FossPDF.UnitTests/Parity/install_mustang.py`; runtime checks the complete JAR hash.
+Deployment, supported release/profile pairs and responsibilities are documented in
+[the invoice guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/EINVOICE.md).

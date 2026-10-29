@@ -21,9 +21,9 @@ namespace FossPDF.PdfOperations
             .WithMetadata(new DocumentMetadata { PdfA = true }).GeneratePdf());
 
         internal static ConformingPdf Generate(IDocument document, PdfAOptions? options, bool requireArchival,
-            bool requireAccessibility, CancellationToken cancellationToken)
+            bool requireAccessibility, CancellationToken cancellationToken, GenerationConfiguration? configuration = null)
         {
-            var configuration = GenerationConfiguration.Resolve(document);
+            configuration ??= GenerationConfiguration.Resolve(document);
             var profile = configuration.Settings.PdfAConformance ??
                 (configuration.Metadata.PdfA ? PdfAConformance.Legacy : PdfAConformance.None);
             var archival = profile != PdfAConformance.None;

@@ -218,3 +218,18 @@ returned. `PdfUaOptions` inherits the validator, XMP and associated-file setting
 `ArchivalReport`. Human checks of reading order, language, meaningful descriptions and assistive
 usability remain an author responsibility; machine reports cannot perform them. See the
 [PDF/UA guide and acceptance status](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PDF_UNIVERSAL_ACCESSIBILITY.md).
+
+### Validated ZUGFeRD / Factur-X packaging
+
+`GenerateEInvoice(xmlBytes, EInvoiceProfile.FacturX1092En16931, out var report)` packages caller
+UTF-8 CII XML for Factur-X 1.09.2 or `Zugferd252En16931` for ZUGFeRD 2.5.2. Both support EN16931.
+Select PDF/A-3a/b/u explicitly; PDF/UA and qpdf settings are retained. The writer preserves XML
+bytes, supplies `factur-x.xml`, Alternative association and required XMP/extension schema, and
+validates XML before composition and the finished package before publishing output.
+
+Deploy Java 17+, Mustang-CLI-2.26.0.jar and veraPDF 1.30.3; set `FOSSPDF_MUSTANG_JAR` and
+`FOSSPDF_VERAPDF_JAR`, or `EInvoiceOptions` paths. JAR hashes are checked; tools are never
+downloaded at runtime or bundled in this package. Reports retain original Mustang XML and
+veraPDF JSON. Authors own invoice correctness and agreement between visible content and XML.
+See the [invoice guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/EINVOICE.md)
+for supported releases, deployment, examples, validation evidence and limits.
