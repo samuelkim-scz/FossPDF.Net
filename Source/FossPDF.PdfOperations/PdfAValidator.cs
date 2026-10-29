@@ -84,7 +84,8 @@ namespace FossPDF.PdfOperations
             }
         }
 
-        internal static string RunProcess(ProcessStartInfo start, TimeSpan timeout, CancellationToken cancellationToken)
+        internal static string RunProcess(ProcessStartInfo start, TimeSpan timeout, CancellationToken cancellationToken,
+            string validatorName = "veraPDF", int invalidExitCode = 1)
         {
             start.UseShellExecute = false;
             start.CreateNoWindow = true;
@@ -93,7 +94,7 @@ namespace FossPDF.PdfOperations
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                using var process = Process.Start(start) ?? throw new PdfOperationException("The veraPDF Java process could not start.");
+                using var process = Process.Start(start) ?? throw new PdfOperationException($"The {validatorName} Java process could not start.");
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 deadline.CancelAfter(timeout);
                 var output = process.StandardOutput.ReadToEndAsync();
@@ -109,19 +110,19 @@ namespace FossPDF.PdfOperations
                     process.WaitForExit();
                     Task.WhenAll(output, error).GetAwaiter().GetResult();
                     cancellationToken.ThrowIfCancellationRequested();
-                    throw new PdfOperationException("veraPDF exceeded PdfAOptions.ProcessTimeout. No output was written.");
+                    throw new PdfOperationException($"{validatorName} exceeded ProcessTimeout. No output was written.");
                 }
                 Task.WhenAll(output, error).GetAwaiter().GetResult();
-                // 0 means conforming, 1 nonconforming. Other codes denote process/parser errors.
-                // Even exit 1 requires a complete normal report; an out-of-memory failure cannot pass.
-                if (process.ExitCode != 0 && process.ExitCode != 1)
-                    throw new PdfOperationException($"veraPDF failed with exit code {process.ExitCode}. No output was written.");
+                // Each pinned tool has a specific nonconformance exit code. A complete parsed
+                // report is required even with that code; process failures cannot establish a pass.
+                if (process.ExitCode != 0 && process.ExitCode != invalidExitCode)
+                    throw new PdfOperationException($"{validatorName} failed with exit code {process.ExitCode}. No output was written.");
                 cancellationToken.ThrowIfCancellationRequested();
                 return output.Result;
             }
             catch (Win32Exception exception)
             {
-                throw new PdfOperationException("Java could not be started. Install Java 8 or newer or set PdfAOptions.JavaExecutablePath.", exception);
+                throw new PdfOperationException($"Java could not be started for {validatorName}. Install a compatible runtime or set JavaExecutablePath in the validator options.", exception);
             }
         }
 

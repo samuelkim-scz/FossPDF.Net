@@ -28,6 +28,7 @@
 
 
     <ItemGroup>
+        <Content Include="..\FossPDF.UnitTests\Resources\EInvoice\en16931.xml" Link="invoice.xml" CopyToOutputDirectory="PreserveNewest" />
         <None Update="quo-vadis.txt">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

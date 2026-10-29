@@ -223,7 +223,7 @@
     {
       "work_item": "FP-404",
       "baseline_status": "missing",
-      "current_capability": "Invoice rendering is possible; structured e-invoice packaging is absent.",
+      "current_capability": "GenerateEInvoice packages externally supplied EN16931 XML for Factur-X 1.09.2 and ZUGFeRD 2.5.2, with final Mustang and veraPDF validation.",
       "public_contract": "Package invoice XML and required XMP/associated-file metadata for explicitly supported e-invoice profiles.",
       "fixture_ids": [
         "ACC-404"
@@ -1474,7 +1474,8 @@
       "work_items": [
         "FP-404"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": ["net9.0"],
       "input": {
         "invoice": {
           "id": "FP-2026-001",
@@ -1484,8 +1485,8 @@
           "net_total": "12.00"
         },
         "profiles": [
-          "one explicitly declared ZUGFeRD profile",
-          "one explicitly declared Factur-X profile"
+          "ZUGFeRD 2.5.2 EN16931",
+          "Factur-X 1.09.2 EN16931"
         ],
         "pdf_profile": "PDF/A-3"
       },
