@@ -464,6 +464,12 @@ namespace FossPDF.Drawing
             InjectDependencies(content, pageContext, canvas);
             content.VisitChildren(x => (x as IStateResettable)?.ResetState());
 
+            if (canvas is SkiaPictureCanvas { Inspection: { } inspection })
+            {
+                inspection.Apply(content);
+                InjectDependencies(content, pageContext, canvas);
+            }
+
             if (beginDocument)
                 canvas.BeginDocument();
 
@@ -535,6 +541,8 @@ namespace FossPDF.Drawing
 
         internal static void InjectDependencies(this Element content, IPageContext pageContext, ICanvas canvas)
         {
+            if (canvas is SkiaPictureCanvas { Inspection: { IsDrawing: true } inspection })
+                inspection.Apply(content);
             content.VisitChildren(x =>
             {
                 if (x == null)

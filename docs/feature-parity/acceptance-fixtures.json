@@ -1502,7 +1502,7 @@
       "work_items": [
         "FP-501"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "source": "LAY-108",
         "protocol_clients": [

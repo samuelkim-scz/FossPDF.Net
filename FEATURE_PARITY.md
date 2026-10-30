@@ -42,6 +42,9 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 ## Confirmed gaps and capabilities to validate
 
+The [preview inspection protocol guide](docs/feature-parity/PREVIEW_INSPECTION.md) covers optional
+hierarchy/source capture, version negotiation, occurrence geometry, payload limits and ownership.
+
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
 | --- | --- | --- | --- | --- | --- |
 | Existing-PDF processing | Missing | Load/save existing PDFs; merge, extract/reorder pages, overlays/underlays, security, attachments/XMP. | FP-302–FP-306 | [Reference](https://www.questpdf.com/concepts/document-operations.html) | [Generation-only API](https://github.com/samuelkim-scz/FossPDF.Net/blob/0339255ff8f987a4abb62ef81f06bbcf00e0b81e/Source/FossPDF/Fluent/GenerateExtensions.cs) |

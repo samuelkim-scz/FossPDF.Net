@@ -11,7 +11,7 @@ using FossPDF.Drawing;
 
 namespace FossPDF.Previewer
 {
-    internal class PreviewerService
+    internal sealed class PreviewerService : IDisposable
     {
         private int Port { get; }
         private HttpClient HttpClient { get; }
@@ -27,9 +27,11 @@ namespace FossPDF.Previewer
             HttpClient = new()
             {
                 BaseAddress = new Uri($"http://localhost:{port}/"),
-                Timeout = TimeSpan.FromSeconds(1)
+                Timeout = TimeSpan.FromSeconds(30)
             };
         }
+
+        public void Dispose() => HttpClient.Dispose();
 
         public async Task Connect()
         {
@@ -45,11 +47,19 @@ namespace FossPDF.Previewer
             CheckVersionCompatibility(previewerVersion);
         }
 
+        internal async Task RequireInspectionSupport()
+        {
+            using var response = await HttpClient.GetAsync("/inspection/version");
+            if (!response.IsSuccessStatusCode || await response.Content.ReadFromJsonAsync<int>() != InspectionSnapshot.CurrentVersion)
+                throw new NotSupportedException("This previewer does not support inspection protocol 1. Update FossPDF.Previewer or disable inspection.");
+        }
+
         private async Task<bool> IsPreviewerAvailable()
         {
             try
             {
-                using var result = await HttpClient.GetAsync("/ping");
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+                using var result = await HttpClient.GetAsync("/ping", timeout.Token);
                 return result.IsSuccessStatusCode;
             }
             catch
@@ -127,37 +137,29 @@ namespace FossPDF.Previewer
             }
         }
 
-        public async Task RefreshPreview(ICollection<PreviewerPicture> pictures)
+        public async Task RefreshPreview(ICollection<PreviewerPicture> pictures, InspectionSnapshot? inspection = null)
         {
-            using var multipartContent = new MultipartFormDataContent();
-
-            var pages = new List<PreviewerRefreshCommand.Page>();
-
-            foreach (var picture in pictures)
+            try
             {
-                var page = new PreviewerRefreshCommand.Page
+                using var multipartContent = new MultipartFormDataContent();
+                var pages = new List<PreviewerRefreshCommand.Page>();
+                foreach (var picture in pictures)
                 {
-                    Width = picture.Size.Width,
-                    Height = picture.Size.Height
-                };
-
-                pages.Add(page);
-
-                using var pictureData = picture.Picture.Serialize();
-                multipartContent.Add(new ByteArrayContent(pictureData.ToArray()), page.Id, page.Id);
+                    var page = new PreviewerRefreshCommand.Page { Width = picture.Size.Width, Height = picture.Size.Height };
+                    pages.Add(page);
+                    using var pictureData = picture.Picture.Serialize();
+                    multipartContent.Add(new ByteArrayContent(pictureData.ToArray()), page.Id, page.Id);
+                }
+                var command = new PreviewerRefreshCommand { Pages = pages, Inspection = inspection };
+                multipartContent.Add(JsonContent.Create(command), "command");
+                using var response = await HttpClient.PostAsync("/update/preview", multipartContent);
+                response.EnsureSuccessStatusCode();
             }
-
-            var command = new PreviewerRefreshCommand
+            finally
             {
-                Pages = pages
-            };
-
-            multipartContent.Add(JsonContent.Create(command), "command");
-
-            using var _ = await HttpClient.PostAsync("/update/preview", multipartContent);
-
-            foreach (var picture in pictures)
-                picture.Picture.Dispose();
+                foreach (var picture in pictures)
+                    picture.Picture.Dispose();
+            }
         }
     }
 }

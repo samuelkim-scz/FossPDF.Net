@@ -6,8 +6,15 @@ using Avalonia.Threading;
 
 namespace FossPDF.Previewer
 {
-    internal class PreviewerWindowViewModel : ReactiveObject
+    internal class PreviewerWindowViewModel : ReactiveObject, IDisposable
     {
+        private bool disposed;
+        private InspectionSnapshot? inspection;
+        public InspectionSnapshot? Inspection
+        {
+            get => inspection;
+            private set => this.RaiseAndSetIfChanged(ref inspection, value);
+        }
         private ObservableCollection<PreviewPage> _pages = new();
         public ObservableCollection<PreviewPage> Pages
         {
@@ -47,6 +54,7 @@ namespace FossPDF.Previewer
         public PreviewerWindowViewModel()
         {
             CommunicationService.Instance.OnDocumentRefreshed += HandleUpdatePreview;
+            CommunicationService.Instance.OnInspectionRefreshed += HandleInspection;
             
             ShowPdfCommand = ReactiveCommand.Create(ShowPdf);
             ShowDocumentationCommand = ReactiveCommand.Create(() => OpenLink("https://www.FossPDF.com/api-reference/index.html"));
@@ -77,13 +85,30 @@ namespace FossPDF.Previewer
         
         private void HandleUpdatePreview(ICollection<PreviewPage> pages)
         {
+            if (disposed)
+            {
+                foreach (var page in pages) page.Picture.Dispose();
+                return;
+            }
             var oldPages = Pages;
-            
-            Pages.Clear();
             Pages = new ObservableCollection<PreviewPage>(pages);
             
             foreach (var page in oldPages)
                 page.Picture.Dispose();
+            oldPages.Clear();
+        }
+
+        private void HandleInspection(InspectionSnapshot? snapshot) => Inspection = snapshot;
+
+        public void Dispose()
+        {
+            if (disposed) return;
+            disposed = true;
+            CommunicationService.Instance.OnDocumentRefreshed -= HandleUpdatePreview;
+            CommunicationService.Instance.OnInspectionRefreshed -= HandleInspection;
+            foreach (var page in Pages) page.Picture.Dispose();
+            Pages.Clear(); Inspection = null;
+            ShowPdfCommand.Dispose(); ShowDocumentationCommand.Dispose(); SponsorProjectCommand.Dispose();
         }
     }
 }

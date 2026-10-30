@@ -35,11 +35,14 @@
         <None Include="Resources\PackageReadme.md" Pack="true" PackagePath="\" />
         <None Include="Resources\PREVIEWER-THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
         <None Include="Resources\licenses\**" Pack="true" PackagePath="licenses\" />
+        <None Include="..\FossPDF\Resources\DefaultFont\OFL.txt" Pack="true" PackagePath="licenses\Lato-OFL.txt" />
         <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <ProjectReference Include="..\FossPDF\FossPDF.csproj" />
+        <InternalsVisibleTo Include="FossPDF.UnitTests" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
@@ -51,5 +54,6 @@
         <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
         <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
         <PackageReference Include="SkiaSharp" Version="3.119.4" />
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
     </ItemGroup>
 </Project>
