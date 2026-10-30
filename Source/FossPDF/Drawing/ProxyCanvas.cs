@@ -11,6 +11,7 @@ namespace FossPDF.Drawing
     /// </summary>
     internal class ProxyCanvas : ICanvas
     {
+        internal FossPDF.Previewer.InspectionCollector? Inspection { get; set; }
         internal ICanvas Target { get; set; } = null!;
 
         public Matrix4x4 Transform => Target.Transform;

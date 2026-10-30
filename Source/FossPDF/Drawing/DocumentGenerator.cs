@@ -541,7 +541,9 @@ namespace FossPDF.Drawing
 
         internal static void InjectDependencies(this Element content, IPageContext pageContext, ICanvas canvas)
         {
-            if (canvas is SkiaPictureCanvas { Inspection: { IsDrawing: true } inspection })
+            if (canvas is ProxyCanvas proxy)
+                proxy.Inspection ??= FossPDF.Previewer.InspectionCollector.ForCanvas(content.Canvas);
+            if (FossPDF.Previewer.InspectionCollector.ForCanvas(canvas) is { IsActive: true } inspection)
                 inspection.Apply(content);
             content.VisitChildren(x =>
             {

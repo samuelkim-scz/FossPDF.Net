@@ -94,3 +94,11 @@ dotnet run --project Source/FossPDF.Previewer.Examples -c Release -- --inspect
 
 Run it with the locally built/updated previewer tool. Its annotated heading/body demonstrate
 source capture; omit `--inspect` to exercise the existing picture-only workflow.
+
+Deferred elements inside balanced multi-column content are instrumented during layout as well
+as drawing. The proxy canvas retains the inspection association while measurement targets a
+free canvas; occurrences are recorded only when drawing to the actual page. Repeated dynamic
+helper elements receive distinct deterministic runtime slots. Collector lookup tables use weak
+element keys, allowing released runtime trees to be collected while the bounded DTO remains.
+`InspectionRegressionTests` checks exact column geometry and pixels, dynamic helper slots,
+runtime-tree collection and rejection of a node that names itself as its parent.

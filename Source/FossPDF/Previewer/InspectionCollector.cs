@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using FossPDF.Drawing;
 using FossPDF.Drawing.Proxy;
 using FossPDF.Elements;
@@ -23,21 +24,37 @@ namespace FossPDF.Previewer
     internal sealed class InspectionCollector
     {
         internal InspectionSnapshot Snapshot { get; } = new();
-        private readonly HashSet<Element> wrapped = new();
+        private readonly ConditionalWeakTable<Element, object> wrapped = new();
         private readonly Dictionary<string, InspectionNode> nodes = new(StringComparer.Ordinal);
-        private readonly Dictionary<Element, string> elementIds = new();
+        private readonly ConditionalWeakTable<Element, InspectionNode> elementIds = new();
         private readonly Stack<string> parents = new();
         private int roots;
-        internal bool IsDrawing => parents.Count > 0;
+        private int runtimeIndex;
+        internal bool IsActive => parents.Count > 0;
+
+        internal static InspectionCollector? ForCanvas(ICanvas? canvas) => canvas switch
+        {
+            SkiaPictureCanvas picture => picture.Inspection,
+            ProxyCanvas proxy => proxy.Inspection ?? ForCanvas(proxy.Target),
+            _ => null
+        };
+
+        private static SkiaPictureCanvas? PictureCanvas(ICanvas? canvas) => canvas switch
+        {
+            SkiaPictureCanvas picture => picture,
+            ProxyCanvas proxy => PictureCanvas(proxy.Target),
+            _ => null
+        };
 
         internal void Apply(Element content)
         {
-            if (!wrapped.Add(content))
+            if (content is Empty or InspectionProxy || wrapped.TryGetValue(content, out _))
                 return;
+            wrapped.Add(content, new object());
             var parent = parents.Count > 0 ? parents.Peek() : null;
-            var id = parent == null ? "document-" + roots++ : parent + "/runtime";
-            AddNode(content, id, parent);
-            Wrap(content, id, 0);
+            var id = parent == null ? "document-" + roots++ : parent + "/runtime-" + runtimeIndex++;
+            var node = AddNode(content, id, parent);
+            Wrap(content, node.Id, 0);
         }
 
         private void Wrap(Element owner, string parent, int depth)
@@ -51,25 +68,29 @@ namespace FossPDF.Previewer
                 if (child == null || child is Empty || child is InspectionProxy)
                     continue;
                 var id = child is InspectionMarker marker ? parent.Split('/')[0] + "/id:" + Uri.EscapeDataString(marker.Id) : path;
-                AddNode(child, id, parent);
-                Wrap(child, id, depth + 1);
+                var node = AddNode(child, id, parent);
+                Wrap(child, node.Id, depth + 1);
             }
             owner.CreateProxy(child =>
             {
                 if (child == null || child is Empty || child is InspectionProxy)
                     return child;
-                return new InspectionProxy(this, elementIds[child], child) { Canvas = child.Canvas, PageContext = child.PageContext };
+                return new InspectionProxy(this, elementIds.GetValue(child, _ =>
+                    throw new InvalidOperationException("Inspection child was not registered.")).Id, child)
+                    { Canvas = child.Canvas, PageContext = child.PageContext };
             });
         }
 
-        private void AddNode(Element element, string id, string? parent)
+        private InspectionNode AddNode(Element element, string id, string? parent)
         {
-            elementIds[element] = id;
+            if (elementIds.TryGetValue(element, out var known))
+                return known;
             if (nodes.TryGetValue(id, out var existing))
             {
                 if (existing.ParentId != parent || existing.Type != element.GetType().Name)
                     throw new ArgumentException("Inspection IDs must be unique within the logical document: " + id);
-                return;
+                elementIds.Add(element, existing);
+                return existing;
             }
             if (nodes.Count >= 20000 || id.Length > 2048)
                 throw new InvalidOperationException("Inspection exceeds its 20,000 node limit.");
@@ -82,7 +103,9 @@ namespace FossPDF.Previewer
                 SourceFile = marker?.SourceFile, SourceLine = marker?.SourceLine ?? 0, SourceMember = marker?.SourceMember
             };
             nodes.Add(id, node);
+            elementIds.Add(element, node);
             Snapshot.Nodes.Add(node);
+            return node;
         }
 
         private static string Limit(string text) => text.Length <= 4096 ? text : text.Substring(0, 4096);
@@ -96,31 +119,47 @@ namespace FossPDF.Previewer
                 this.collector = collector; this.id = id; Child = child;
             }
 
+            internal override SpacePlan Measure(Size availableSpace)
+            {
+                // Deferred and dynamic elements can compose children while measuring. Give those
+                // children the same structural parent and runtime slots as the final draw.
+                var previousIndex = collector.runtimeIndex;
+                collector.runtimeIndex = 0;
+                collector.parents.Push(id);
+                try { return base.Measure(availableSpace); }
+                finally { collector.parents.Pop(); collector.runtimeIndex = previousIndex; }
+            }
+
             internal override void Draw(Size availableSpace)
             {
-                if (Canvas is not SkiaPictureCanvas canvas)
-                {
-                    base.Draw(availableSpace);
-                    return;
-                }
-                if (Child is FossPDF.Elements.Lazy)
-                    collector.Wrap(Child, id, 0);
-                if (collector.Snapshot.Occurrences.Count >= 100000)
-                    throw new InvalidOperationException("Inspection exceeds its 100,000 occurrence limit.");
-                var transform = Canvas.Transform;
-                var points = new[] { Vector2.Zero, new Vector2(availableSpace.Width, 0),
-                    new Vector2(0, availableSpace.Height), new Vector2(availableSpace.Width, availableSpace.Height) }
-                    .Select(point => Vector2.Transform(point, transform)).ToArray();
-                var x = points.Min(point => point.X); var y = points.Min(point => point.Y);
-                collector.Snapshot.Occurrences.Add(new InspectionOccurrence
-                {
-                    NodeId = id, Page = canvas.Pictures.Count + 1, X = x, Y = y,
-                    Width = points.Max(point => point.X) - x, Height = points.Max(point => point.Y) - y,
-                    Text = Child is TextBlock text ? Limit(text.Text) : null
-                });
+                var previousIndex = collector.runtimeIndex;
+                collector.runtimeIndex = 0;
                 collector.parents.Push(id);
-                try { base.Draw(availableSpace); }
-                finally { collector.parents.Pop(); }
+                try
+                {
+                    if (Child is FossPDF.Elements.Lazy)
+                        collector.Wrap(Child, id, 0);
+                    // ProxyCanvas can target the real page or a speculative FreeCanvas. Only the
+                    // real page emits geometry; the association still instruments deferred trees.
+                    if (PictureCanvas(Canvas) is { } canvas && ReferenceEquals(canvas.Inspection, collector))
+                    {
+                        if (collector.Snapshot.Occurrences.Count >= 100000)
+                            throw new InvalidOperationException("Inspection exceeds its 100,000 occurrence limit.");
+                        var transform = Canvas.Transform;
+                        var points = new[] { Vector2.Zero, new Vector2(availableSpace.Width, 0),
+                            new Vector2(0, availableSpace.Height), new Vector2(availableSpace.Width, availableSpace.Height) }
+                            .Select(point => Vector2.Transform(point, transform)).ToArray();
+                        var x = points.Min(point => point.X); var y = points.Min(point => point.Y);
+                        collector.Snapshot.Occurrences.Add(new InspectionOccurrence
+                        {
+                            NodeId = id, Page = canvas.Pictures.Count + 1, X = x, Y = y,
+                            Width = points.Max(point => point.X) - x, Height = points.Max(point => point.Y) - y,
+                            Text = Child is TextBlock text ? Limit(text.Text) : null
+                        });
+                    }
+                    base.Draw(availableSpace);
+                }
+                finally { collector.parents.Pop(); collector.runtimeIndex = previousIndex; }
             }
         }
     }

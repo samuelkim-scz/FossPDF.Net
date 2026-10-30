@@ -22,11 +22,12 @@ namespace FossPDF.Previewer
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var node in Nodes)
             {
-                if (node == null || string.IsNullOrWhiteSpace(node.Id) || node.Id.Length > 2048 || !ids.Add(node.Id) ||
+                if (node == null || string.IsNullOrWhiteSpace(node.Id) || node.Id.Length > 2048 || ids.Contains(node.Id) ||
                     node.Type == null || node.Type.Length > 256 || node.Label?.Length > 4096 || node.Configuration?.Length > 4096 ||
                     node.SourceFile?.Length > 4096 || node.SourceMember?.Length > 512 || node.SourceLine < 0 ||
                     (node.ParentId != null && !ids.Contains(node.ParentId)))
                     throw new ArgumentException("Inspection nodes must be bounded, unique and ordered with parents before children.");
+                ids.Add(node.Id);
             }
             foreach (var occurrence in Occurrences)
             {
