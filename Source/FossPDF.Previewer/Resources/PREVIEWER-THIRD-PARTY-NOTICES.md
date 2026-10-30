@@ -18,7 +18,9 @@ files shipped under `licenses/`.
 | Tmds.DBus.Protocol | 0.21.3 | MIT | Copyright Tom Deseyn |
 | MicroCom.Runtime | 0.11.0 | MIT | Copyright 2021 © Nikita Tsukanov |
 | SkiaSharp (managed wrapper) | 3.119.4 | MIT | Copyright (c) 2015-2016 Xamarin, Inc.; Copyright (c) 2017-2018 Microsoft Corporation |
-| HarfBuzzSharp (managed wrapper) | 8.3.1.1 | MIT | Copyright (c) 2015-2016 Xamarin, Inc.; Copyright (c) 2017-2018 Microsoft Corporation |
+| HarfBuzzSharp (managed wrapper) | 8.3.1.5 | MIT | Copyright (c) 2015-2016 Xamarin, Inc.; Copyright (c) 2017-2018 Microsoft Corporation |
+| SkiaSharp.HarfBuzz | 3.119.4 | MIT | Xamarin/Microsoft; shared SkiaSharp licence text |
+| Embedded Lato font family (in FossPDF) | — | SIL Open Font License 1.1 | Copyright (c) 2010-2014 by tyPoland Lukasz Dziedzic; `licenses/Lato-OFL.txt` |
 | Inter font family (embedded in Avalonia.Fonts.Inter) | — | SIL Open Font License 1.1 | Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter) |
 
 ## Bundled native components
@@ -26,7 +28,7 @@ files shipped under `licenses/`.
 | Component | Runtime identifiers | Licence | Attribution | Full text |
 | --- | --- | --- | --- | --- |
 | `libSkiaSharp` (SkiaSharp.NativeAssets.Win32/macOS/Linux) | win-x86/x64/arm64, osx, linux-x86/x64/arm/arm64 and musl/bionic variants | SkiaSharp wrapper MIT; Skia native BSD-3-Clause and third-party terms | Xamarin/Microsoft; Skia copyright and third-party notices | `licenses/SkiaSharp-3.119.4-LICENSE.txt`, `licenses/SkiaSharp-HarfBuzzSharp-THIRD-PARTY-NOTICES.txt` |
-| `libHarfBuzzSharp` (HarfBuzzSharp.NativeAssets.Win32/macOS/Linux) | win-x86/x64/arm64, osx, linux-x86/x64/arm/arm64 and musl variants | HarfBuzzSharp wrapper MIT; HarfBuzz native MIT and third-party terms | Xamarin/Microsoft; HarfBuzz copyright and third-party notices | `licenses/HarfBuzzSharp-8.3.1.1-LICENSE.txt`, `licenses/SkiaSharp-HarfBuzzSharp-THIRD-PARTY-NOTICES.txt` |
+| `libHarfBuzzSharp` (HarfBuzzSharp.NativeAssets.Win32/macOS/Linux) | win-x86/x64/arm64, osx, linux-x86/x64/arm/arm64 and musl variants | HarfBuzzSharp wrapper MIT; HarfBuzz native MIT and third-party terms | Xamarin/Microsoft; HarfBuzz copyright and third-party notices | `licenses/HarfBuzzSharp-8.3.1.5-LICENSE.txt`, `licenses/SkiaSharp-HarfBuzzSharp-THIRD-PARTY-NOTICES.txt` |
 | `libAvaloniaNative.dylib` (Avalonia.Native) | osx | MIT | Copyright 2013-2025 © The AvaloniaUI Project | `THIRD-PARTY-NOTICES.md` (MIT text) |
 | `av_libglesv2.dll` (Avalonia.Angle.Windows.Natives) | win-x86/x64/arm64 | BSD-3-Clause (ANGLE) | Copyright 2018 The ANGLE Project Authors | `licenses/Avalonia.Angle.Windows.Natives-2.1.25547.20250602-LICENSE.txt` |
 
@@ -44,10 +46,11 @@ they are not redistributed in this package.
 ## Full licence texts
 
 - `licenses/SkiaSharp-3.119.4-LICENSE.txt`
-- `licenses/HarfBuzzSharp-8.3.1.1-LICENSE.txt`
+- `licenses/HarfBuzzSharp-8.3.1.5-LICENSE.txt`
 - `licenses/SkiaSharp-HarfBuzzSharp-THIRD-PARTY-NOTICES.txt`
 - `licenses/Avalonia.Angle.Windows.Natives-2.1.25547.20250602-LICENSE.txt`
 - `licenses/Inter-OFL.txt`
+- `licenses/Lato-OFL.txt`
 - `THIRD-PARTY-NOTICES.md` for the MIT text and the shared core/font notices
 
 The notices are provided for attribution and licence compliance. They do not imply endorsement by

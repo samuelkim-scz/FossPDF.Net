@@ -2,6 +2,7 @@
 
 internal class DocumentSnapshot
 {
+    public InspectionSnapshot? Inspection { get; set; }
     public ICollection<PageSnapshot> Pages { get; set; } = new List<PageSnapshot>();
 
     public class PageSnapshot

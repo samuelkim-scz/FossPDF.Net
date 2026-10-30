@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using FossPDF.Drawing;
 using FossPDF.Infrastructure;
+using FossPDF.Fluent;
+using System.Linq;
 
 namespace FossPDF.Previewer
 {
@@ -17,13 +19,22 @@ namespace FossPDF.Previewer
         }
         
         public static async Task ShowInPreviewerAsync(this IDocument document, int port = 12500)
+            => await document.ShowInPreviewerAsync(port, false);
+
+        /// <summary>Opt in to local source/text inspection; the previewer must support protocol 1.</summary>
+        public static void ShowInPreviewer(this IDocument document, int port, bool enableInspection)
+            => document.ShowInPreviewerAsync(port, enableInspection).ConfigureAwait(true).GetAwaiter().GetResult();
+
+        public static async Task ShowInPreviewerAsync(this IDocument document, int port, bool enableInspection)
         {
-            var previewerService = new PreviewerService(port);
+            using var previewerService = new PreviewerService(port);
             
             using var cancellationTokenSource = new CancellationTokenSource();
             previewerService.OnPreviewerStopped += () => cancellationTokenSource.Cancel();
             
             await previewerService.Connect();
+            if (enableInspection)
+                await previewerService.RequireInspectionSupport();
             await RefreshPreview();
             
             EventHandler refreshHandler = async (_, _) => await RefreshPreview();
@@ -39,6 +50,22 @@ namespace FossPDF.Previewer
             
             async Task RefreshPreview()
             {
+                if (enableInspection)
+                {
+                    try
+                    {
+                        using var preview = document.GenerateInspectedPreview();
+                        await previewerService.RefreshPreview(preview.Pictures.ToArray(), preview.Inspection);
+                    }
+                    catch (Exception exception)
+                    {
+                        using var error = new ExceptionDocument(exception).GenerateInspectedPreview();
+                        var diagnostic = exception.ToString();
+                        error.Inspection.Diagnostic = diagnostic.Length <= 32768 ? diagnostic : diagnostic.Substring(0, 32768);
+                        await previewerService.RefreshPreview(error.Pictures.ToArray(), error.Inspection);
+                    }
+                    return;
+                }
                 var pictures = GetPictures();
                 await previewerService.RefreshPreview(pictures);
                 

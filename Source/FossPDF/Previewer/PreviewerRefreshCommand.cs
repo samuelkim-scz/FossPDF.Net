@@ -8,6 +8,7 @@ namespace FossPDF.Previewer
 {
     internal class PreviewerRefreshCommand
     {
+        public InspectionSnapshot? Inspection { get; set; }
         public ICollection<Page> Pages { get; set; } = new List<Page>();
 
         public class Page

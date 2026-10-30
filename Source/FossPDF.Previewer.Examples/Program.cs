@@ -1,5 +1,6 @@
 ﻿using FossPDF.Fluent;
 using FossPDF.Helpers;
+using System;
 using FossPDF.Infrastructure;
 using FossPDF.Previewer;
 using FossPDF.ReportSample;
@@ -24,6 +25,7 @@ Document
             page.DefaultTextStyle(x => x.FontSize(20));
 
             page.Header()
+                .Inspect("example-heading", "Hot reload heading")
                 .Text("Hot Reload!")
                 .SemiBold().FontSize(36).FontColor(Colors.Blue.Darken2);
 
@@ -47,7 +49,8 @@ Document
                         t.Cell().Border(1).Padding(5).Text("Run 'dotnet watch'.");
                     });
 
-                    x.Item().Text("Modify this line and the preview should show your changes instantly.");
+                    x.Item().Inspect("example-body", "Hot reload sample")
+                        .Text("Modify this line and the preview should show your changes instantly.");
                 });
 
             page.Footer()
@@ -59,4 +62,4 @@ Document
                 });
         });
     })
-    .ShowInPreviewer();
+    .ShowInPreviewer(port: 12500, enableInspection: Array.IndexOf(args, "--inspect") >= 0);
