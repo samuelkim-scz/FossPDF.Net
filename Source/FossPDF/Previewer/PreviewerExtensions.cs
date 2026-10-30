@@ -15,43 +15,95 @@ namespace FossPDF.Previewer
         {
             document.ShowInPreviewerAsync(port).ConfigureAwait(true).GetAwaiter().GetResult();
         }
+
+        public static void ShowInPreviewer(this IDocument document, PreviewerOptions options, int port = 12500)
+            => document.ShowInPreviewerAsync(options, port).ConfigureAwait(false).GetAwaiter().GetResult();
         
-        public static async Task ShowInPreviewerAsync(this IDocument document, int port = 12500)
+        public static Task ShowInPreviewerAsync(this IDocument document, int port = 12500)
+            => document.ShowInPreviewerAsync(new PreviewerOptions(), port);
+
+        public static async Task ShowInPreviewerAsync(this IDocument document, PreviewerOptions options, int port = 12500)
         {
-            var previewerService = new PreviewerService(port);
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            options.Validate();
+            using var previewerService = new PreviewerService(port);
+            var refreshGate = new object();
+            var pendingRefresh = Task.CompletedTask;
+            var closing = false;
+            Exception? refreshFailure = null;
             
             using var cancellationTokenSource = new CancellationTokenSource();
-            previewerService.OnPreviewerStopped += () => cancellationTokenSource.Cancel();
+            Action stoppedHandler = () =>
+            {
+                lock (refreshGate)
+                    if (!closing) cancellationTokenSource.Cancel();
+            };
+            previewerService.OnPreviewerStopped += stoppedHandler;
             
-            await previewerService.Connect();
-            await RefreshPreview();
+            try
+            {
+                await previewerService.Connect();
+                if (options.EnableInspection) await previewerService.RequireInspectionSupport();
+                await RefreshPreview();
+            }
+            catch
+            {
+                lock (refreshGate) closing = true;
+                previewerService.OnPreviewerStopped -= stoppedHandler;
+                throw;
+            }
             
-            EventHandler refreshHandler = async (_, _) => await RefreshPreview();
+            EventHandler refreshHandler = (_, _) =>
+            {
+                lock (refreshGate)
+                {
+                    if (!closing) pendingRefresh = RefreshAfter(pendingRefresh);
+                }
+            };
             HotReloadManager.UpdateApplicationRequested += refreshHandler;
             try
             {
-                await WaitForPreviewerExit(cancellationTokenSource.Token);
+                try { await WaitForPreviewerExit(cancellationTokenSource.Token); }
+                catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested) { }
             }
             finally
             {
                 HotReloadManager.UpdateApplicationRequested -= refreshHandler;
+                previewerService.OnPreviewerStopped -= stoppedHandler;
+                Task remaining;
+                lock (refreshGate) { closing = true; remaining = pendingRefresh; }
+                await remaining;
+            }
+            if (refreshFailure != null)
+                throw new InvalidOperationException("The preview refresh failed.", refreshFailure);
+
+            async Task RefreshAfter(Task previous)
+            {
+                try { await previous; await RefreshPreview(); }
+                catch (Exception error)
+                {
+                    refreshFailure = error;
+                    cancellationTokenSource.Cancel();
+                }
             }
             
             async Task RefreshPreview()
             {
-                var pictures = GetPictures();
-                await previewerService.RefreshPreview(pictures);
-                
-                ICollection<PreviewerPicture> GetPictures()
+                if (cancellationTokenSource.IsCancellationRequested) return;
+                using var snapshot = GetSnapshot();
+                await previewerService.RefreshPreview(snapshot);
+
+                PreviewerSnapshot GetSnapshot()
                 {
                     try
                     {
-                        return DocumentGenerator.GeneratePreviewerPictures(document);
+                        return document.GeneratePreviewerSnapshot(options);
                     }
                     catch (Exception exception)
                     {
                         var exceptionDocument = new ExceptionDocument(exception);
-                        return DocumentGenerator.GeneratePreviewerPictures(exceptionDocument);
+                        // A failed render replaces obsolete inspection with an ordinary error preview.
+                        return exceptionDocument.GeneratePreviewerSnapshot();
                     }
                 }
             }

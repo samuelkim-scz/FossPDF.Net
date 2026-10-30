@@ -13,7 +13,8 @@ namespace FossPDF.Previewer
 
         protected override void OnClosed(EventArgs e)
         {
-            
+            (DataContext as IDisposable)?.Dispose();
+            base.OnClosed(e);
         }
 
         private void InitializeComponent()

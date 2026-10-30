@@ -22,6 +22,7 @@ namespace FossPDF.Drawing
 
     internal class SkiaPictureCanvas : SkiaCanvasBase, IDisposable
     {
+        internal FossPDF.Previewer.InspectionCapture? Inspection { get; set; }
         private bool _disposed;
 
         private SKPictureRecorder? PictureRecorder { get; set; }

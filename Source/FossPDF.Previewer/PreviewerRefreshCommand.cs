@@ -2,7 +2,9 @@
 
 internal class DocumentSnapshot
 {
-    public ICollection<PageSnapshot> Pages { get; set; } = new List<PageSnapshot>();
+    public int ProtocolVersion { get; set; }
+    public InspectionSnapshot? Inspection { get; set; }
+    public ICollection<PageSnapshot>? Pages { get; set; }
 
     public class PageSnapshot
     {

@@ -59,4 +59,4 @@ Document
                 });
         });
     })
-    .ShowInPreviewer();
+    .ShowInPreviewer(new PreviewerOptions { EnableInspection = true });

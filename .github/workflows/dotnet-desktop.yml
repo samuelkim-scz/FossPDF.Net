@@ -125,7 +125,7 @@ jobs:
         run: python Source/FossPDF.UnitTests/Parity/verify_einvoice.py Source/FossPDF.UnitTests/bin/Release/net9.0/parity-artifacts/ACC-404
       - name: Run .NET 9 settings and accessibility examples
         shell: bash
-        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples|FullyQualifiedName~PdfAExamples|FullyQualifiedName~PdfUaExamples|FullyQualifiedName~EInvoiceExamples" --logger trx --results-directory ../artifacts/parity
+        run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples|FullyQualifiedName~PdfAExamples|FullyQualifiedName~PdfUaExamples|FullyQualifiedName~EInvoiceExamples|FullyQualifiedName~PreviewInspectionExamples" --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
       - name: Upload test and parity fixture evidence
@@ -138,6 +138,7 @@ jobs:
             artifacts/parity/verapdf/qualification-manifest.json
             artifacts/parity/mustang/qualification-manifest.json
             Source/FossPDF.Examples/bin/Release/net9.0/einvoice-example/**
+            Source/FossPDF.Examples/bin/Release/net9.0/preview-inspection-example/**
             Source/FossPDF.Examples/bin/Release/net9.0/pdfa-example/**
             Source/FossPDF.Examples/bin/Release/net9.0/pdfua-example/**
             Source/FossPDF.UnitTests/Resources/AccessibilityReview/**

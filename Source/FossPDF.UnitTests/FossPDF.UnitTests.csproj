@@ -21,6 +21,8 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+      <ProjectReference Include="..\FossPDF.Previewer\FossPDF.Previewer.csproj" />
+      <FrameworkReference Include="Microsoft.AspNetCore.App" />
       <ProjectReference Include="..\FossPDF.FontSubset.Glue\FossPDF.FontSubset.Glue.csproj" />
       <!-- The SVG companion targets net9.0 only; the tests are conditional on the framework. -->
       <ProjectReference Include="..\FossPDF.Svg\FossPDF.Svg.csproj" />

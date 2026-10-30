@@ -2,6 +2,14 @@
 
 It offers a layout engine designed with a full paging support in mind. The document consists of many simple elements (e.g. border, background, image, text, padding, table, grid etc.) that are composed together to create more complex structures. This way, as a developer, you can understand the behavior of every element and use them with full confidence. Additionally, the document and all its elements support paging functionality. For example, an element can be moved to the next page (if there is not enough space) or even be split between pages like table's rows.
 
+## Optional local inspection
+
+The previewer supports backward-compatible picture updates and optional version 1 inspection data.
+Use `document.ShowInPreviewer(new PreviewerOptions { EnableInspection = true })` from .NET 9 and
+`.Inspect("unique-instance-id")` to record source boundaries. The
+[inspection guide](https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PREVIEW_INSPECTION.md)
+documents local snapshot export, source mapping, protocol negotiation, resource limits and ownership.
+
 ## Simplicity is the key
 
 How easy it is to start and prototype with FossPDF? Really easy thanks to its minimal API! Please analyse the code below:

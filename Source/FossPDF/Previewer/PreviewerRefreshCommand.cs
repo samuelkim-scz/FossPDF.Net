@@ -8,6 +8,9 @@ namespace FossPDF.Previewer
 {
     internal class PreviewerRefreshCommand
     {
+        public int ProtocolVersion { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public InspectionSnapshot? Inspection { get; set; }
         public ICollection<Page> Pages { get; set; } = new List<Page>();
 
         public class Page

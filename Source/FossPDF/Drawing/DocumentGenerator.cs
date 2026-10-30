@@ -9,6 +9,7 @@ using FossPDF.Elements.Text;
 using FossPDF.Elements.Text.Items;
 using FossPDF.Helpers;
 using FossPDF.Infrastructure;
+using FossPDF.Previewer;
 using HarfBuzzSharp;
 using SkiaSharp;
 
@@ -121,8 +122,39 @@ namespace FossPDF.Drawing
         {
             var configuration = GenerationConfiguration.Resolve(document);
             using var canvas = new SkiaPictureCanvas();
-            RenderDocument(canvas, document, configuration);
-            return canvas.Pictures;
+            try
+            {
+                RenderDocument(canvas, document, configuration);
+                return canvas.Pictures;
+            }
+            catch
+            {
+                foreach (var picture in canvas.Pictures) picture.Picture.Dispose();
+                throw;
+            }
+        }
+
+        internal static PreviewerSnapshot GeneratePreviewerSnapshot(IDocument document, PreviewerOptions options)
+        {
+            var configuration = GenerationConfiguration.Resolve(document);
+            using var canvas = new SkiaPictureCanvas
+            {
+                Inspection = options.EnableInspection ? new InspectionCapture(options) : null
+            };
+            try
+            {
+                RenderDocument(canvas, document, configuration);
+                if (canvas.Pictures.Count > PreviewerProtocol.MaxPages)
+                    throw new InvalidOperationException("Preview exceeds the 10000 page limit.");
+                if (canvas.Inspection != null)
+                    PreviewerProtocol.Validate(canvas.Inspection.Snapshot, canvas.Pictures.Count);
+                return new PreviewerSnapshot(canvas.Pictures, canvas.Inspection?.Snapshot);
+            }
+            catch
+            {
+                foreach (var picture in canvas.Pictures) picture.Picture.Dispose();
+                throw;
+            }
         }
 
         internal static int RenderDocument<TCanvas>(TCanvas canvas, IDocument document, GenerationConfiguration configuration)
@@ -535,6 +567,9 @@ namespace FossPDF.Drawing
 
         internal static void InjectDependencies(this Element content, IPageContext pageContext, ICanvas canvas)
         {
+            if (canvas is ProxyCanvas proxy)
+                proxy.Inspection ??= InspectionCapture.ForCanvas(content.Canvas);
+            InspectionCapture.ForCanvas(canvas)?.Prepare(content);
             content.VisitChildren(x =>
             {
                 if (x == null)

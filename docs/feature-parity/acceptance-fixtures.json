@@ -232,7 +232,7 @@
     {
       "work_item": "FP-501",
       "baseline_status": "partial",
-      "current_capability": "The previewer already transfers pictures and refreshes documents.",
+      "current_capability": "Optional version 1 inspection carries deterministic hierarchy IDs, final-render geometry, scalar configuration and explicit caller source locations; snapshots and refreshes own bounded native resources.",
       "public_contract": "Expose optional versioned inspection/source-mapping data while preserving existing preview clients.",
       "fixture_ids": [
         "DEV-501"
@@ -1502,7 +1502,7 @@
       "work_items": [
         "FP-501"
       ],
-      "execution": "planned",
+      "execution": "active",
       "input": {
         "source": "LAY-108",
         "protocol_clients": [

@@ -6,8 +6,11 @@ using Avalonia.Threading;
 
 namespace FossPDF.Previewer
 {
-    internal class PreviewerWindowViewModel : ReactiveObject
+    internal class PreviewerWindowViewModel : ReactiveObject, IDisposable
     {
+        private PreviewUpdate? CurrentUpdate;
+        private bool Disposed;
+        public InspectionSnapshot? Inspection => CurrentUpdate?.Inspection;
         private ObservableCollection<PreviewPage> _pages = new();
         public ObservableCollection<PreviewPage> Pages
         {
@@ -75,15 +78,27 @@ namespace FossPDF.Previewer
             openBrowserProcess.Start();
         }
         
-        private void HandleUpdatePreview(ICollection<PreviewPage> pages)
+        private void HandleUpdatePreview(PreviewUpdate update)
         {
-            var oldPages = Pages;
-            
+            if (Disposed) { update.Dispose(); return; }
+            var previous = CurrentUpdate;
+            CurrentUpdate = update;
+            Pages = new ObservableCollection<PreviewPage>(update.Pages);
+            this.RaisePropertyChanged(nameof(Inspection));
+            previous?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            Disposed = true;
+            CommunicationService.Instance.OnDocumentRefreshed -= HandleUpdatePreview;
+            CurrentUpdate?.Dispose();
+            CurrentUpdate = null;
             Pages.Clear();
-            Pages = new ObservableCollection<PreviewPage>(pages);
-            
-            foreach (var page in oldPages)
-                page.Picture.Dispose();
+            ShowPdfCommand.Dispose();
+            ShowDocumentationCommand.Dispose();
+            SponsorProjectCommand.Dispose();
         }
     }
 }
