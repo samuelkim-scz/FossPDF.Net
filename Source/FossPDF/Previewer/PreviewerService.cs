@@ -54,6 +54,15 @@ namespace FossPDF.Previewer
                 throw new NotSupportedException("This previewer does not support inspection protocol 1. Update FossPDF.Previewer or disable inspection.");
         }
 
+        internal async Task WaitForExit(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested && await IsPreviewerAvailable())
+            {
+                try { await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return; }
+            }
+        }
+
         private async Task<bool> IsPreviewerAvailable()
         {
             try

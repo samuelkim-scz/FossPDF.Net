@@ -29,8 +29,13 @@ try
 }
 finally
 {
-    await CommunicationService.Instance.Stop();
-    await communicationTask;
+    // The Avalonia dispatcher has ended. Start teardown outside its synchronization context,
+    // including synchronous portions of host disposal that could otherwise capture that context.
+    await Task.Run(async () =>
+    {
+        try { await communicationTask.ConfigureAwait(false); }
+        finally { await CommunicationService.Instance.Stop().ConfigureAwait(false); }
+    }).ConfigureAwait(false);
 }
 
 static int GetCommunicationPort()

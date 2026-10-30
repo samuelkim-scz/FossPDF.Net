@@ -9,6 +9,7 @@ namespace FossPDF.Previewer
     internal class PreviewerWindowViewModel : ReactiveObject, IDisposable
     {
         private bool disposed;
+        public InspectionViewModel Inspector { get; } = new();
         private InspectionSnapshot? inspection;
         public InspectionSnapshot? Inspection
         {
@@ -98,7 +99,11 @@ namespace FossPDF.Previewer
             oldPages.Clear();
         }
 
-        private void HandleInspection(InspectionSnapshot? snapshot) => Inspection = snapshot;
+        private void HandleInspection(InspectionSnapshot? snapshot)
+        {
+            Inspection = snapshot;
+            Inspector.Load(snapshot, Pages.Count);
+        }
 
         public void Dispose()
         {
@@ -108,6 +113,7 @@ namespace FossPDF.Previewer
             CommunicationService.Instance.OnInspectionRefreshed -= HandleInspection;
             foreach (var page in Pages) page.Picture.Dispose();
             Pages.Clear(); Inspection = null;
+            Inspector.Dispose();
             ShowPdfCommand.Dispose(); ShowDocumentationCommand.Dispose(); SponsorProjectCommand.Dispose();
         }
     }

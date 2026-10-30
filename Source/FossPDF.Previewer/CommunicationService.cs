@@ -31,6 +31,8 @@ class CommunicationService
     
     public Task Start(int port)
     {
+        if (Application != null)
+            throw new InvalidOperationException("The preview server is already started.");
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddLogging(x => x.ClearProviders());
         builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -46,7 +48,8 @@ class CommunicationService
         Application.MapGet("inspection/version", () => Results.Json(InspectionSnapshot.CurrentVersion));
         Application.MapPost("update/preview", HandleUpdatePreview);
             
-        return Application.RunAsync($"http://localhost:{port}/");
+        Application.Urls.Add($"http://localhost:{port}/");
+        return Application.StartAsync();
     }
 
     public async Task Stop()
@@ -56,8 +59,8 @@ class CommunicationService
             return;
 
         Application = null;
-        await application.StopAsync();
-        await application.DisposeAsync();
+        try { await application.StopAsync().ConfigureAwait(false); }
+        finally { await application.DisposeAsync().ConfigureAwait(false); }
     }
 
     private IResult HandlePing()

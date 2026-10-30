@@ -1523,7 +1523,8 @@
       "work_items": [
         "FP-502"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": [ "net9.0" ],
       "input": {
         "source": "DEV-501",
         "actions": [

@@ -24,7 +24,7 @@
 			<Setter Property="Background" Value="#888"/>
 		</Style>
 		
-		<Style Selector="Button:pointerover /template/ ContentPresenter">
+		<Style Selector="Button.actions:pointerover /template/ ContentPresenter">
 			<Setter Property="Background" Value="#999"/>
 		</Style>
 	</Window.Styles>
@@ -39,6 +39,7 @@
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
 			
 			<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
@@ -50,7 +51,11 @@
 			                            VerticalAlignment="Stretch"
 			                            CurrentScroll="{Binding CurrentScroll, Mode=TwoWay}"
 			                            ScrollViewportSize="{Binding ScrollViewportSize, Mode=OneWayToSource}"
-			                            Pages="{Binding Pages, Mode=OneWay}" />
+			                            Pages="{Binding Pages, Mode=OneWay}"
+			                            Inspector="{Binding Inspector}"
+			                            Highlight="{Binding Inspector.Highlight}"
+			                            Measurement="{Binding Inspector.Measurement}"
+			                            ZoomPercent="{Binding Inspector.ZoomPercent, Mode=TwoWay}" />
 			
 			<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom" Spacing="16" Margin="32">
 				<Button Classes="actions"
@@ -92,6 +97,37 @@
 			           IsVisible="{Binding VerticalScrollbarVisible, Mode=OneWay}"
 			           Value="{Binding CurrentScroll, Mode=TwoWay}"
 			           ViewportSize="{Binding ScrollViewportSize, Mode=OneWay}"></ScrollBar>
+
+            <Border Grid.Row="1" Grid.Column="2" Width="340" Padding="12" Background="#252a34" IsVisible="{Binding Inspector.Available}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Document inspection" FontSize="18" FontWeight="Bold" Foreground="#f5f5f5" />
+                        <TextBlock Text="Pointer tool" Foreground="#f5f5f5" />
+                        <ComboBox ItemsSource="{Binding Inspector.Modes}" SelectedIndex="{Binding Inspector.InteractionMode, Mode=TwoWay}" HorizontalAlignment="Stretch" Background="#171b22" Foreground="White" AutomationProperties.Name="Pointer tool" />
+                        <TextBlock Text="{Binding Inspector.Pointer}" TextWrapping="Wrap" Foreground="#f5f5f5" />
+                        <TextBlock Text="{Binding Inspector.ZoomLabel}" Foreground="#f5f5f5" />
+                        <Slider Minimum="10" Maximum="1000" Value="{Binding Inspector.ZoomPercent, Mode=TwoWay}" AutomationProperties.Name="Zoom percent" />
+                        <TextBlock Text="Hierarchy" FontWeight="Bold" Foreground="#f5f5f5" />
+                        <TreeView Height="180" ItemsSource="{Binding Inspector.Roots}" SelectedItem="{Binding Inspector.SelectedTreeItem, Mode=TwoWay}">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate x:DataType="previewer:InspectionTreeItem" ItemsSource="{Binding Children}">
+                                    <TextBlock Text="{Binding Title}" />
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                        <TextBox Watermark="Search text, labels or IDs" Text="{Binding Inspector.Search, Mode=TwoWay}" Background="#171b22" Foreground="White" AutomationProperties.Name="Search document content" />
+                        <ListBox Height="120" ItemsSource="{Binding Inspector.Matches}" SelectedItem="{Binding Inspector.SelectedEntry, Mode=TwoWay}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="previewer:InspectionEntry"><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" /></DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBox Height="130" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Inspector.Details}" Background="#171b22" Foreground="White" AutomationProperties.Name="Selected occurrence details" />
+                        <Button Content="Open source in VS Code" Command="{Binding Inspector.OpenSourceCommand}" Background="#374151" Foreground="White" />
+                        <TextBlock Text="{Binding Inspector.Status}" TextWrapping="Wrap" Foreground="#f5f5f5" />
+                        <TextBox Height="100" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Inspector.Diagnostic}" IsVisible="{Binding Inspector.HasDiagnostic}" Background="#171b22" Foreground="White" AutomationProperties.Name="Layout diagnostic" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 		</Grid>
 	</Panel>
 </Window>

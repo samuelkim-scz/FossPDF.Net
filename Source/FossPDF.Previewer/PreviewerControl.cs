@@ -10,6 +10,14 @@ namespace FossPDF.Previewer
     class PreviewerControl : Control
     {
         private InteractiveCanvas InteractiveCanvas { get; set; } = new ();
+        public static readonly StyledProperty<InspectionViewModel?> InspectorProperty = AvaloniaProperty.Register<PreviewerControl, InspectionViewModel?>(nameof(Inspector));
+        public InspectionViewModel? Inspector { get => GetValue(InspectorProperty); set => SetValue(InspectorProperty, value); }
+        public static readonly StyledProperty<InspectionOccurrence?> HighlightProperty = AvaloniaProperty.Register<PreviewerControl, InspectionOccurrence?>(nameof(Highlight));
+        public InspectionOccurrence? Highlight { get => GetValue(HighlightProperty); set => SetValue(HighlightProperty, value); }
+        public static readonly StyledProperty<InspectionMeasurement?> MeasurementProperty = AvaloniaProperty.Register<PreviewerControl, InspectionMeasurement?>(nameof(Measurement));
+        public InspectionMeasurement? Measurement { get => GetValue(MeasurementProperty); set => SetValue(MeasurementProperty, value); }
+        public static readonly StyledProperty<double> ZoomPercentProperty = AvaloniaProperty.Register<PreviewerControl, double>(nameof(ZoomPercent), 100);
+        public double ZoomPercent { get => GetValue(ZoomPercentProperty); set => SetValue(ZoomPercentProperty, value); }
         
         public static readonly StyledProperty<ObservableCollection<PreviewPage>?> PagesProperty =
             AvaloniaProperty.Register<PreviewerControl, ObservableCollection<PreviewPage>?>(nameof(Pages));
@@ -38,6 +46,18 @@ namespace FossPDF.Previewer
         
         public PreviewerControl()
         {
+            HighlightProperty.Changed.Subscribe(change =>
+            {
+                InteractiveCanvas.Highlight = change.NewValue.Value;
+                if (InteractiveCanvas.Highlight != null) InteractiveCanvas.Reveal(InteractiveCanvas.Highlight);
+                InvalidateVisual();
+            });
+            MeasurementProperty.Changed.Subscribe(change => { InteractiveCanvas.Measurement = change.NewValue.Value; InvalidateVisual(); });
+            ZoomPercentProperty.Changed.Subscribe(change =>
+            {
+                InteractiveCanvas.ZoomToPoint(0, (float)Bounds.Height / 2, (float)(change.NewValue.Value / 100 / InteractiveCanvas.Scale));
+                InvalidateVisual();
+            });
             PagesProperty.Changed.Subscribe(x =>
             {
                 InteractiveCanvas.Pages = x.NewValue.Value ?? (ICollection<PreviewPage>)Array.Empty<PreviewPage>();
@@ -63,6 +83,7 @@ namespace FossPDF.Previewer
                 var point = new Point(Bounds.Center.X, Bounds.Top) - e.GetPosition(this);
                 
                 InteractiveCanvas.ZoomToPoint((float)point.X, -(float)point.Y, (float)scaleFactor);
+                ZoomPercent = InteractiveCanvas.Scale * 100;
             }
                 
             if (e.KeyModifiers == KeyModifiers.None)
@@ -91,11 +112,20 @@ namespace FossPDF.Previewer
             }
 
             MousePosition = e.GetPosition(this);
+            var point = InteractiveCanvas.PagePoint((float)MousePosition.X, (float)MousePosition.Y);
+            if (point.HasValue) Inspector?.SetPointer(point.Value.Page, point.Value.X, point.Value.Y);
         }
         
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
+            MousePosition = e.GetPosition(this);
+            if (Inspector?.InteractionMode > 0)
+            {
+                var point = InteractiveCanvas.PagePoint((float)MousePosition.X, (float)MousePosition.Y);
+                if (point.HasValue) Inspector.Pick(point.Value.Page, point.Value.X, point.Value.Y);
+                InvalidateVisual(); e.Handled = true; return;
+            }
             IsMousePressed = true;
         }
 

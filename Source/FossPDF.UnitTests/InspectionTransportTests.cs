@@ -65,6 +65,12 @@ namespace FossPDF.UnitTests
                 Assert.That(updates, Is.EqualTo(before));
                 Assert.That(await Send(null), Is.EqualTo(HttpStatusCode.OK));
                 Assert.That(accepted, Is.Null, "A legacy refresh must clear obsolete inspection metadata.");
+                using var attachedClient = new PreviewerService(port);
+                using var canceled = new System.Threading.CancellationTokenSource();
+                canceled.Cancel();
+                await attachedClient.WaitForExit(canceled.Token).WaitAsync(TimeSpan.FromSeconds(3));
+                await service.Stop();
+                await attachedClient.WaitForExit(default).WaitAsync(TimeSpan.FromSeconds(3));
             }
             finally { await service.Stop(); await running; }
         }

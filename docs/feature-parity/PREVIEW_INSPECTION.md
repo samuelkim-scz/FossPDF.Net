@@ -83,8 +83,59 @@ cd Source
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --filter "FullyQualifiedName~Inspection|Name~DEV-501"
 ```
 
-Interactive selection, measurement, search and source-launch controls are tracked separately in
-FP-502; the transport delivers the data those controls consume.
+## Interactive inspection controls (FP-502)
+
+The .NET 9 previewer displays an inspection panel when it receives protocol 1 metadata. A legacy
+refresh hides it and clears previous selection, search results, measurements and diagnostics.
+
+- Expand the hierarchy and select a logical node, or select a search result to focus/highlight
+  its page occurrence. Details show physical page, bounds, configuration and nearest annotated
+  source location. Repeated elements have separately selectable occurrences.
+- Search matches composed text, labels and IDs without changing the document. Results are capped
+  at 500 to keep large snapshots usable. A paragraph's text is logical composed text; its separate
+  page fragments can all match. This is document inspection rather than arbitrary PDF extraction.
+- Choose **Inspect** and click the page to pick coordinates and the smallest containing element.
+  **Pan** preserves drag navigation. The zoom slider and Ctrl+wheel provide 10–1000% magnification.
+- Choose **Measure horizontal** or **Measure vertical**, then click two points on the same page.
+  The orange overlay and status report the chosen axis distance in points and millimeters.
+  Moving to another page starts a new measurement instead of combining unrelated page coordinates.
+- **Open source in VS Code** uses the registered `vscode://file/` handler and an escaped local
+  path/line. Missing source files or an unavailable handler produce a clear fallback; the details
+  text remains selectable for copying into any editor. A source annotation is inherited from the
+  nearest `Inspect` boundary. No editor shell command is constructed.
+- Failed render diagnostics appear in a selectable panel alongside the error preview. Enable
+  per-document debugging when a detailed engine layout trace is needed.
+
+PDF export uses the original page pictures, so highlights and measurement overlays remain preview
+controls. Pan, zoom, source-independent operation, export and hot reload remain available. The
+panel uses keyboard-operable standard controls and explicit accessible names for its input fields.
+The view-model and coordinate tests run headlessly on the Windows/Linux/Intel macOS CI matrix;
+interactive Windows verification covers the rendered controls. Other desktop sessions can use
+the same smoke steps below without IDE integration.
+
+### Reproducible UI smoke test
+
+1. Run the newly built previewer, then run the sample with `--inspect` below. Confirm the panel
+   appears and the document remains visible. Run the sample without that flag for legacy fallback.
+2. Search `Modify`, select the matching paragraph, and confirm its blue rectangle and source
+   file/line agree with `FossPDF.Previewer.Examples/Program.cs`.
+3. Use Inspect on the paragraph and verify page coordinates. Pan/zoom, then repeat: the hit and
+   rectangle must continue to align, including when a whole page fits inside the viewport.
+4. Make one horizontal and one vertical measurement. Check line placement and units; select a
+   point on another page to verify that the old anchor is discarded.
+5. Use keyboard navigation on the hierarchy, search and zoom controls. Source details must remain
+   copyable when VS Code is absent or the source path is unavailable locally.
+6. With `dotnet watch`, edit the sample repeatedly, then temporarily introduce a layout that
+   cannot fit. Confirm refreshed data/error diagnostics replace the previous snapshot. Restore
+   the sample, export PDF, and close the previewer to exercise disposal.
+
+`DEV-502` records search/selection/measurement results and a real engine layout-error diagnostic.
+Automated tests additionally cover viewport transforms, source URI escaping/fallback, bounded
+2,000-node searches and twenty refresh/clear cycles.
+
+The preview window owns explicit server startup/shutdown. Teardown runs outside the completed
+Avalonia dispatcher context, and the client detects closure of an already-running previewer.
+Normal window closure returns without a cancellation exception or a lingering server process.
 
 The previewer sample also has an explicit inspection switch:
 

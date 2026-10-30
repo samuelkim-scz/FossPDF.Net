@@ -11,6 +11,8 @@ class InteractiveCanvas : ICustomDrawOperation
 {
     public Rect Bounds { get; set; }
     public ICollection<PreviewPage> Pages { get; set; } = new List<PreviewPage>();
+    public InspectionOccurrence? Highlight { get; set; }
+    public InspectionMeasurement? Measurement { get; set; }
 
     private float Width => (float)Bounds.Width;
     private float Height => (float)Bounds.Height;
@@ -35,7 +37,7 @@ class InteractiveCanvas : ICustomDrawOperation
     {
         get
         {
-            return TranslateY / MaxTranslateY;
+            return Math.Abs(MaxTranslateY) < 0.001f ? 0 : TranslateY / MaxTranslateY;
         }
         set
         {
@@ -53,6 +55,33 @@ class InteractiveCanvas : ICustomDrawOperation
     }
 
     #region transformations
+
+    internal (int Page, float X, float Y)? PagePoint(float x, float y)
+    {
+        LimitScale(); LimitTranslate();
+        var pageY = (y - SafeZone) / Scale + TranslateY;
+        var documentX = (x - Width / 2) / Scale - TranslateX;
+        var index = 0;
+        foreach (var page in Pages)
+        {
+            index++;
+            var pageX = documentX + page.Width / 2;
+            if (pageY >= 0 && pageY <= page.Height && pageX >= 0 && pageX <= page.Width)
+                return (index, pageX, pageY);
+            pageY -= page.Height + PageSpacing;
+        }
+        return null;
+    }
+
+    internal void Reveal(InspectionOccurrence occurrence)
+    {
+        var top = Pages.Take(occurrence.Page - 1).Sum(page => page.Height + PageSpacing);
+        var page = Pages.ElementAtOrDefault(occurrence.Page - 1);
+        if (page == null) return;
+        TranslateY = top + occurrence.Y - Height / (2 * Scale);
+        TranslateX = page.Width / 2 - occurrence.X - occurrence.Width / 2;
+        LimitTranslate();
+    }
     
     private void LimitScale()
     {
@@ -141,11 +170,27 @@ class InteractiveCanvas : ICustomDrawOperation
         canvas.Scale(Scale);
         canvas.Translate(TranslateX, -TranslateY + SafeZone / Scale);
         
+        var pageIndex = 0;
         foreach (var page in Pages)
         {
+            pageIndex++;
             canvas.Translate(-page.Width / 2f, 0);
             DrawBlankPage(canvas, page.Width, page.Height);
             canvas.DrawPicture(page.Picture);
+            if (Highlight is { } selected && selected.Page == pageIndex)
+            {
+                using var fill = new SKPaint { Color = SKColors.DeepSkyBlue.WithAlpha(48), Style = SKPaintStyle.Fill };
+                using var outline = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 2 / Scale };
+                var rectangle = new SKRect(selected.X, selected.Y, selected.X + selected.Width, selected.Y + selected.Height);
+                canvas.DrawRect(rectangle, fill); canvas.DrawRect(rectangle, outline);
+            }
+            if (Measurement is { } measure && measure.Page == pageIndex)
+            {
+                using var line = new SKPaint { Color = SKColors.DarkOrange, Style = SKPaintStyle.Stroke, StrokeWidth = 2 / Scale, IsAntialias = true };
+                canvas.DrawLine(measure.X1, measure.Y1, measure.X2, measure.Y2, line);
+                canvas.DrawCircle(measure.X1, measure.Y1, 3 / Scale, line);
+                canvas.DrawCircle(measure.X2, measure.Y2, 3 / Scale, line);
+            }
             canvas.Translate(page.Width / 2f, page.Height + PageSpacing);
         }
 

@@ -41,7 +41,7 @@ namespace FossPDF.Previewer
             HotReloadManager.UpdateApplicationRequested += refreshHandler;
             try
             {
-                await WaitForPreviewerExit(cancellationTokenSource.Token);
+                await previewerService.WaitForExit(cancellationTokenSource.Token);
             }
             finally
             {
@@ -83,16 +83,6 @@ namespace FossPDF.Previewer
                 }
             }
 
-            async Task WaitForPreviewerExit(CancellationToken cancellationToken)
-            {
-                while (true)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                        return;
-                
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                }
-            }
         }
     }
 }
