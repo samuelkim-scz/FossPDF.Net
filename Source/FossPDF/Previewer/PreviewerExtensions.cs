@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using FossPDF.Drawing;
 using FossPDF.Infrastructure;
@@ -29,9 +28,6 @@ namespace FossPDF.Previewer
         {
             using var previewerService = new PreviewerService(port);
             
-            using var cancellationTokenSource = new CancellationTokenSource();
-            previewerService.OnPreviewerStopped += () => cancellationTokenSource.Cancel();
-            
             await previewerService.Connect();
             if (enableInspection)
                 await previewerService.RequireInspectionSupport();
@@ -41,7 +37,7 @@ namespace FossPDF.Previewer
             HotReloadManager.UpdateApplicationRequested += refreshHandler;
             try
             {
-                await previewerService.WaitForExit(cancellationTokenSource.Token);
+                await previewerService.WaitForExit(default);
             }
             finally
             {

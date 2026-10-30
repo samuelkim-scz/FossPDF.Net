@@ -16,7 +16,6 @@ namespace FossPDF.Previewer
         private int Port { get; }
         private HttpClient HttpClient { get; }
 
-        public  event Action? OnPreviewerStopped;
 
         private const int RequiredPreviewerVersionMajor = 2026;
         private const int RequiredPreviewerVersionMinor = 1;
@@ -105,7 +104,6 @@ namespace FossPDF.Previewer
                 {
                     await process.WaitForExitAsync();
                     process.Dispose();
-                    OnPreviewerStopped?.Invoke();
                 });
             }
             catch
