@@ -99,6 +99,7 @@ def verify(result: Path, publish: Path, feature: str, mode: str, rid: str, basel
         check([int(page.mediabox.width) for page in merged.pages] == [200, 240, 200], "Imported page boxes are preserved.")
         encrypted = fitz.open(result / "PDF-305-encrypted.pdf")
         check(encrypted.needs_pass and encrypted.authenticate("runtime-reader") > 0, "AES-256 output opens with the configured reader password.")
+        check(encrypted.metadata["encryption"] == "Standard V5 R6 256-bit AES", "Encryption retains the declared AES-256 revision and strength.")
         check("RUN-503" in encrypted.get_xml_metadata(), "Encrypted XMP survives the pinned backend bridge.")
         check(encrypted.embfile_get("runtime-data.xml") == b"<runtime>RUN-503</runtime>", "Encrypted attachment bytes are preserved.")
         encrypted.close()

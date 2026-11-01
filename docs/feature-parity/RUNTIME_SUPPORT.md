@@ -44,6 +44,18 @@ Trimmed/AOT rasters are compared with the same feature's JIT output on the same 
 must match and at most 0.002 of pixels may differ beyond 2/255 per channel. Different platforms
 are not compared with each other. This small corpus does not replace complex-script qualification.
 
+For embedded fonts, use an explicit resource assembly in trimmed/AOT consumers:
+
+```csharp
+FontManager.RegisterFontFromEmbeddedResource("MyApp.Resources.Font.ttf", typeof(Program).Assembly);
+```
+
+The same overload is available on `DocumentSpecificFontManager`, on both core target frameworks.
+Existing one-argument calls keep caller-assembly discovery for managed deployments. NativeAOT
+does not support that discovery and those calls produce an actionable exception; alternatively,
+open the resource stream yourself and call `RegisterFont(stream)`. This limitation was reproduced
+in native CI and follows the [.NET 9 runtime implementation](https://github.com/dotnet/runtime/blob/v9.0.0/src/coreclr/nativeaot/System.Private.CoreLib/src/System/Reflection/Assembly.NativeAot.cs).
+
 Previewer/Avalonia, interactive hot reload, arbitrary third-party components, PDF/A, PDF/UA,
 e-invoicing, external qpdf/Java validators and XPS are outside this deployment corpus. Their normal
 managed tests remain applicable; their NativeAOT deployment requires additional evidence.

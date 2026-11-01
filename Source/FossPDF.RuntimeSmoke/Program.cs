@@ -138,7 +138,7 @@ internal static class Program
 #if SMOKE_FONTS
     private static void FontFixture()
     {
-        FontManager.RegisterFontFromEmbeddedResource("FossPDF.RuntimeSmoke.ConsumerFont.ttf");
+        FontManager.RegisterFontFromEmbeddedResource("FossPDF.RuntimeSmoke.ConsumerFont.ttf", typeof(Program).Assembly);
         var subsetCalls = 0;
         FontManager.RegisterSubsetCallback((manager, fonts) =>
         {
