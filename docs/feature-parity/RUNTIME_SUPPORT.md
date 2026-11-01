@@ -9,11 +9,11 @@ native OS/architecture, produce the fixtures and pass independent PDF/raster ins
 
 | Runtime identifier | Self-contained JIT | Full trimming | NativeAOT | Evidence |
 | --- | --- | --- | --- | --- |
-| `win-x64` | Passed, four profiles | Passed, four profiles | CI qualification pending | [Local Windows record](evidence/fp-503-windows.md) |
-| `linux-x64` | CI qualification pending | CI qualification pending | CI qualification pending | `runtime-qualification-linux-x64` CI artifact |
-| `osx-x64` | CI qualification pending | CI qualification pending | CI qualification pending | `runtime-qualification-osx-x64` CI artifact |
-| `win-arm64` | CI qualification pending | CI qualification pending | CI qualification pending | Native `windows-11-arm` runner |
-| `linux-arm64` | CI qualification pending | CI qualification pending | CI qualification pending | Native `ubuntu-24.04-arm` runner |
+| `win-x64` | Passed, four profiles | Passed, four profiles | Passed, four profiles | Native Windows CI and [local trimming record](evidence/fp-503-windows.md) |
+| `linux-x64` | Passed, four profiles | Passed, four profiles | Passed, four profiles | Native Ubuntu CI |
+| `osx-x64` | Passed, four profiles | Passed, four profiles | Passed, four profiles | Native Intel macOS CI |
+| `win-arm64` | Passed, four profiles | Passed, four profiles | Passed, four profiles | Native `windows-11-arm` runner |
+| `linux-arm64` | Passed, four profiles | Passed, four profiles | Passed, four profiles | Native `ubuntu-24.04-arm` runner |
 | `osx-arm64` | Validation required | Validation required | Validation required | Runner accepts this RID; no execution evidence recorded |
 
 These are fixture-scoped results, not a guarantee that every feature or application survives
@@ -21,8 +21,11 @@ trimming/AOT. .NET 8/netstandard2.1 compatibility remains covered by the existin
 this work makes no new .NET 8 trimming claim. Available native binaries for x86, musl, additional
 Linux architectures and mobile/browser targets do not establish support for those deployments.
 
+The [November 1, 2026 CI record](evidence/fp-503-ci.md) links all sixty successful profiles,
+exact runtime/OS versions, package/native hashes and the initial failure that drove the font fix.
+These RIDs are qualified on the recorded CI hosts; other OS versions/distributions need validation.
 The dedicated [workflow](../../.github/workflows/runtime-qualification.yml) retains failures as
-well as successes. Until actual execution succeeds, a pending matrix cell is not a support claim.
+well as successes. A validation-required matrix cell is not a support claim.
 Windows ARM64 qualification checks the consumer's process **and OS** architecture; an x64 Python
 validation tool on that host does not substitute for native ARM64 consumer execution.
 
@@ -99,8 +102,9 @@ NativeAOT compiles managed code but does not remove these shared-library require
 
 The .NET 9 core preserves public configuration properties on internal layout elements for
 diagnostic reflection, following the [linker's type annotation contract](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trim-warnings/il2075).
-It does not root an entire assembly or suppress linker warnings. The netstandard2.1 target is
-unchanged. The subsetter's reflection uses known HarfBuzz `Face`/`Blob` constructors; the font
+It does not root an entire assembly or suppress linker warnings. The preservation annotation
+applies only to .NET 9; netstandard2.1 compatibility is retained. The subsetter's reflection uses
+known HarfBuzz `Face`/`Blob` constructors; the font
 profile executes those calls. Consumer/core embedded font resources, Skia/HarfBuzz P/Invoke,
 SVG dependencies and the pinned PDFsharp `UnsafeAccessor` metadata bridge are exercised by their
 respective profiles. No blanket `IsAotCompatible` promise is added to the packages.

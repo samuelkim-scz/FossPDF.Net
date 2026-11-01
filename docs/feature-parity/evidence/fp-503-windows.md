@@ -24,6 +24,13 @@ linker workload, and the SDK stopped with **Platform linker not found**. This is
 toolchain gap, not evidence of NativeAOT compatibility or an application runtime failure. The
 dedicated native-runner workflow must supply the missing execution evidence.
 
+The subsequent [native CI qualification](fp-503-ci.md) supplies that evidence on all five
+configured RIDs, including Windows x64/ARM64. Its initial run found an AOT caller-assembly
+discovery failure; the explicit resource-assembly overload fixes the supported font workflow.
+Both core targets build cleanly after the fix, with ten font/catalog tests passing per framework
+and the evidence-dependent RUN-503 check explicitly skipped locally. Newly packed Windows font
+consumers also pass JIT/full trimming with the explicit assembly and subset-callback assertion.
+
 Local ignored artifacts:
 
 - `artifacts/fp-503/windows-packaged-qualification/qualification.json`
