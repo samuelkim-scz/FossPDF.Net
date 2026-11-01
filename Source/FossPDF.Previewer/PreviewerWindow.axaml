@@ -1,97 +1,95 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
-		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:previewer="clr-namespace:FossPDF.Previewer"
-		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-		x:Class="FossPDF.Previewer.PreviewerWindow"
-		x:DataType="previewer:PreviewerWindowViewModel"
-		x:CompileBindings="True"
-		WindowStartupLocation="CenterScreen"
-		ExtendClientAreaToDecorationsHint="true"
-		ExtendClientAreaTitleBarHeightHint="-1"
-		Background="#666"
-		Icon="/Resources/Logo.png"
-		UseLayoutRounding="True"
-		Title="FossPDF Document Preview">
-	
-	<Window.Styles>
-		<Style Selector="Button.actions">
-			<Setter Property="VerticalAlignment" Value="Bottom"/>
-			<Setter Property="HorizontalAlignment" Value="Left"/>
-			<Setter Property="Padding" Value="10"/>
-			<Setter Property="CornerRadius" Value="100"/>
-			<Setter Property="Background" Value="#888"/>
-		</Style>
-		
-		<Style Selector="Button:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#999"/>
-		</Style>
-	</Window.Styles>
-
-	<Panel>
-		<Grid>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="32" />
-				<RowDefinition Height="*" />
-			</Grid.RowDefinitions>
-
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="Auto" />
-			</Grid.ColumnDefinitions>
-			
-			<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-			           VerticalAlignment="Center" HorizontalAlignment="Center" 
-			           TextAlignment="Center" Text="FossPDF Previewer" FontSize="14" Foreground="#DFFF" FontWeight="Regular" IsHitTestVisible="False" />
-			
-			<previewer:PreviewerControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-			                            HorizontalAlignment="Stretch" 
-			                            VerticalAlignment="Stretch"
-			                            CurrentScroll="{Binding CurrentScroll, Mode=TwoWay}"
-			                            ScrollViewportSize="{Binding ScrollViewportSize, Mode=OneWayToSource}"
-			                            Pages="{Binding Pages, Mode=OneWay}" />
-			
-			<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom" Spacing="16" Margin="32">
-				<Button Classes="actions"
-				        Command="{Binding ShowPdfCommand, Mode=OneTime}"
-				        IsVisible="{Binding !!Pages.Count}"
-				        ToolTip.Tip="Generates PDF file and shows it in the default browser. Useful for testing compatibility and interactive links.">
-					<Viewbox Width="24" Height="24">
-						<Canvas Width="24" Height="24">
-							<Path Fill="White" Data="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H13C12.59,21.75 12.2,21.44 11.86,21.1C11.53,20.77 11.25,20.4 11,20H6V4H13V9H18V10.18C18.71,10.34 19.39,10.61 20,11V8L14,2M20.31,18.9C21.64,16.79 21,14 18.91,12.68C16.8,11.35 14,12 12.69,14.08C11.35,16.19 12,18.97 14.09,20.3C15.55,21.23 17.41,21.23 18.88,20.32L22,23.39L23.39,22L20.31,18.9M16.5,19A2.5,2.5 0 0,1 14,16.5A2.5,2.5 0 0,1 16.5,14A2.5,2.5 0 0,1 19,16.5A2.5,2.5 0 0,1 16.5,19Z" />
-						</Canvas>
-					</Viewbox>
-				</Button>
-				
-				<Button Classes="actions"
-				        Command="{Binding ShowDocumentationCommand, Mode=OneTime}"
-				        ToolTip.Tip="Opens official FossPDF documentation">
-					<Viewbox Width="24" Height="24">
-						<Canvas Width="24" Height="24">
-							<Path Fill="White" Data="M19 1L14 6V17L19 12.5V1M21 5V18.5C19.9 18.15 18.7 18 17.5 18C15.8 18 13.35 18.65 12 19.5V6C10.55 4.9 8.45 4.5 6.5 4.5C4.55 4.5 2.45 4.9 1 6V20.65C1 20.9 1.25 21.15 1.5 21.15C1.6 21.15 1.65 21.1 1.75 21.1C3.1 20.45 5.05 20 6.5 20C8.45 20 10.55 20.4 12 21.5C13.35 20.65 15.8 20 17.5 20C19.15 20 20.85 20.3 22.25 21.05C22.35 21.1 22.4 21.1 22.5 21.1C22.75 21.1 23 20.85 23 20.6V6C22.4 5.55 21.75 5.25 21 5M10 18.41C8.75 18.09 7.5 18 6.5 18C5.44 18 4.18 18.19 3 18.5V7.13C3.91 6.73 5.14 6.5 6.5 6.5C7.86 6.5 9.09 6.73 10 7.13V18.41Z" />
-						</Canvas>
-					</Viewbox>
-				</Button>
-				
-				<Button Classes="actions"
-				        Command="{Binding SponsorProjectCommand, Mode=OneTime}"
-				        ToolTip.Tip="Do you like FossPDF? Please consider sponsoring the project. It really helps!">
-					<Viewbox Width="24" Height="24">
-						<Canvas Width="24" Height="24">
-							<Path Fill="White" Data="M12,21.1L10.5,22.4C3.9,16.5 0.5,13.4 0.5,9.6C0.5,8.4 0.9,7.3 1.5,6.4C1.5,6.6 1.5,6.8 1.5,7C1.5,11.7 5.4,15.2 12,21.1M13.6,17C18.3,12.7 21.5,9.9 21.6,7C21.6,5 20.1,3.5 18.1,3.5C16.5,3.5 15,4.5 14.5,5.9H12.6C12,4.5 10.5,3.5 9,3.5C7,3.5 5.5,5 5.5,7C5.5,9.9 8.6,12.7 13.4,17L13.5,17.1M18,1.5C21.1,1.5 23.5,3.9 23.5,7C23.5,10.7 20.1,13.8 13.5,19.8C6.9,13.9 3.5,10.8 3.5,7C3.5,3.9 5.9,1.5 9,1.5C10.7,1.5 12.4,2.3 13.5,3.6C14.6,2.3 16.3,1.5 18,1.5Z" />
-						</Canvas>
-					</Viewbox>
-				</Button>
-			</StackPanel>
-			
-			<ScrollBar Grid.Row="1" Grid.Column="1"
-			           Orientation="Vertical" 
-			           AllowAutoHide="False" 
-			           Minimum="0" Maximum="1" 
-			           IsVisible="{Binding VerticalScrollbarVisible, Mode=OneWay}"
-			           Value="{Binding CurrentScroll, Mode=TwoWay}"
-			           ViewportSize="{Binding ScrollViewportSize, Mode=OneWay}"></ScrollBar>
-		</Grid>
-	</Panel>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:p="clr-namespace:FossPDF.Previewer"
+        x:Class="FossPDF.Previewer.PreviewerWindow"
+        x:DataType="p:PreviewerWindowViewModel" x:CompileBindings="True"
+        WindowStartupLocation="CenterScreen" Width="1300" Height="850" MinWidth="900" MinHeight="600"
+        Background="#252930" Icon="/Resources/Logo.png" UseLayoutRounding="True"
+        Title="FossPDF Document Preview">
+  <Window.Styles>
+    <Style Selector="Button"><Setter Property="Padding" Value="12,6" /></Style>
+    <Style Selector="TextBlock"><Setter Property="Foreground" Value="#E5EAF0" /></Style>
+    <Style Selector="SelectableTextBlock"><Setter Property="Foreground" Value="#E5EAF0" /></Style>
+  </Window.Styles>
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,380">
+    <Border Grid.ColumnSpan="2" Background="#191D23" Padding="16,10">
+      <WrapPanel Orientation="Horizontal">
+        <TextBlock Text="FossPDF" FontWeight="Bold" FontSize="18" VerticalAlignment="Center" Margin="0,0,22,0" />
+        <ComboBox ItemsSource="{x:Static p:InspectionViewModel.Tools}" SelectedItem="{Binding Inspector.Tool, Mode=TwoWay}"
+                  AutomationProperties.Name="Inspection tool" MinWidth="195" Margin="0,0,12,0" />
+        <CheckBox Content="3× magnifier" IsChecked="{Binding Inspector.Magnify, Mode=TwoWay}" Margin="0,0,20,0" />
+        <Button Content="Open PDF" Command="{Binding ShowPdfCommand}" IsEnabled="{Binding !!Pages.Count}" Margin="0,0,8,0" />
+        <Button Content="Documentation" Command="{Binding ShowDocumentationCommand}" />
+      </WrapPanel>
+    </Border>
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Background="#666">
+      <p:PreviewerControl Pages="{Binding Pages}" Inspector="{Binding Inspector}"
+                          CurrentScroll="{Binding CurrentScroll, Mode=TwoWay}"
+                          ScrollViewportSize="{Binding ScrollViewportSize, Mode=OneWayToSource}"
+                          AutomationProperties.Name="Document canvas. Arrow keys pan, plus and minus zoom." />
+      <ScrollBar Grid.Column="1" Orientation="Vertical" AllowAutoHide="False" Minimum="0" Maximum="1"
+                 IsVisible="{Binding VerticalScrollbarVisible}" Value="{Binding CurrentScroll, Mode=TwoWay}"
+                 ViewportSize="{Binding ScrollViewportSize}" AutomationProperties.Name="Document scroll" />
+    </Grid>
+    <Border Grid.Row="1" Grid.Column="1" Padding="14" Background="#252930">
+      <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+        <StackPanel Spacing="6">
+          <TextBlock Text="INSPECT DOCUMENT" FontWeight="Bold" FontSize="13" />
+          <TextBox Watermark="Search text, labels, types or configuration" Text="{Binding Inspector.Query, Mode=TwoWay}"
+                   AutomationProperties.Name="Search document" />
+          <TextBlock Text="{Binding Inspector.SearchStatus}" FontSize="11" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,8">
+          <Button Content="Expand / collapse" Click="ToggleHierarchy" />
+          <Button Content="Parent" Click="SelectParent" />
+        </StackPanel>
+        <ListBox Grid.Row="2" ItemsSource="{Binding Inspector.Entries}" SelectedItem="{Binding Inspector.Selected, Mode=TwoWay}"
+                 KeyDown="HierarchyKeyDown" AutomationProperties.Name="Element hierarchy and search results">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="p:InspectionEntry">
+              <StackPanel Margin="{Binding Indent}" Spacing="2">
+                <TextBlock Text="{Binding DisplayTitle}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Description}" FontSize="10" Opacity="0.7" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <ScrollViewer Grid.Row="3" MaxHeight="260" Margin="0,12,0,0">
+          <StackPanel Spacing="8">
+            <SelectableTextBlock Text="{Binding Inspector.Details}" TextWrapping="Wrap" FontSize="12" />
+            <ComboBox ItemsSource="{Binding Inspector.Occurrences}" SelectedItem="{Binding Inspector.SelectedOccurrence, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch" AutomationProperties.Name="Selected element occurrence" />
+            <SelectableTextBlock Text="{Binding Inspector.OccurrenceDetails}" TextWrapping="Wrap" FontSize="12" />
+            <SelectableTextBlock Text="{Binding Inspector.SourceLocation}" TextWrapping="Wrap" FontSize="11" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Button Content="Open source" Click="OpenSource" IsEnabled="{Binding Inspector.HasSource}" />
+              <Button Content="Copy location" Click="CopyLocation" IsEnabled="{Binding Inspector.HasSource}" />
+            </StackPanel>
+            <TextBlock Text="Point coordinates" FontWeight="Bold" FontSize="12" />
+            <Grid ColumnDefinitions="50,*,*,Auto">
+              <TextBox Text="{Binding Inspector.CoordinatePage, Mode=TwoWay}" AutomationProperties.Name="Coordinate page" Watermark="Page" />
+              <TextBox Grid.Column="1" Text="{Binding Inspector.CoordinateX, Mode=TwoWay}" AutomationProperties.Name="Coordinate X in points" Watermark="X pt" />
+              <TextBox Grid.Column="2" Text="{Binding Inspector.CoordinateY, Mode=TwoWay}" AutomationProperties.Name="Coordinate Y in points" Watermark="Y pt" />
+              <Button Grid.Column="3" Content="Pick" Click="PickCoordinates" />
+            </Grid>
+            <SelectableTextBlock Text="{Binding Inspector.MeasurementText}" TextWrapping="Wrap" FontSize="12" />
+          </StackPanel>
+        </ScrollViewer>
+        <Expander Grid.Row="4" Header="Runtime / layout diagnostic" IsVisible="{Binding Inspector.HasDiagnostic}" MaxHeight="180">
+          <ScrollViewer>
+            <StackPanel Spacing="8">
+              <Button Content="Find exception text" Click="FindDiagnostic" />
+              <SelectableTextBlock Text="{Binding Inspector.Diagnostic}" TextWrapping="Wrap" FontSize="11" />
+            </StackPanel>
+          </ScrollViewer>
+        </Expander>
+      </Grid>
+    </Border>
+    <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#191D23" Padding="16,8">
+      <StackPanel Spacing="3">
+        <TextBlock Text="{Binding Inspector.Pointer}" FontSize="12" />
+        <TextBlock Text="{Binding Inspector.Status}" TextWrapping="Wrap" FontSize="12" />
+      </StackPanel>
+    </Border>
+  </Grid>
 </Window>

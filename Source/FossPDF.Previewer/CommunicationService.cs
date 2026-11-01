@@ -56,8 +56,8 @@ class CommunicationService
             return;
 
         Application = null;
-        await application.StopAsync();
-        await application.DisposeAsync();
+        await application.StopAsync().ConfigureAwait(false);
+        await application.DisposeAsync().ConfigureAwait(false);
     }
 
     private IResult HandlePing()
@@ -140,7 +140,7 @@ class CommunicationService
             if (!ownershipTransferred)
             {
                 foreach (var page in pages)
-                    page.Picture.Dispose();
+                    page.Dispose();
             }
         }
     }

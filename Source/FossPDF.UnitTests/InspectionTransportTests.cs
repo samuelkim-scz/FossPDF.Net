@@ -17,6 +17,57 @@ namespace FossPDF.UnitTests
     public class InspectionTransportTests
     {
         [Test]
+        public async Task WindowRefreshDisposesOldPicturesAndClearsTheInspectorForLegacyClients()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start(); var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
+            var service = new CommunicationService(action => { action(); return Task.CompletedTask; });
+            var window = new PreviewerWindowViewModel(service, action => action());
+            var running = service.Start(port);
+            using var client = new HttpClient { BaseAddress = new Uri("http://localhost:" + port) };
+            using var preview = InspectionTests.CreateDocument().GenerateInspectedPreview();
+            var snapshot = preview.Inspection;
+            async Task Send(bool inspected)
+            {
+                using var form = new MultipartFormDataContent();
+                var pages = preview.Pictures.Select((picture, index) => new { Id = "p" + index, Width = picture.Size.Width, Height = picture.Size.Height }).ToArray();
+                form.Add(JsonContent.Create(new { Pages = pages, Inspection = inspected ? snapshot : null }), "command");
+                for (var index = 0; index < preview.Pictures.Count; index++)
+                {
+                    using var data = preview.Pictures[index].Picture.Serialize();
+                    form.Add(new ByteArrayContent(data.ToArray()), "p" + index, "p" + index);
+                }
+                using var response = await client.PostAsync("update/preview", form);
+                response.EnsureSuccessStatusCode();
+            }
+            try
+            {
+                var oldPages = Array.Empty<PreviewPage>();
+                for (var index = 0; index < 20; index++)
+                {
+                    await Send(true);
+                    Assert.That(oldPages.All(page => page.Picture.Handle == IntPtr.Zero), Is.True);
+                    oldPages = window.Pages.ToArray();
+                    window.Inspector.Query = "Report heading";
+                    await window.Inspector.SearchCompletion;
+                    window.Inspector.Selected = window.Inspector.Entries.Single();
+                    Assert.That(window.Inspector.Highlights.Count, Is.EqualTo(window.Pages.Count));
+                }
+                await Send(false);
+                Assert.That(window.Inspector.Entries, Is.Empty);
+                Assert.That(window.Inspector.Highlights, Is.Empty);
+                Assert.That(window.Inspector.SourceNode, Is.Null);
+                oldPages = window.Pages.ToArray();
+                window.Dispose(); window.Dispose();
+                Assert.That(oldPages.All(page => page.Picture.Handle == IntPtr.Zero), Is.True);
+                Assert.That(window.Pages, Is.Empty);
+                using var ping = await client.GetAsync("ping");
+                Assert.That(ping.StatusCode, Is.EqualTo(HttpStatusCode.ServiceUnavailable));
+            }
+            finally { window.Dispose(); await service.Stop(); await running; }
+        }
+
+        [Test]
         public async Task LegacyAndInspectionUpdatesRoundTripAndMalformedUpdatesAreAtomic()
         {
             var listener = new TcpListener(IPAddress.Loopback, 0);

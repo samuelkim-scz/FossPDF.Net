@@ -46,3 +46,11 @@ Document.Create(container =>
 })
 .GeneratePdf("hello.pdf");
 ```
+
+## Interactive inspection
+
+The previewer includes hierarchy selection, repeated-occurrence details, content search,
+horizontal/vertical measurement, point picking, a 3x magnifier, VS Code navigation and
+runtime/layout diagnostics. Opt in through ShowInPreviewer(port: 12500, enableInspection: true).
+See https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PREVIEWER_TOOLS.md
+for setup, keyboard controls, source-location fallback and smoke-test steps.

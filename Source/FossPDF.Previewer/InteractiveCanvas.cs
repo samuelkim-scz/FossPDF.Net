@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
@@ -7,208 +7,101 @@ using SkiaSharp;
 
 namespace FossPDF.Previewer;
 
-class InteractiveCanvas : ICustomDrawOperation
+internal sealed class InteractiveCanvas : ICustomDrawOperation
 {
     public Rect Bounds { get; set; }
-    public ICollection<PreviewPage> Pages { get; set; } = new List<PreviewPage>();
+    internal PreviewViewport Viewport { get; set; } = new();
+    internal IReadOnlyList<PreviewPage> Pages { get; set; } = Array.Empty<PreviewPage>();
+    internal InspectionOccurrence[] Highlights { get; set; } = Array.Empty<InspectionOccurrence>();
+    internal InspectionMeasurement? Measurement { get; set; }
+    internal PagePoint? Pointer { get; set; }
+    internal bool Magnify { get; set; }
+    private PreviewPage[] retained = Array.Empty<PreviewPage>();
 
-    private float Width => (float)Bounds.Width;
-    private float Height => (float)Bounds.Height;
-
-    public float Scale { get; private set; } = 1;
-    public float TranslateX { get; set; }
-    public float TranslateY { get; set; }
-
-    private const float MinScale = 0.1f;
-    private const float MaxScale = 10f;
-
-    private const float PageSpacing = 25f;
-    private const float SafeZone = 25f;
-
-    public float TotalPagesHeight => Pages.Sum(x => x.Height) + (Pages.Count - 1) * PageSpacing;
-    public float TotalHeight => TotalPagesHeight + SafeZone * 2 / Scale;
-    public float MaxWidth => Pages.Any() ? Pages.Max(x => x.Width) : 0;
-    
-    public float MaxTranslateY => TotalHeight - Height / Scale;
-
-    public float ScrollPercentY
+    internal void RetainPictures()
     {
-        get
-        {
-            return TranslateY / MaxTranslateY;
-        }
-        set
-        {
-            TranslateY = value * MaxTranslateY;
-        }
+        retained = Pages.Where(page => page.Retain()).ToArray();
     }
 
-    public float ScrollViewportSizeY
-    {
-        get
-        {
-            var viewPortSize = Height / Scale / TotalHeight;
-            return Math.Clamp(viewPortSize, 0, 1);
-        }
-    }
-
-    #region transformations
-    
-    private void LimitScale()
-    {
-        Scale = Math.Max(Scale, MinScale);
-        Scale = Math.Min(Scale, MaxScale);
-    }
-    
-    private void LimitTranslate()
-    {
-        if (TotalPagesHeight > Height / Scale)
-        {
-            TranslateY = Math.Min(TranslateY, MaxTranslateY);
-            TranslateY = Math.Max(TranslateY, 0);
-        }
-        else
-        {
-            TranslateY = (TotalPagesHeight - Height / Scale) / 2;
-        }
-
-        if (Width / Scale < MaxWidth)
-        {
-            var maxTranslateX = (Width / 2 - SafeZone) / Scale - MaxWidth / 2;
-
-            TranslateX = Math.Min(TranslateX, -maxTranslateX);
-            TranslateX = Math.Max(TranslateX, maxTranslateX);
-        }
-        else
-        {
-            TranslateX = 0;
-        }
-    }
-
-    public void TranslateWithCurrentScale(float x, float y)
-    {
-        TranslateX += x / Scale;
-        TranslateY += y / Scale;
-
-        LimitTranslate();
-    }
-    
-    public void ZoomToPoint(float x, float y, float factor)
-    {
-        var oldScale = Scale;
-        Scale *= factor;
-                
-        LimitScale();
-   
-        TranslateX -= x / Scale - x / oldScale;
-        TranslateY -= y / Scale - y / oldScale;
-
-        LimitTranslate();
-    }
-    
-    #endregion
-    
-    #region rendering
-    
     public void Render(ImmediateDrawingContext context)
     {
-        // get SkiaSharp canvas
-        var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
-        if (leaseFeature == null)
-            return;
+        var feature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
+        if (feature == null) return;
+        using var lease = feature.Lease();
+        Draw(lease.SkCanvas);
+    }
 
-        using var lease = leaseFeature.Lease();
-
-        var canvas = lease.SkCanvas;
-
-        if (canvas == null)
-            return;
-        
-        // draw document
-        if (Pages.Count <= 0)
-            return;
-
-        LimitScale();
-        LimitTranslate();
-    
-        if (canvas == null)
-            throw new InvalidOperationException($"Context needs to be ISkiaDrawingContextImpl but got {nameof(context)}");
-
-        var originalMatrix = canvas.TotalMatrix;
-
-        canvas.Translate(Width / 2, 0);
-        
-        canvas.Scale(Scale);
-        canvas.Translate(TranslateX, -TranslateY + SafeZone / Scale);
-        
-        foreach (var page in Pages)
+    // Shared with raster regression tests. Coordinates are device-independent pixels.
+    internal void Draw(SKCanvas canvas)
+    {
+        canvas.Save();
+        try
         {
-            canvas.Translate(-page.Width / 2f, 0);
-            DrawBlankPage(canvas, page.Width, page.Height);
-            canvas.DrawPicture(page.Picture);
-            canvas.Translate(page.Width / 2f, page.Height + PageSpacing);
+            canvas.ClipRect(new SKRect(0, 0, (float)Bounds.Width, (float)Bounds.Height));
+            for (var index = 0; index < Pages.Count; index++)
+            {
+                var bounds = Viewport.PageBounds(index + 1);
+                if (bounds.Bottom < 0 || bounds.Top > Bounds.Height || Pages[index].Picture.Handle == IntPtr.Zero) continue;
+                DrawPage(canvas, index, bounds);
+            }
+            using var highlight = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 2, IsAntialias = true };
+            using var fill = new SKPaint { Color = SKColors.DeepSkyBlue.WithAlpha(35) };
+            foreach (var occurrence in Highlights)
+            {
+                if (occurrence.Page < 1 || occurrence.Page > Pages.Count) continue;
+                var start = Viewport.ToViewport(new PagePoint(occurrence.Page, occurrence.X, occurrence.Y));
+                var rect = new SKRect((float)start.X, (float)start.Y,
+                    (float)(start.X + occurrence.Width * Viewport.Scale), (float)(start.Y + occurrence.Height * Viewport.Scale));
+                canvas.DrawRect(rect, fill); canvas.DrawRect(rect, highlight);
+            }
+            if (Measurement is { } measurement && measurement.Start.Page <= Pages.Count)
+            {
+                var end = measurement.Horizontal ? measurement.End with { Y = measurement.Start.Y } : measurement.End with { X = measurement.Start.X };
+                var a = Viewport.ToViewport(measurement.Start); var b = Viewport.ToViewport(end);
+                using var paint = new SKPaint { Color = SKColors.OrangeRed, StrokeWidth = 2, IsAntialias = true };
+                canvas.DrawLine((float)a.X, (float)a.Y, (float)b.X, (float)b.Y, paint);
+                foreach (var point in new[] { a, b })
+                    if (measurement.Horizontal) canvas.DrawLine((float)point.X, (float)point.Y - 6, (float)point.X, (float)point.Y + 6, paint);
+                    else canvas.DrawLine((float)point.X - 6, (float)point.Y, (float)point.X + 6, (float)point.Y, paint);
+            }
+            if (Magnify && Pointer is { } pointer && pointer.Page <= Pages.Count) DrawMagnifier(canvas, pointer);
         }
-
-        canvas.SetMatrix(originalMatrix);
-        DrawInnerGradient(canvas);
+        finally { canvas.Restore(); }
     }
-    
-    public void Dispose() { }
+
+    private void DrawPage(SKCanvas canvas, int index, Rect bounds)
+    {
+        canvas.Save();
+        canvas.Translate((float)bounds.X, (float)bounds.Y);
+        canvas.Scale((float)Viewport.Scale);
+        using var white = new SKPaint { Color = SKColors.White };
+        canvas.DrawRect(0, 0, Pages[index].Width, Pages[index].Height, white);
+        canvas.DrawPicture(Pages[index].Picture);
+        canvas.Restore();
+    }
+
+    private void DrawMagnifier(SKCanvas canvas, PagePoint pointer)
+    {
+        const float radius = 65;
+        var position = Viewport.ToViewport(pointer);
+        var cx = (float)Math.Clamp(position.X + 90, radius + 4, Math.Max(radius + 4, Bounds.Width - radius - 4));
+        var cy = (float)Math.Clamp(position.Y - 90, radius + 4, Math.Max(radius + 4, Bounds.Height - radius - 4));
+        using var circle = new SKPath(); circle.AddCircle(cx, cy, radius);
+        canvas.Save(); canvas.ClipPath(circle, antialias: true);
+        canvas.DrawColor(SKColors.White);
+        canvas.Translate(cx, cy); canvas.Scale((float)Viewport.Scale * 3);
+        canvas.Translate(-(float)pointer.X, -(float)pointer.Y);
+        if (Pages[pointer.Page - 1].Picture.Handle != IntPtr.Zero) canvas.DrawPicture(Pages[pointer.Page - 1].Picture);
+        canvas.Restore();
+        using var outline = new SKPaint { Color = SKColors.DeepSkyBlue, StrokeWidth = 2, Style = SKPaintStyle.Stroke, IsAntialias = true };
+        canvas.DrawCircle(cx, cy, radius, outline);
+        canvas.DrawLine(cx - 8, cy, cx + 8, cy, outline); canvas.DrawLine(cx, cy - 8, cx, cy + 8, outline);
+    }
+
+    public void Dispose()
+    {
+        foreach (var page in Interlocked.Exchange(ref retained, Array.Empty<PreviewPage>())) page.Release();
+    }
     public bool Equals(ICustomDrawOperation? other) => false;
-    public bool HitTest(Point p) => true;
-
-    #endregion
-    
-    #region blank page
-
-    private static SKPaint BlankPagePaint = new SKPaint
-    {
-        Color = SKColors.White
-    };
-    
-    private static SKPaint BlankPageShadowPaint = new SKPaint
-    {
-        ImageFilter = SKImageFilter.CreateBlendMode(
-            SKBlendMode.Overlay, 
-            SKImageFilter.CreateDropShadowOnly(0, 6, 6, 6, SKColors.Black.WithAlpha(64)),
-            SKImageFilter.CreateDropShadowOnly(0, 10, 14, 14, SKColors.Black.WithAlpha(32)))
-    };
-    
-    private void DrawBlankPage(SKCanvas canvas, float width, float height)
-    {
-        canvas.DrawRect(0, 0, width, height, BlankPageShadowPaint);
-        canvas.DrawRect(0, 0, width, height, BlankPagePaint);
-    }
-    
-    #endregion
-
-    #region inner viewport gradient
-
-    private const int InnerGradientSize = (int)SafeZone;
-    private static readonly SKColor InnerGradientColor = SKColor.Parse("#666");
-    
-    private void DrawInnerGradient(SKCanvas canvas)
-    {
-        // gamma correction
-        var colors = Enumerable
-            .Range(0, InnerGradientSize)
-            .Select(x => 1f - x / (float) InnerGradientSize)
-            .Select(x => Math.Pow(x, 2f))
-            .Select(x => (byte)(x * 255))
-            .Select(x => InnerGradientColor.WithAlpha(x))
-            .ToArray();
-        
-        using var fogPaint = new SKPaint
-        {
-            Shader = SKShader.CreateLinearGradient(
-                new SKPoint(0, 0),
-                new SKPoint(0, InnerGradientSize), 
-                colors,
-                SKShaderTileMode.Clamp)
-        };
-        
-        canvas.DrawRect(0, 0, Width, InnerGradientSize, fogPaint);
-    }
-
-    #endregion
+    public bool HitTest(Point p) => Bounds.Contains(p);
 }
