@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <QualificationMode Condition="'$(QualificationMode)' == ''">jit</QualificationMode>
+    <PublishTrimmed Condition="'$(QualificationMode)' == 'trimmed' or '$(QualificationMode)' == 'aot'">true</PublishTrimmed>
+    <PublishAot Condition="'$(QualificationMode)' == 'aot'">true</PublishAot>
+    <TrimMode>full</TrimMode>
+    <RuntimeFeature Condition="'$(RuntimeFeature)' == ''">Core</RuntimeFeature>
+    <SmokePackageVersion Condition="'$(SmokePackageVersion)' == ''">2026.5.1</SmokePackageVersion>
+    <DefineConstants Condition="'$(RuntimeFeature)' == 'Fonts'">$(DefineConstants);SMOKE_FONTS</DefineConstants>
+    <DefineConstants Condition="'$(RuntimeFeature)' == 'Svg'">$(DefineConstants);SMOKE_SVG</DefineConstants>
+    <DefineConstants Condition="'$(RuntimeFeature)' == 'Pdf'">$(DefineConstants);SMOKE_PDF</DefineConstants>
+    <DefineConstants Condition="'$(PublishAot)' == 'true'">$(DefineConstants);SMOKE_AOT</DefineConstants>
+    <DefineConstants Condition="'$(PublishTrimmed)' == 'true'">$(DefineConstants);SMOKE_TRIMMED</DefineConstants>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FossPDF/FossPDF.csproj" Condition="'$(UseFossPdfPackages)' != 'true'" />
+    <PackageReference Include="FossPDF" Version="$(SmokePackageVersion)" Condition="'$(UseFossPdfPackages)' == 'true'" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
+    <EmbeddedResource Include="../FossPDF/Resources/DefaultFont/Lato-Regular.ttf" Link="Resources/ConsumerFont.ttf" LogicalName="FossPDF.RuntimeSmoke.ConsumerFont.ttf" />
+    <None Include="../FossPDF/Resources/DefaultFont/OFL.txt" Link="licenses/Lato-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/feature-parity/notices/*LICENSE.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeFeature)' == 'Fonts'">
+    <ProjectReference Include="../FossPDF.FontSubset.Glue/FossPDF.FontSubset.Glue.csproj" Condition="'$(UseFossPdfPackages)' != 'true'" />
+    <PackageReference Include="FossPDF.FontSubset.Glue" Version="$(SmokePackageVersion)" Condition="'$(UseFossPdfPackages)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeFeature)' == 'Svg'">
+    <ProjectReference Include="../FossPDF.Svg/FossPDF.Svg.csproj" Condition="'$(UseFossPdfPackages)' != 'true'" />
+    <PackageReference Include="FossPDF.Svg" Version="$(SmokePackageVersion)" Condition="'$(UseFossPdfPackages)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeFeature)' == 'Pdf'">
+    <ProjectReference Include="../FossPDF.PdfOperations/FossPDF.PdfOperations.csproj" Condition="'$(UseFossPdfPackages)' != 'true'" />
+    <PackageReference Include="FossPDF.PdfOperations" Version="$(SmokePackageVersion)" Condition="'$(UseFossPdfPackages)' == 'true'" />
+  </ItemGroup>
+  <Target Name="ValidateRuntimeFeature" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(RuntimeFeature)' != 'Core' and '$(RuntimeFeature)' != 'Fonts' and '$(RuntimeFeature)' != 'Svg' and '$(RuntimeFeature)' != 'Pdf'" Text="RuntimeFeature must be Core, Fonts, Svg or Pdf." />
+    <Error Condition="'$(QualificationMode)' != 'jit' and '$(QualificationMode)' != 'trimmed' and '$(QualificationMode)' != 'aot'" Text="QualificationMode must be jit, trimmed or aot." />
+  </Target>
+</Project>

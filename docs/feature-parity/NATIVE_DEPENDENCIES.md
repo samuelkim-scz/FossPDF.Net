@@ -101,7 +101,8 @@ proof projects are not packed or shipped as FossPDF packages.
 | Linux | `linux-x64/x86/arm/arm64/loongarch64/riscv64`, musl and Android-bionic variants in the asset packages | Ubuntu CI qualifies only its actual desktop RID |
 
 `dependency-assets.json` is the exact restored-file inventory; availability of a binary is not a
-support claim. FP-503 owns the wider architecture/OS, NativeAOT, trimming and publish qualification.
+support claim. The [FP-503 runtime matrix](RUNTIME_SUPPORT.md) records the separate package-based
+architecture/OS, NativeAOT, trimming and publish qualification.
 Browser/iOS/Android/bionic, musl, Windows ARM/x86 and additional Linux architectures are not accepted
 as qualified production targets by this proof. Missing native libraries or unsupported RIDs fail
 explicitly, with no silent rasterization/output substitution. A consumer may deploy the optional

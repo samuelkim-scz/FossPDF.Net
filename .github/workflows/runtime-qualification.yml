@@ -1,0 +1,100 @@
+name: Runtime deployment qualification
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  publish-run:
+    name: Runtime qualification (${{ matrix.rid }})
+    runs-on: ${{ matrix.environment }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: windows-latest
+            rid: win-x64
+          - environment: ubuntu-latest
+            rid: linux-x64
+          - environment: macos-26-intel
+            rid: osx-x64
+          - environment: windows-11-arm
+            rid: win-arm64
+            python-architecture: x64
+          - environment: ubuntu-24.04-arm
+            rid: linux-arm64
+            python-architecture: arm64
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9.0.x
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.python-architecture || 'x64' }}
+      - name: Configure the Windows native toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $architecture = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'amd64' }
+          $component = if ($env:RUNNER_ARCH -eq 'ARM64') { 'Microsoft.VisualStudio.Component.VC.Tools.ARM64' } else { 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64' }
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $installation = & $vswhere -latest -products '*' -requires $component -property installationPath
+          if (-not $installation) { throw "Missing native C++ workload: $component" }
+          Import-Module (Join-Path $installation 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $installation -SkipAutomaticLocation -DevCmdArguments "-arch=$architecture -host_arch=$architecture"
+          foreach ($name in @('PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'VCToolsInstallDir', 'VCINSTALLDIR', 'WindowsSdkDir', 'WindowsSDKVersion', 'UniversalCRTSdkDir', 'UCRTVersion')) {
+            $value = [Environment]::GetEnvironmentVariable($name)
+            if ($value) { "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
+          }
+      - name: Install the Linux native toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+      - name: Record the publishing environment
+        shell: bash
+        run: |
+          mkdir -p artifacts/runtime-environment
+          dotnet --info > artifacts/runtime-environment/dotnet-info.txt
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            clang --version > artifacts/runtime-environment/clang-version.txt
+          fi
+      - name: Install pinned independent readers
+        shell: bash
+        run: python -m pip install -r Source/FossPDF.RuntimeSmoke/requirements-validation.txt
+      - name: Pack the public consumer packages
+        shell: bash
+        working-directory: Source
+        run: |
+          for project in FossPDF FossPDF.FontSubset FossPDF.FontSubset.Glue FossPDF.Svg FossPDF.PdfOperations; do
+            dotnet pack "$project/$project.csproj" -c Release -p:GeneratePackageOnBuild=false --output ../artifacts/runtime-packages
+          done
+      - name: Publish, execute and independently inspect JIT, trimmed and NativeAOT consumers
+        shell: bash
+        run: python Source/FossPDF.RuntimeSmoke/qualify_runtime.py --rid "${{ matrix.rid }}" --package-source artifacts/runtime-packages --output artifacts/runtime-qualification
+      - name: Verify the RUN-503 acceptance contract
+        shell: bash
+        working-directory: Source
+        env:
+          FOSSPDF_RUNTIME_QUALIFICATION: ${{ github.workspace }}/artifacts/runtime-qualification/qualification.json
+        run: dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release -f net9.0 -p:UsedAvaloniaProducts= -p:GeneratePackageOnBuild=false --filter "Name~RUN-503" --logger trx --results-directory ../artifacts/runtime-acceptance
+      - name: Upload deployment evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: runtime-qualification-${{ matrix.rid }}
+          path: |
+            artifacts/runtime-environment/**
+            artifacts/runtime-qualification/qualification.json
+            artifacts/runtime-qualification/**/publish.log
+            artifacts/runtime-qualification/**/run.log
+            artifacts/runtime-qualification/**/result/**
+            artifacts/runtime-acceptance/**

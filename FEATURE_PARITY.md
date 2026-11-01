@@ -46,6 +46,8 @@ The [preview inspection protocol guide](docs/feature-parity/PREVIEW_INSPECTION.m
 hierarchy/source capture, version negotiation, occurrence geometry, payload limits and ownership.
 The [interactive previewer guide](docs/feature-parity/PREVIEWER_TOOLS.md) covers hierarchy picking,
 measurement, magnification, search, source navigation, diagnostics and native UI smoke checks.
+The [runtime deployment guide](docs/feature-parity/RUNTIME_SUPPORT.md) records package-based
+trimming/NativeAOT qualification, native architecture evidence and the remaining deployment limits.
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
 | --- | --- | --- | --- | --- | --- |
