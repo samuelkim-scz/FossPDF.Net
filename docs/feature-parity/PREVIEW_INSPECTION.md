@@ -83,8 +83,9 @@ cd Source
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --filter "FullyQualifiedName~Inspection|Name~DEV-501"
 ```
 
-Interactive selection, measurement, search and source-launch controls are tracked separately in
-FP-502; the transport delivers the data those controls consume.
+The [interactive previewer tools guide](PREVIEWER_TOOLS.md) describes hierarchy selection,
+measurement, magnification, search, source navigation, diagnostics and reproducible UI checks
+for FP-502. These controls consume protocol 1 without changing its transport.
 
 The previewer sample also has an explicit inspection switch:
 

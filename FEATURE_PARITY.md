@@ -44,6 +44,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 The [preview inspection protocol guide](docs/feature-parity/PREVIEW_INSPECTION.md) covers optional
 hierarchy/source capture, version negotiation, occurrence geometry, payload limits and ownership.
+The [interactive previewer guide](docs/feature-parity/PREVIEWER_TOOLS.md) covers hierarchy picking,
+measurement, magnification, search, source navigation, diagnostics and native UI smoke checks.
 
 | Capability | Baseline assessment | Target behavior / current distinction | Work items | QuestPDF reference | FossPDF baseline evidence |
 | --- | --- | --- | --- | --- | --- |

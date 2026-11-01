@@ -9,6 +9,7 @@ namespace FossPDF.Previewer
     internal class PreviewerWindowViewModel : ReactiveObject, IDisposable
     {
         private bool disposed;
+        public InspectionViewModel Inspector { get; }
         private InspectionSnapshot? inspection;
         public InspectionSnapshot? Inspection
         {
@@ -51,10 +52,15 @@ namespace FossPDF.Previewer
         public ReactiveCommand<Unit, Unit> ShowDocumentationCommand { get; }
         public ReactiveCommand<Unit, Unit> SponsorProjectCommand { get; }
 
-        public PreviewerWindowViewModel()
+        public PreviewerWindowViewModel() : this(CommunicationService.Instance) { }
+
+        private readonly CommunicationService communication;
+        internal PreviewerWindowViewModel(CommunicationService communication, Action<Action>? dispatch = null)
         {
-            CommunicationService.Instance.OnDocumentRefreshed += HandleUpdatePreview;
-            CommunicationService.Instance.OnInspectionRefreshed += HandleInspection;
+            this.communication = communication;
+            Inspector = new InspectionViewModel(dispatch);
+            communication.OnDocumentRefreshed += HandleUpdatePreview;
+            communication.OnInspectionRefreshed += HandleInspection;
             
             ShowPdfCommand = ReactiveCommand.Create(ShowPdf);
             ShowDocumentationCommand = ReactiveCommand.Create(() => OpenLink("https://www.FossPDF.com/api-reference/index.html"));
@@ -87,27 +93,33 @@ namespace FossPDF.Previewer
         {
             if (disposed)
             {
-                foreach (var page in pages) page.Picture.Dispose();
+                foreach (var page in pages) page.Dispose();
                 return;
             }
             var oldPages = Pages;
             Pages = new ObservableCollection<PreviewPage>(pages);
-            
-            foreach (var page in oldPages)
-                page.Picture.Dispose();
+            foreach (var page in oldPages) page.Dispose();
             oldPages.Clear();
         }
 
-        private void HandleInspection(InspectionSnapshot? snapshot) => Inspection = snapshot;
+        private void HandleInspection(InspectionSnapshot? snapshot)
+        {
+            if (disposed) return;
+            Inspection = snapshot;
+            Inspector.Refresh(snapshot, Pages.Count);
+        }
 
         public void Dispose()
         {
             if (disposed) return;
             disposed = true;
-            CommunicationService.Instance.OnDocumentRefreshed -= HandleUpdatePreview;
-            CommunicationService.Instance.OnInspectionRefreshed -= HandleInspection;
-            foreach (var page in Pages) page.Picture.Dispose();
-            Pages.Clear(); Inspection = null;
+            communication.OnDocumentRefreshed -= HandleUpdatePreview;
+            communication.OnInspectionRefreshed -= HandleInspection;
+            Inspector.Dispose();
+            var oldPages = Pages;
+            Pages = new ObservableCollection<PreviewPage>();
+            foreach (var page in oldPages) page.Dispose();
+            oldPages.Clear(); Inspection = null;
             ShowPdfCommand.Dispose(); ShowDocumentationCommand.Dispose(); SponsorProjectCommand.Dispose();
         }
     }

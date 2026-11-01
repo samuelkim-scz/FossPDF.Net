@@ -51,6 +51,16 @@ Document
 
                     x.Item().Inspect("example-body", "Hot reload sample")
                         .Text("Modify this line and the preview should show your changes instantly.");
+
+                    if (Array.IndexOf(args, "--inspect") >= 0)
+                    {
+                        var rows = Array.IndexOf(args, "--large") >= 0 ? 1000 : 40;
+                        for (var index = 0; index < rows; index++)
+                            x.Item().Inspect("revenue-" + index, "Revenue row " + index, configuration: "currency=EUR")
+                                .Text("Revenue " + index + ": EUR 12.00");
+                    }
+                    if (Array.IndexOf(args, "--layout-error") >= 0)
+                        x.Item().Width(10000).Height(10000).Text("Deliberately impossible content");
                 });
 
             page.Footer()

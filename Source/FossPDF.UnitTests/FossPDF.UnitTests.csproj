@@ -21,6 +21,10 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+      <FrameworkReference Include="Microsoft.AspNetCore.App" />
+      <PackageReference Include="Avalonia" Version="11.3.10" />
+      <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
+      <PackageReference Include="Avalonia.Skia" Version="11.3.10" />
       <ProjectReference Include="..\FossPDF.Previewer\FossPDF.Previewer.csproj" />
       <ProjectReference Include="..\FossPDF.FontSubset.Glue\FossPDF.FontSubset.Glue.csproj" />
       <!-- The SVG companion targets net9.0 only; the tests are conditional on the framework. -->

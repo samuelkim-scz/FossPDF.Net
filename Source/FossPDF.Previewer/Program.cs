@@ -29,8 +29,10 @@ try
 }
 finally
 {
-    await CommunicationService.Instance.Stop();
-    await communicationTask;
+    // The Avalonia loop has stopped; asynchronous host cleanup cannot resume on its dispatcher.
+    SynchronizationContext.SetSynchronizationContext(null);
+    await CommunicationService.Instance.Stop().ConfigureAwait(false);
+    await communicationTask.ConfigureAwait(false);
 }
 
 static int GetCommunicationPort()
