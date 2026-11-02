@@ -16,6 +16,8 @@ This is the shared implementation plan for functional parity with **QuestPDF 202
 
 [The acceptance specification](docs/feature-parity/ACCEPTANCE.md) defines public behavioral contracts, stable fixture IDs, expected outcomes, visual tolerances and commands for running the shared corpus.
 
+[The current parity audit](docs/feature-parity/PARITY_AUDIT.md) maps all 32 accepted work items to merged implementation, tests, guides and examples. Thirty are complete; native previewer acceptance and the final release gate remain open. See the [migration guide](docs/feature-parity/MIGRATION.md) and [unreleased notes](RELEASE_NOTES.md). Historical assessments below remain the starting baseline.
+
 [The settings contract](docs/feature-parity/SETTINGS.md) defines document/output defaults, compatibility mappings, concurrency and ownership rules for dependent feature work.
 
 [The image optimization guide](docs/feature-parity/IMAGE_OPTIMIZATION.md) covers per-image raster DPI, resampling, JPEG/WebP quality, document defaults and shared-image ownership.
@@ -99,7 +101,7 @@ flowchart LR
   M4 --> M5
 ```
 
-**Ready for the first contributors:** FP-001 (spec/fixtures), FP-002 (native architecture), FP-003 (quality/performance baseline), and FP-004 (settings/API contract). These can be claimed independently. Follow-on work becomes ready when its blocking issues are resolved or an agreed stable contract allows safe parallel implementation.
+**Current remaining work:** FP-502 native previewer acceptance (#31) and the FP-504 release gate (#33). Foundations and the other accepted implementation issues are complete; consult the audit for evidence and the open issues for remaining work. The next parity target is explicitly unselected.
 
 Sizes are relative complexity: S = localized, M = moderate, L = cross-cutting, XL = major subsystem. They are not person-day estimates. Split XL work into smaller sub-issues and scoped pull requests while keeping its parent acceptance criteria intact.
 

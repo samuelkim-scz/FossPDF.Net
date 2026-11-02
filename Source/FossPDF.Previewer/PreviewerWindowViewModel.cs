@@ -63,7 +63,7 @@ namespace FossPDF.Previewer
             communication.OnInspectionRefreshed += HandleInspection;
             
             ShowPdfCommand = ReactiveCommand.Create(ShowPdf);
-            ShowDocumentationCommand = ReactiveCommand.Create(() => OpenLink("https://www.FossPDF.com/api-reference/index.html"));
+            ShowDocumentationCommand = ReactiveCommand.Create(() => OpenLink("https://github.com/samuelkim-scz/FossPDF.Net/blob/main/docs/feature-parity/PREVIEWER_TOOLS.md"));
             SponsorProjectCommand = ReactiveCommand.Create(() => OpenLink("https://github.com/sponsors/FossPDF"));
         }
 
