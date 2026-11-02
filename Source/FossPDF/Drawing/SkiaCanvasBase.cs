@@ -18,6 +18,8 @@ namespace FossPDF.Drawing
             public ZIndexLayer(SKRect bounds)
             {
                 Canvas = Recorder.BeginRecording(bounds);
+                // Keep an unclipped baseline so a reused layer can adopt the current scope's clip.
+                Canvas.Save();
             }
 
             public void Dispose()
@@ -31,6 +33,8 @@ namespace FossPDF.Drawing
         private int CurrentZIndex { get; set; }
         private SKRect PageBounds { get; set; }
         private Dictionary<int, ZIndexLayer> ZIndexLayers { get; } = new Dictionary<int, ZIndexLayer>();
+        private List<(SKMatrix Matrix, Position Position, Size Size, BorderRadius Radius)> ZIndexClips { get; } = new();
+        private Stack<(SKMatrix Matrix, int ClipCount)> ZIndexSavePoints { get; } = new();
 
         internal SKCanvas? Canvas { get; set; }
 
@@ -99,6 +103,8 @@ namespace FossPDF.Drawing
                 layer.Dispose();
 
             ZIndexLayers.Clear();
+            ZIndexClips.Clear();
+            ZIndexSavePoints.Clear();
             CurrentZIndex = 0;
         }
 
@@ -128,7 +134,19 @@ namespace FossPDF.Drawing
             var matrix = ActiveCanvas.TotalMatrix;
 
             CurrentZIndex = index;
-            GetZIndexLayer(index).SetMatrix(matrix);
+            RestoreZIndexLayerState(GetZIndexLayer(index), matrix);
+        }
+
+        private void RestoreZIndexLayerState(SKCanvas canvas, SKMatrix matrix)
+        {
+            canvas.RestoreToCount(1);
+            canvas.Save();
+            foreach (var clip in ZIndexClips)
+            {
+                canvas.SetMatrix(clip.Matrix);
+                ApplyClip(canvas, clip.Position, clip.Size, clip.Radius);
+            }
+            canvas.SetMatrix(matrix);
         }
 
         public Matrix4x4 Transform
@@ -473,12 +491,25 @@ namespace FossPDF.Drawing
 
         public virtual void SaveState()
         {
-            ActiveCanvas.Save();
+            if (ZIndexLayersEnabled)
+                ZIndexSavePoints.Push((ActiveCanvas.TotalMatrix, ZIndexClips.Count));
+            else
+                ActiveCanvas.Save();
         }
 
         public virtual void RestoreState()
         {
-            ActiveCanvas.Restore();
+            if (!ZIndexLayersEnabled)
+            {
+                ActiveCanvas.Restore();
+                return;
+            }
+
+            if (ZIndexSavePoints.Count == 0)
+                return;
+            var state = ZIndexSavePoints.Pop();
+            ZIndexClips.RemoveRange(state.ClipCount, ZIndexClips.Count - state.ClipCount);
+            RestoreZIndexLayerState(ActiveCanvas, state.Matrix);
         }
 
         public virtual void ClipRectangle(Position vector, Size size, BorderRadius cornerRadius)
@@ -486,14 +517,21 @@ namespace FossPDF.Drawing
             if (size.Width < Size.Epsilon || size.Height < Size.Epsilon)
                 return;
 
+            if (ZIndexLayersEnabled)
+                ZIndexClips.Add((ActiveCanvas.TotalMatrix, vector, size, cornerRadius));
+            ApplyClip(ActiveCanvas, vector, size, cornerRadius);
+        }
+
+        private static void ApplyClip(SKCanvas canvas, Position vector, Size size, BorderRadius cornerRadius)
+        {
             if (cornerRadius.IsZero)
             {
-                ActiveCanvas.ClipRect(new SKRect(vector.X, vector.Y, vector.X + size.Width, vector.Y + size.Height), SKClipOperation.Intersect, true);
+                canvas.ClipRect(new SKRect(vector.X, vector.Y, vector.X + size.Width, vector.Y + size.Height), SKClipOperation.Intersect, true);
             }
             else
             {
                 using var roundRect = CreateRoundRect(vector, size, cornerRadius);
-                ActiveCanvas.ClipRoundRect(roundRect, SKClipOperation.Intersect, true);
+                canvas.ClipRoundRect(roundRect, SKClipOperation.Intersect, true);
             }
         }
 

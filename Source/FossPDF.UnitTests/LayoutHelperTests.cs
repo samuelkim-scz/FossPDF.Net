@@ -210,6 +210,29 @@ namespace FossPDF.UnitTests
         }
 
         [Test]
+        public void ZIndex_PreservesNestedClipsAndRestoresTheirScopes()
+        {
+            var document = Document.Create(container => container.Page(page =>
+            {
+                page.Size(120, 60);
+                page.Margin(0);
+                page.PageColor("#ffffff");
+                page.Content().Row(row =>
+                {
+                    row.ConstantItem(60).Height(60).Padding(10).CornerRadius(20).Clip()
+                        .TranslateX(-5).Clip().ZIndex(1).Background("#ff0000");
+                    row.ConstantItem(60).Height(60).ZIndex(1).Background("#0000ff");
+                });
+            })).WithSettings(new DocumentSettings { ImageRasterDpi = 72 });
+
+            using var bitmap = SKBitmap.Decode(document.GenerateImages().Single());
+            Assert.That(bitmap.GetPixel(30, 30), Is.EqualTo(SKColors.Red));
+            Assert.That(bitmap.GetPixel(11, 11), Is.EqualTo(SKColors.White), "Rounded clipping must survive a layer switch.");
+            Assert.That(bitmap.GetPixel(47, 30), Is.EqualTo(SKColors.White), "The nested translated clip must also survive.");
+            Assert.That(bitmap.GetPixel(80, 30), Is.EqualTo(SKColors.Blue), "A reused layer must leave the previous clip scope.");
+        }
+
+        [Test]
         public void InjectedElementAlignment_AccommodatesMixedHeights()
         {
             var span = new TextLineElement
