@@ -11,6 +11,7 @@ internal sealed class InspectionEntry
     internal InspectionNode Node { get; }
     internal List<InspectionEntry> Children { get; } = new();
     internal InspectionEntry? Parent { get; set; }
+    internal int Depth { get; set; }
     internal List<InspectionOccurrence> Paints { get; } = new();
     internal bool Expanded { get; set; }
     public string Title => string.IsNullOrWhiteSpace(Node.Label) ? Node.Type : Node.Label;
@@ -140,6 +141,7 @@ internal sealed class InspectionViewModel : ReactiveObject, IDisposable
             {
                 entry.Parent = index[node.ParentId];
                 entry.Parent.Children.Add(entry);
+                entry.Depth = entry.Parent.Depth + 1;
                 entry.Indent = new Thickness(Math.Min(160, entry.Parent.Indent.Left + 12), 0, 0, 0);
             }
             entry.Expanded = entry.Indent.Left < 24;
@@ -152,9 +154,9 @@ internal sealed class InspectionViewModel : ReactiveObject, IDisposable
         Diagnostic = snapshot?.Diagnostic ?? string.Empty;
         Selected = null;
         UpdatePointer(null);
+        ResetMeasurement();
         Status = snapshot == null ? "Picture-only preview. Measurement is available; enable inspection for element details." :
             "Select a hierarchy row or choose Pick element. Ctrl+wheel zooms; middle-drag pans in every tool.";
-        ResetMeasurement();
         QueueSearch();
     }
 
@@ -261,7 +263,21 @@ internal sealed class InspectionViewModel : ReactiveObject, IDisposable
             this.RaisePropertyChanged(nameof(MeasurementText));
             return;
         }
-        var occurrence = paints.LastOrDefault(paint => paint.Page == point.Page && point.X >= paint.X && point.X <= paint.X + paint.Width && point.Y >= paint.Y && point.Y <= paint.Y + paint.Height);
+        InspectionOccurrence? occurrence = null;
+        var depth = -1;
+        foreach (var paint in paints)
+        {
+            if (paint.Page != point.Page || paint.Width <= 0 || paint.Height <= 0 ||
+                point.X < paint.X || point.X > paint.X + paint.Width ||
+                point.Y < paint.Y || point.Y > paint.Y + paint.Height)
+                continue;
+            var candidateDepth = index[paint.NodeId].Depth;
+            // Page-wide wrappers are captured after content, even if their child is empty.
+            // Prefer the deepest containing element, then later occurrences at equal depth.
+            if (candidateDepth < depth) continue;
+            occurrence = paint;
+            depth = candidateDepth;
+        }
         if (occurrence == null) { Status = "No inspected element at that point."; return; }
         suppressFocus = true;
         try
@@ -291,7 +307,13 @@ internal sealed class InspectionViewModel : ReactiveObject, IDisposable
     }
 
     public void ResetMeasurement()
-    { measurement = null; measuring = false; this.RaisePropertyChanged(nameof(MeasurementText)); }
+    {
+        var hadMeasurement = measurement.HasValue;
+        measurement = null;
+        measuring = false;
+        this.RaisePropertyChanged(nameof(MeasurementText));
+        if (hadMeasurement) Status = "Measurement cleared.";
+    }
 
     private void CancelSearch()
     { searchCancellation?.Cancel(); searchCancellation?.Dispose(); searchCancellation = null; }

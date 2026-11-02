@@ -33,6 +33,10 @@ This extends [the original Windows record](fp-502-windows.md); it does not close
 
 ## Remaining acceptance
 
+The [November 2 follow-up](fp-502-windows-keyboard-clipboard.md) reproduces and fixes clipboard,
+keyboard and picking problems and records additional native checks. The failures below remain
+the historical outcome of this November 1 run; consult the newer record for the corrected behavior.
+
 Native Linux/macOS smoke and accessibility review remain pending by the user's explicit decision.
 The full Windows keyboard traversal, pointer pan/Ctrl+wheel checks, measurement reset/invalid-input
 walkthrough and successful clipboard copy are not all covered by these additional observations;

@@ -10,6 +10,9 @@ native smoke observations and remaining cross-platform checks.
 The [additional Windows/package record](evidence/fp-502-windows-followup.md) adds forty real
 hot reloads, large-document/export/error recovery, clean tool installation and explicit remaining
 clipboard/keyboard/pointer checks. Linux/macOS native review remains pending.
+The [November 2 keyboard/clipboard follow-up](evidence/fp-502-windows-keyboard-clipboard.md)
+records native reproductions and corrections for clipboard startup, numeric Escape, picking
+and hierarchy shortcuts, plus human-confirmed Ctrl+wheel and middle-button pan behavior.
 
 ## Run the example
 
@@ -34,8 +37,9 @@ through `dotnet watch --project Source/FossPDF.Previewer.Examples -- --inspect`.
   occurrence to focus its physical page. Details show the node ID, type, annotation, point
   rectangle, captured text and nearest annotated ancestor's source location.
 - Expand/collapse the selected node with the button or Space/Right. Parent or Left selects
-  its parent. In Pick element mode, click a page to select the last captured occurrence
-  containing that point; the hierarchy reveals its ancestors and clears an old search.
+  its parent. In Pick element mode, click a page to select the deepest containing occurrence
+  at that point; equal depths prefer later captured occurrences and zero-area metadata is ignored.
+  The hierarchy reveals its ancestors and clears an old search.
   Parent selection lets you inspect enclosing wrappers sharing the same bounds.
 - Coordinates use physical 1-based pages and points from each page's top-left. Move the pointer
   to read coordinates, or enter Page/X/Y and press Pick to navigate/select without a mouse.

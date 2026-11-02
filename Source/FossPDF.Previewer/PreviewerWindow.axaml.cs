@@ -3,13 +3,31 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 
 namespace FossPDF.Previewer;
 
 internal partial class PreviewerWindow : Window
 {
-    public PreviewerWindow() => AvaloniaXamlLoader.Load(this);
+    public PreviewerWindow()
+    {
+        AvaloniaXamlLoader.Load(this);
+        // ListBox consumes navigation keys before bubbling KeyDown handlers run.
+        this.FindControl<ListBox>("ElementHierarchy")!.AddHandler(
+            KeyDownEvent, HierarchyKeyDown, RoutingStrategies.Tunnel);
+    }
     private InspectionViewModel? Inspector => (DataContext as PreviewerWindowViewModel)?.Inspector;
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        // Numeric picking leaves focus on a form control rather than on the canvas.
+        if (!e.Handled && e.Key == Key.Escape && Inspector?.Measurement != null)
+        {
+            Inspector.ResetMeasurement();
+            e.Handled = true;
+        }
+    }
 
     protected override void OnClosed(EventArgs e)
     {
@@ -23,8 +41,22 @@ internal partial class PreviewerWindow : Window
     private void FindDiagnostic(object? sender, RoutedEventArgs e) { if (Inspector is { } model) model.Query = "Exception"; }
     private void HierarchyKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key is Key.Space or Key.Right) { Inspector?.ToggleSelected(); e.Handled = true; }
-        else if (e.Key == Key.Left) { Inspector?.SelectParent(); e.Handled = true; }
+        if (Inspector is not { } model) return;
+        if (e.Key is Key.Space or Key.Right) model.ToggleSelected();
+        else if (e.Key == Key.Left) model.SelectParent();
+        else return;
+        e.Handled = true;
+        if (sender is ListBox hierarchy && model.Selected is { } selection)
+        {
+            hierarchy.ScrollIntoView(selection);
+            // Revealing/collapsing a node rebuilds the virtualized items. Restore focus only
+            // after their containers are realized, and never after a refresh changes selection.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (ReferenceEquals(model.Selected, selection))
+                    hierarchy.ContainerFromItem(selection)?.Focus();
+            }, DispatcherPriority.Background);
+        }
     }
 
     private void OpenSource(object? sender, RoutedEventArgs e)

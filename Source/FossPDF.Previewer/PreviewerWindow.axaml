@@ -43,8 +43,8 @@
           <Button Content="Expand / collapse" Click="ToggleHierarchy" />
           <Button Content="Parent" Click="SelectParent" />
         </StackPanel>
-        <ListBox Grid.Row="2" ItemsSource="{Binding Inspector.Entries}" SelectedItem="{Binding Inspector.Selected, Mode=TwoWay}"
-                 KeyDown="HierarchyKeyDown" AutomationProperties.Name="Element hierarchy and search results">
+        <ListBox x:Name="ElementHierarchy" Grid.Row="2" ItemsSource="{Binding Inspector.Entries}" SelectedItem="{Binding Inspector.Selected, Mode=TwoWay}"
+                 AutomationProperties.Name="Element hierarchy and search results">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="p:InspectionEntry">
               <StackPanel Margin="{Binding Indent}" Spacing="2">
@@ -66,10 +66,10 @@
               <Button Content="Copy location" Click="CopyLocation" IsEnabled="{Binding Inspector.HasSource}" />
             </StackPanel>
             <TextBlock Text="Point coordinates" FontWeight="Bold" FontSize="12" />
-            <Grid ColumnDefinitions="50,*,*,Auto">
-              <TextBox Text="{Binding Inspector.CoordinatePage, Mode=TwoWay}" AutomationProperties.Name="Coordinate page" Watermark="Page" />
-              <TextBox Grid.Column="1" Text="{Binding Inspector.CoordinateX, Mode=TwoWay}" AutomationProperties.Name="Coordinate X in points" Watermark="X pt" />
-              <TextBox Grid.Column="2" Text="{Binding Inspector.CoordinateY, Mode=TwoWay}" AutomationProperties.Name="Coordinate Y in points" Watermark="Y pt" />
+            <Grid ColumnDefinitions="64,*,*,Auto" ColumnSpacing="6">
+              <TextBox MinWidth="0" Text="{Binding Inspector.CoordinatePage, Mode=TwoWay}" AutomationProperties.Name="Coordinate page" Watermark="Page" />
+              <TextBox Grid.Column="1" MinWidth="0" Text="{Binding Inspector.CoordinateX, Mode=TwoWay}" AutomationProperties.Name="Coordinate X in points" Watermark="X pt" />
+              <TextBox Grid.Column="2" MinWidth="0" Text="{Binding Inspector.CoordinateY, Mode=TwoWay}" AutomationProperties.Name="Coordinate Y in points" Watermark="Y pt" />
               <Button Grid.Column="3" Content="Pick" Click="PickCoordinates" />
             </Grid>
             <SelectableTextBlock Text="{Binding Inspector.MeasurementText}" TextWrapping="Wrap" FontSize="12" />

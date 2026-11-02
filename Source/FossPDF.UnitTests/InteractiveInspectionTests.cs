@@ -16,6 +16,75 @@ namespace FossPDF.UnitTests;
 [NonParallelizable]
 public class InteractiveInspectionTests
 {
+    [Test]
+    public void PreviewerEntryPointKeepsWindowsOleOnAnStaThread()
+    {
+        var entryPoint = typeof(PreviewerWindow).Assembly.EntryPoint;
+        Assert.That(entryPoint, Is.Not.Null);
+        Assert.That(entryPoint!.IsDefined(typeof(STAThreadAttribute), false), Is.True,
+            "Windows OLE clipboard operations require an STA entry thread.");
+        Assert.That(entryPoint.ReturnType, Is.EqualTo(typeof(void)),
+            "An async Main compiler wrapper does not preserve the STAThread contract.");
+    }
+
+    [Test]
+    public void PickingRealCapturedRowsPrefersContentOverEmptyPageForegroundWrappers()
+    {
+        var document = Document.Create(container => container.Page(page =>
+        {
+            page.Size(200, 100);
+            page.Content().Column(column =>
+            {
+                for (var row = 0; row < 6; row++)
+                    column.Item().Height(30).Inspect("row-" + row).Text("Visible row " + row);
+            });
+        }));
+        using var preview = document.GenerateInspectedPreview();
+        using var model = new InspectionViewModel(action => action());
+        model.Refresh(preview.Inspection, preview.Pictures.Count);
+        model.Tool = InspectionViewModel.Tools[1];
+        var rows = preview.Inspection.Occurrences.Where(paint => paint.Text?.StartsWith("Visible row ", StringComparison.Ordinal) == true).ToArray();
+        Assert.That(rows, Has.Length.EqualTo(6));
+        Assert.That(preview.Pictures.Count, Is.EqualTo(2));
+        foreach (var row in rows)
+        {
+            model.Pick(new PagePoint(row.Page, row.X + row.Width / 2, row.Y + row.Height / 2));
+            Assert.That(model.Selected!.Node.Type, Is.EqualTo("TextBlock"));
+            Assert.That(model.SelectedOccurrence!.Value.Text, Is.EqualTo(row.Text));
+            Assert.That(model.SourceNode, Is.Not.Null);
+        }
+    }
+
+    [Test]
+    public void PickingUsesLaterOccurrencesForEqualDepthAndIgnoresZeroAreaMetadata()
+    {
+        var snapshot = Snapshot();
+        snapshot.Nodes.Add(new InspectionNode { Id = "later", ParentId = "heading", Type = "TextBlock" });
+        snapshot.Nodes.Add(new InspectionNode { Id = "zero-area", ParentId = "later", Type = "Container" });
+        snapshot.Occurrences.Add(new InspectionOccurrence { NodeId = "later", Page = 1, X = 10, Y = 10, Width = 100, Height = 20 });
+        snapshot.Occurrences.Add(new InspectionOccurrence { NodeId = "zero-area", Page = 1, X = 10, Y = 10, Width = 0, Height = 20 });
+        using var model = new InspectionViewModel(action => action());
+        model.Refresh(snapshot, 2);
+        model.Pick(new PagePoint(1, 10, 15));
+        Assert.That(model.Selected!.Node.Id, Is.EqualTo("later"));
+    }
+
+    [Test]
+    public void ResetMeasurementClearsItsStatusAndRefreshKeepsNewPreviewInstructions()
+    {
+        using var model = new InspectionViewModel(action => action());
+        model.Refresh(Snapshot(), 2);
+        model.Tool = InspectionViewModel.Tools[2];
+        model.Pick(new PagePoint(1, 10, 10));
+        model.ResetMeasurement();
+        Assert.That(model.Measurement, Is.Null);
+        Assert.That(model.Status, Is.EqualTo("Measurement cleared."));
+        model.Pick(new PagePoint(1, 10, 10));
+        model.Refresh(null, 2);
+        Assert.That(model.Measurement, Is.Null);
+        Assert.That(model.Status, Does.Contain("Picture-only preview"));
+    }
+
     internal static InspectionSnapshot Snapshot() => new()
     {
         Nodes = new List<InspectionNode>
