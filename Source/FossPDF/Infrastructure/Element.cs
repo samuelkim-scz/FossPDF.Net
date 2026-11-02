@@ -5,6 +5,10 @@ using FossPDF.Drawing;
 
 namespace FossPDF.Infrastructure
 {
+    // Layout diagnostics enumerate public configuration properties on concrete elements.
+#if NET9_0_OR_GREATER
+    [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties)]
+#endif
     internal abstract class Element : IElement
     {
         // DocumentGenerator injects these dependencies before measuring or drawing.

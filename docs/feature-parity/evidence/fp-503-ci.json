@@ -1,0 +1,1109 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-11-01",
+  "workflow_run": "https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/41359918379",
+  "qualified_head_commit": "9ab8be8",
+  "profiles_passed": 60,
+  "platforms": [
+    {
+      "rid": "linux-arm64",
+      "sdk": "9.0.320",
+      "source_commit": "ad39fbd789f44e059ef1b4ad51f5f60f5ce0b789",
+      "dirty_worktree": false,
+      "framework": ".NET 9.0.22",
+      "os": "Ubuntu 24.04.5 LTS",
+      "architecture": "Arm64",
+      "os_architecture": "Arm64",
+      "package_hashes": [
+        {
+          "file": "FossPDF.2026.5.1.nupkg",
+          "sha256": "36643d7551599d8223e59adf1e4a9f1f96a825c715d672a6b20da01501456297"
+        },
+        {
+          "file": "FossPDF.FontSubset.2026.5.1.nupkg",
+          "sha256": "b2314f55eed97bdb9c75869841ae794e0dda29541b544c52ea3fbfc6506d7355"
+        },
+        {
+          "file": "FossPDF.FontSubset.Glue.2026.5.1.nupkg",
+          "sha256": "0685ee37f5dd896cafce7adc0ce28fc0d866cca2808c342d42964efca419a60f"
+        },
+        {
+          "file": "FossPDF.PdfOperations.2026.5.1.nupkg",
+          "sha256": "c67bf5eee36a65631e7b199c3c5a76fe21947c14c627fab18f332b321fb4a4c8"
+        },
+        {
+          "file": "FossPDF.Svg.2026.5.1.nupkg",
+          "sha256": "939f049285e08d40d4786c46761a8653b845b506840acf09be6c59149a1a1647"
+        }
+      ],
+      "native_files": [
+        {
+          "Path": "libSkiaSharp.so",
+          "Bytes": 10832888,
+          "Sha256": "7863926487214882C75BBADE2F1BDA4E65D403D3BAB1A2A8B24D125C44E1799E"
+        },
+        {
+          "Path": "libHarfBuzzSharp.so",
+          "Bytes": 2657280,
+          "Sha256": "68FC5EF842AC0DBD57E8063A11DE5BB2F3C2B5AF530A2D4FA07A7CF5D6EA4259"
+        }
+      ],
+      "dependencies": [
+        "ExCSS/4.3.1",
+        "FossPDF.FontSubset.Glue/2026.5.1",
+        "FossPDF.FontSubset/2026.5.1",
+        "FossPDF.PdfOperations/2026.5.1",
+        "FossPDF.Svg/2026.5.1",
+        "FossPDF/2026.5.1",
+        "HarfBuzzSharp.NativeAssets.Linux/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.Win32/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.macOS/8.3.1.5",
+        "HarfBuzzSharp/8.3.1.5",
+        "Microsoft.DotNet.ILCompiler/9.0.22",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2",
+        "Microsoft.Extensions.Logging.Abstractions/8.0.3",
+        "Microsoft.NET.ILLink.Tasks/9.0.22",
+        "PDFsharp/6.2.4",
+        "ShimSkiaSharp/4.9.1",
+        "SkiaSharp.HarfBuzz/3.119.4",
+        "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.4",
+        "SkiaSharp.NativeAssets.Win32/3.119.4",
+        "SkiaSharp.NativeAssets.macOS/3.119.4",
+        "SkiaSharp/3.119.4",
+        "Svg.Animation/4.9.1",
+        "Svg.Custom/4.9.1",
+        "Svg.Model/4.9.1",
+        "Svg.SceneGraph/4.9.1",
+        "Svg.Skia/4.9.1",
+        "System.Security.Cryptography.Pkcs/8.0.1",
+        "runtime.linux-arm64.Microsoft.DotNet.ILCompiler/9.0.22"
+      ],
+      "profiles": [
+        {
+          "feature": "Core",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 9,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 10,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 12,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 17,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        }
+      ]
+    },
+    {
+      "rid": "linux-x64",
+      "sdk": "9.0.320",
+      "source_commit": "ad39fbd789f44e059ef1b4ad51f5f60f5ce0b789",
+      "dirty_worktree": false,
+      "framework": ".NET 9.0.22",
+      "os": "Ubuntu 24.04.5 LTS",
+      "architecture": "X64",
+      "os_architecture": "X64",
+      "package_hashes": [
+        {
+          "file": "FossPDF.2026.5.1.nupkg",
+          "sha256": "b8ae621926c8125bb0f4e64b3cefba694c5a42848f91a147d9f6e870d08d087e"
+        },
+        {
+          "file": "FossPDF.FontSubset.2026.5.1.nupkg",
+          "sha256": "1b01a0ff6efa015508ffb88c24667cfe67820dfd35587e17336ee7ed9d9deb3a"
+        },
+        {
+          "file": "FossPDF.FontSubset.Glue.2026.5.1.nupkg",
+          "sha256": "07674a1c739a518135cbbeb901084133344ba007f577f7093f9d58a80534af53"
+        },
+        {
+          "file": "FossPDF.PdfOperations.2026.5.1.nupkg",
+          "sha256": "d571eb51b3e54f0ec4f320df1e461abf7d17706f66cd32708df0b1e229a3aa64"
+        },
+        {
+          "file": "FossPDF.Svg.2026.5.1.nupkg",
+          "sha256": "d2ee0eebcb600a7a56ffdbc464ccca2b23585cc68e84898648a99f096a62e798"
+        }
+      ],
+      "native_files": [
+        {
+          "Path": "libSkiaSharp.so",
+          "Bytes": 11155176,
+          "Sha256": "C8A0EE6F954BC6CF80673C34C6D6BA3345700E0AD1305172066E427954214C6B"
+        },
+        {
+          "Path": "libHarfBuzzSharp.so",
+          "Bytes": 2808040,
+          "Sha256": "1D5C3AFEF13545BF34BF8F068B14E25EE619C3B6DEE235C44E260FE61CB24018"
+        }
+      ],
+      "dependencies": [
+        "ExCSS/4.3.1",
+        "FossPDF.FontSubset.Glue/2026.5.1",
+        "FossPDF.FontSubset/2026.5.1",
+        "FossPDF.PdfOperations/2026.5.1",
+        "FossPDF.Svg/2026.5.1",
+        "FossPDF/2026.5.1",
+        "HarfBuzzSharp.NativeAssets.Linux/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.Win32/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.macOS/8.3.1.5",
+        "HarfBuzzSharp/8.3.1.5",
+        "Microsoft.DotNet.ILCompiler/9.0.22",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2",
+        "Microsoft.Extensions.Logging.Abstractions/8.0.3",
+        "Microsoft.NET.ILLink.Tasks/9.0.22",
+        "PDFsharp/6.2.4",
+        "ShimSkiaSharp/4.9.1",
+        "SkiaSharp.HarfBuzz/3.119.4",
+        "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.4",
+        "SkiaSharp.NativeAssets.Win32/3.119.4",
+        "SkiaSharp.NativeAssets.macOS/3.119.4",
+        "SkiaSharp/3.119.4",
+        "Svg.Animation/4.9.1",
+        "Svg.Custom/4.9.1",
+        "Svg.Model/4.9.1",
+        "Svg.SceneGraph/4.9.1",
+        "Svg.Skia/4.9.1",
+        "System.Security.Cryptography.Pkcs/8.0.1",
+        "runtime.linux-x64.Microsoft.DotNet.ILCompiler/9.0.22"
+      ],
+      "profiles": [
+        {
+          "feature": "Core",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 9,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 10,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 12,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 17,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        }
+      ]
+    },
+    {
+      "rid": "osx-x64",
+      "sdk": "9.0.320",
+      "source_commit": "ad39fbd789f44e059ef1b4ad51f5f60f5ce0b789",
+      "dirty_worktree": false,
+      "framework": ".NET 9.0.22",
+      "os": "Darwin 25.6.0 Darwin Kernel Version 25.6.0: Sat Jul 11 15:22:40 PDT 2026; root:xnu-12377.161.13~4/RELEASE_X86_64",
+      "architecture": "X64",
+      "os_architecture": "X64",
+      "package_hashes": [
+        {
+          "file": "FossPDF.2026.5.1.nupkg",
+          "sha256": "88664a7ad56a0d79bdfa13aaa996676e31648ab3ee18bbc6ebe7f3eecf256ed2"
+        },
+        {
+          "file": "FossPDF.FontSubset.2026.5.1.nupkg",
+          "sha256": "1885a5bf11b88a8bdbb6cd034714459a6a01ea002af40698c9b5758e39e49804"
+        },
+        {
+          "file": "FossPDF.FontSubset.Glue.2026.5.1.nupkg",
+          "sha256": "c6053993f8ae4b8b704566ca6b41a3d0e1965cb5c223c0671a76b401d742e727"
+        },
+        {
+          "file": "FossPDF.PdfOperations.2026.5.1.nupkg",
+          "sha256": "d33045357bd256a3976986b97a81b73785417cd80e294439d3e0c55339e68648"
+        },
+        {
+          "file": "FossPDF.Svg.2026.5.1.nupkg",
+          "sha256": "9d029707c7999a57c2096cf1d79fff40d49b096074cb25c8d816063e45a9ae15"
+        }
+      ],
+      "native_files": [
+        {
+          "Path": "libHarfBuzzSharp.dylib",
+          "Bytes": 2641664,
+          "Sha256": "F8E9AB02B74E68D151ABC3781098C9201E57C392B827B40451515D42386D6B0D"
+        },
+        {
+          "Path": "libSkiaSharp.dylib",
+          "Bytes": 15201456,
+          "Sha256": "E09F07AE1DF62DED475351F56D8DC8366CD679043F28B65D9DEE597A5FD0DA6C"
+        }
+      ],
+      "dependencies": [
+        "ExCSS/4.3.1",
+        "FossPDF.FontSubset.Glue/2026.5.1",
+        "FossPDF.FontSubset/2026.5.1",
+        "FossPDF.PdfOperations/2026.5.1",
+        "FossPDF.Svg/2026.5.1",
+        "FossPDF/2026.5.1",
+        "HarfBuzzSharp.NativeAssets.Linux/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.Win32/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.macOS/8.3.1.5",
+        "HarfBuzzSharp/8.3.1.5",
+        "Microsoft.DotNet.ILCompiler/9.0.22",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2",
+        "Microsoft.Extensions.Logging.Abstractions/8.0.3",
+        "Microsoft.NET.ILLink.Tasks/9.0.22",
+        "PDFsharp/6.2.4",
+        "ShimSkiaSharp/4.9.1",
+        "SkiaSharp.HarfBuzz/3.119.4",
+        "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.4",
+        "SkiaSharp.NativeAssets.Win32/3.119.4",
+        "SkiaSharp.NativeAssets.macOS/3.119.4",
+        "SkiaSharp/3.119.4",
+        "Svg.Animation/4.9.1",
+        "Svg.Custom/4.9.1",
+        "Svg.Model/4.9.1",
+        "Svg.SceneGraph/4.9.1",
+        "Svg.Skia/4.9.1",
+        "System.Security.Cryptography.Pkcs/8.0.1",
+        "runtime.osx-x64.Microsoft.DotNet.ILCompiler/9.0.22"
+      ],
+      "profiles": [
+        {
+          "feature": "Core",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 9,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 10,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 12,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 17,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        }
+      ]
+    },
+    {
+      "rid": "win-x64",
+      "sdk": "9.0.320",
+      "source_commit": "ad39fbd789f44e059ef1b4ad51f5f60f5ce0b789",
+      "dirty_worktree": false,
+      "framework": ".NET 9.0.22",
+      "os": "Microsoft Windows 10.0.26100",
+      "architecture": "X64",
+      "os_architecture": "X64",
+      "package_hashes": [
+        {
+          "file": "FossPDF.2026.5.1.nupkg",
+          "sha256": "e88ac8973b70376b06f1c7d693758574985923d11820cd02493c20d234b37b72"
+        },
+        {
+          "file": "FossPDF.FontSubset.2026.5.1.nupkg",
+          "sha256": "e7ea4b29178c8313392af09f23b2f70c555147c6492c5ddaa6d1d0f09e870d29"
+        },
+        {
+          "file": "FossPDF.FontSubset.Glue.2026.5.1.nupkg",
+          "sha256": "bac86ca3b8f5c24607eb374ff0e1d95a94461deb6420306601868e7f65664c4d"
+        },
+        {
+          "file": "FossPDF.PdfOperations.2026.5.1.nupkg",
+          "sha256": "f3fda8887d5fc456d80342db8a177d314bb5f66dff43a4569b8ccb3dbd0e9f86"
+        },
+        {
+          "file": "FossPDF.Svg.2026.5.1.nupkg",
+          "sha256": "175fc767cc2751f9a452885b835a95d3f70a6ab3d79718dff7f4d2e8d6adc4f8"
+        }
+      ],
+      "native_files": [
+        {
+          "Path": "libHarfBuzzSharp.dll",
+          "Bytes": 1815904,
+          "Sha256": "CF97AE00945E6F5290967BA4FF3051F1CD47A0758B7D9A7159FB352B33655D43"
+        },
+        {
+          "Path": "libSkiaSharp.dll",
+          "Bytes": 11628896,
+          "Sha256": "7DEC3BA900AB353491E6446F0083739924C6F8DD668832E2F09D38EBFFDBBE1C"
+        }
+      ],
+      "dependencies": [
+        "ExCSS/4.3.1",
+        "FossPDF.FontSubset.Glue/2026.5.1",
+        "FossPDF.FontSubset/2026.5.1",
+        "FossPDF.PdfOperations/2026.5.1",
+        "FossPDF.Svg/2026.5.1",
+        "FossPDF/2026.5.1",
+        "HarfBuzzSharp.NativeAssets.Linux/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.Win32/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.macOS/8.3.1.5",
+        "HarfBuzzSharp/8.3.1.5",
+        "Microsoft.DotNet.ILCompiler/9.0.22",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2",
+        "Microsoft.Extensions.Logging.Abstractions/8.0.3",
+        "Microsoft.NET.ILLink.Tasks/9.0.22",
+        "PDFsharp/6.2.4",
+        "ShimSkiaSharp/4.9.1",
+        "SkiaSharp.HarfBuzz/3.119.4",
+        "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.4",
+        "SkiaSharp.NativeAssets.Win32/3.119.4",
+        "SkiaSharp.NativeAssets.macOS/3.119.4",
+        "SkiaSharp/3.119.4",
+        "Svg.Animation/4.9.1",
+        "Svg.Custom/4.9.1",
+        "Svg.Model/4.9.1",
+        "Svg.SceneGraph/4.9.1",
+        "Svg.Skia/4.9.1",
+        "System.Security.Cryptography.Pkcs/8.0.1",
+        "runtime.win-x64.Microsoft.DotNet.ILCompiler/9.0.22"
+      ],
+      "profiles": [
+        {
+          "feature": "Core",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 9,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 10,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 12,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 17,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        }
+      ]
+    },
+    {
+      "rid": "win-arm64",
+      "sdk": "9.0.320",
+      "source_commit": "ad39fbd789f44e059ef1b4ad51f5f60f5ce0b789",
+      "dirty_worktree": false,
+      "framework": ".NET 9.0.22",
+      "os": "Microsoft Windows 10.0.26200",
+      "architecture": "Arm64",
+      "os_architecture": "Arm64",
+      "package_hashes": [
+        {
+          "file": "FossPDF.2026.5.1.nupkg",
+          "sha256": "11df6b943a68c4e3711d6f355d138201e78114f8d4112463873928022ad7f26a"
+        },
+        {
+          "file": "FossPDF.FontSubset.2026.5.1.nupkg",
+          "sha256": "fcaa21100ecd8b535261e229188e7776187a9568aeb7c580081b6b8d34cd1c19"
+        },
+        {
+          "file": "FossPDF.FontSubset.Glue.2026.5.1.nupkg",
+          "sha256": "96d302c9af798952689a1f9c37c84b94892a88a3ffccbb1b82f917778cf1bc5a"
+        },
+        {
+          "file": "FossPDF.PdfOperations.2026.5.1.nupkg",
+          "sha256": "dd3b9a5555c2602586e34e61fa1eeec4df84a62d0b05108170dadc84546c1091"
+        },
+        {
+          "file": "FossPDF.Svg.2026.5.1.nupkg",
+          "sha256": "e620942bb8418a93130a49a0b35985ee3cab643b1c47cdbaadda644d74d7bcc5"
+        }
+      ],
+      "native_files": [
+        {
+          "Path": "libHarfBuzzSharp.dll",
+          "Bytes": 1924448,
+          "Sha256": "E8C9923C68C08E83F632E18FEC2C9DD812F64E1E553E4B6702B5396B3834F821"
+        },
+        {
+          "Path": "libSkiaSharp.dll",
+          "Bytes": 10411360,
+          "Sha256": "F7409FCFC3557E272D3E8DF2DCD6F737EE5A68B09FDBC6D6FF8C9A3C24B2E36A"
+        }
+      ],
+      "dependencies": [
+        "ExCSS/4.3.1",
+        "FossPDF.FontSubset.Glue/2026.5.1",
+        "FossPDF.FontSubset/2026.5.1",
+        "FossPDF.PdfOperations/2026.5.1",
+        "FossPDF.Svg/2026.5.1",
+        "FossPDF/2026.5.1",
+        "HarfBuzzSharp.NativeAssets.Linux/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.Win32/8.3.1.5",
+        "HarfBuzzSharp.NativeAssets.macOS/8.3.1.5",
+        "HarfBuzzSharp/8.3.1.5",
+        "Microsoft.DotNet.ILCompiler/9.0.22",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2",
+        "Microsoft.Extensions.Logging.Abstractions/8.0.3",
+        "Microsoft.NET.ILLink.Tasks/9.0.22",
+        "PDFsharp/6.2.4",
+        "ShimSkiaSharp/4.9.1",
+        "SkiaSharp.HarfBuzz/3.119.4",
+        "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.4",
+        "SkiaSharp.NativeAssets.Win32/3.119.4",
+        "SkiaSharp.NativeAssets.macOS/3.119.4",
+        "SkiaSharp/3.119.4",
+        "Svg.Animation/4.9.1",
+        "Svg.Custom/4.9.1",
+        "Svg.Model/4.9.1",
+        "Svg.SceneGraph/4.9.1",
+        "Svg.Skia/4.9.1",
+        "System.Security.Cryptography.Pkcs/8.0.1",
+        "runtime.win-arm64.Microsoft.DotNet.ILCompiler/9.0.22"
+      ],
+      "profiles": [
+        {
+          "feature": "Core",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 9,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Core",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 11,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 10,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Fonts",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 13,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.FontSubset.Glue/2026.5.1",
+            "FossPDF.FontSubset/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 12,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Svg",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 15,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.Svg/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "jit",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 17,
+          "max_changed_pixel_fraction": 0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "trimmed",
+          "status": "passed",
+          "dynamic_code_supported": true,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        },
+        {
+          "feature": "Pdf",
+          "mode": "aot",
+          "status": "passed",
+          "dynamic_code_supported": false,
+          "independent_checks": 19,
+          "max_changed_pixel_fraction": 0.0,
+          "packages": [
+            "FossPDF.PdfOperations/2026.5.1",
+            "FossPDF/2026.5.1"
+          ]
+        }
+      ]
+    }
+  ]
+}

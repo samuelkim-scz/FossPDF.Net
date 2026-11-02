@@ -91,6 +91,11 @@ Each catalog entry records the current capability, initial assessment, concrete 
 | [FP-502](https://github.com/samuelkim-scz/FossPDF.Net/issues/31) | `DEV-502` | Provide interactive hierarchy inspection, measurement, search, source navigation and diagnostics. |
 | [FP-503](https://github.com/samuelkim-scz/FossPDF.Net/issues/32) | `RUN-503` | Qualify supported trimmed/NativeAOT consumers and native assets by publishing and executing them. |
 
+RUN-503 is active on .NET 9 and requires a complete packaged publish/run manifest through
+`FOSSPDF_RUNTIME_QUALIFICATION`. Ordinary unit-test runs explicitly skip it when that evidence is
+absent; the dedicated runtime workflow requires all twelve profiles for each native RID. See the
+[deployment guide and recorded matrix](RUNTIME_SUPPORT.md) for reproduction and qualification scope.
+
 PDF-operation inputs reuse the generated PAG-001/PAG-002 documents, whose page colors make selection/order observable. ACC-401 declares independently authored semantic content, language, heading order and figure alternatives; the PDF/A/PDF/UA contracts build on it. PDF-305 supplies exact attachment bytes/XMP values. The PDF/A and PDF/UA contracts remain planned; their inputs do not claim conforming output.
 
 ## Visual tolerances

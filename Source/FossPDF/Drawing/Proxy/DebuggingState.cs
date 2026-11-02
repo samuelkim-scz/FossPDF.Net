@@ -86,7 +86,7 @@ namespace FossPDF.Drawing.Proxy
                 builder.AppendLine(indent + "Available space: " + item.AvailableSpace);
                 builder.AppendLine(indent + "Requested space: " + item.SpacePlan);
                 
-                foreach (var configuration in GetElementConfiguration(item.Element))
+                foreach (var configuration in GetElementConfiguration(item.Element as Element))
                     builder.AppendLine(indent + configuration);
 
                 builder.AppendLine();
@@ -96,9 +96,9 @@ namespace FossPDF.Drawing.Proxy
                 nestingLevel--;
             }
 
-            static IEnumerable<string> GetElementConfiguration(IElement element)
+            static IEnumerable<string> GetElementConfiguration(Element? element)
             {
-                if (element is DebugPointer)
+                if (element == null || element is DebugPointer)
                     return Enumerable.Empty<string>();
                 
                 return element

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using HarfBuzzSharp;
 using FossPDF.Fluent;
 using FossPDF.Infrastructure;
@@ -74,9 +75,26 @@ namespace FossPDF.Drawing
             RegisterFontType(fontData);
         }
 
+        /// <summary>Registers a font from the calling assembly. NativeAOT callers must use the overload with an explicit resource assembly.</summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void RegisterFontFromEmbeddedResource(string pathName)
         {
-            using var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(pathName);
+            Assembly resourceAssembly;
+            try { resourceAssembly = Assembly.GetCallingAssembly(); }
+            catch (PlatformNotSupportedException error)
+            {
+                throw new PlatformNotSupportedException("Caller assembly discovery is unavailable. Use RegisterFontFromEmbeddedResource(pathName, resourceAssembly) or RegisterFont(stream).", error);
+            }
+            RegisterFontFromEmbeddedResource(pathName, resourceAssembly);
+        }
+
+        /// <summary>Registers an embedded font from an explicit assembly, including in trimmed and NativeAOT applications.</summary>
+        public void RegisterFontFromEmbeddedResource(string pathName, Assembly resourceAssembly)
+        {
+            if (resourceAssembly == null)
+                throw new ArgumentNullException(nameof(resourceAssembly));
+
+            using var stream = resourceAssembly.GetManifestResourceStream(pathName);
 
             if (stream == null)
                 throw new ArgumentException(

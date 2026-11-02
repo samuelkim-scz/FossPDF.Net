@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FossPDF.Svg", "FossPDF.Svg\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FossPDF.PdfOperations", "FossPDF.PdfOperations\FossPDF.PdfOperations.csproj", "{D8C3C2E2-202B-4379-BCF1-BE66BB9B4902}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FossPDF.RuntimeSmoke", "FossPDF.RuntimeSmoke\FossPDF.RuntimeSmoke.csproj", "{A29F30D3-00B4-47F5-BC4A-AD38DFDE3093}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,5 +85,9 @@ Global
 		{D8C3C2E2-202B-4379-BCF1-BE66BB9B4902}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8C3C2E2-202B-4379-BCF1-BE66BB9B4902}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8C3C2E2-202B-4379-BCF1-BE66BB9B4902}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A29F30D3-00B4-47F5-BC4A-AD38DFDE3093}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A29F30D3-00B4-47F5-BC4A-AD38DFDE3093}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A29F30D3-00B4-47F5-BC4A-AD38DFDE3093}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A29F30D3-00B4-47F5-BC4A-AD38DFDE3093}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

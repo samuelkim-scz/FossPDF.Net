@@ -1547,7 +1547,8 @@
       "work_items": [
         "FP-503"
       ],
-      "execution": "planned",
+      "execution": "active",
+      "frameworks": ["net9.0"],
       "input": {
         "framework": "net9.0",
         "publish_modes": [
