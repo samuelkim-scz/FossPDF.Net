@@ -482,6 +482,15 @@ namespace FossPDF.Drawing
 
                 var spacePlan = content.Measure(Size.Max);
 
+                // An empty composition has no printable pages (for example, an empty label job).
+                // Do not hand a zero-sized page to the output canvas.
+                if (spacePlan.Type == SpacePlanType.FullRender && spacePlan.Width == 0 && spacePlan.Height == 0)
+                {
+                    if (endDocument)
+                        canvas.EndDocument();
+                    return currentPage - 1;
+                }
+
                 if (spacePlan.Type == SpacePlanType.Wrap)
                 {
                     if (endDocument)

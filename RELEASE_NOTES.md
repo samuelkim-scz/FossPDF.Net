@@ -6,6 +6,8 @@ retain version 2026.5.1; these notes do not announce a new NuGet publication.
 
 ## Added capabilities
 
+- Label sheets and thermal labels with Avery 5160 / 4 x 6 inch presets, custom stock,
+  first-sheet starting positions, consecutive copies, physical alignment offsets and calibration PDFs.
 - Paragraph justification, logical alignment, first-line indentation, word spacing, line clamping,
   OpenType controls and richer text decorations; complex-script/CJK qualification.
 - Multi-column flow/balancing, page-aware pagination helpers, lazy/cached composition,

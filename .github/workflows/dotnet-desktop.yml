@@ -128,6 +128,12 @@ jobs:
         run: dotnet test FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter "FullyQualifiedName~DocumentSettingsExamples|FullyQualifiedName~AccessiblePdfExamples|FullyQualifiedName~PdfAExamples|FullyQualifiedName~PdfUaExamples|FullyQualifiedName~EInvoiceExamples" --logger trx --results-directory ../artifacts/parity
         working-directory: ./Source
 
+      - name: Generate label examples and independently inspect PDF geometry and blank slots
+        shell: bash
+        run: |
+          dotnet test Source/FossPDF.Examples/FossPDF.Examples.csproj -c Release --no-build --no-restore --filter FullyQualifiedName~LabelExamples --logger trx --results-directory artifacts/parity
+          python Source/FossPDF.UnitTests/Parity/verify_pdf_labels.py Source/FossPDF.Examples/bin/Release/net9.0/labels
+
       - name: Upload test and parity fixture evidence
         uses: actions/upload-artifact@v7
         if: always()
@@ -145,6 +151,7 @@ jobs:
             Source/FossPDF.Examples/bin/Release/net9.0/settings-example/**
             Source/FossPDF.Examples/bin/Release/net9.0/pdf-optimization-*/**
             Source/FossPDF.Examples/bin/Release/net9.0/accessible-*/**
+            Source/FossPDF.Examples/bin/Release/net9.0/labels/**
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

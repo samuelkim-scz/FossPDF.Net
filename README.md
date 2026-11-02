@@ -5,6 +5,9 @@
 
 It's MIT-licensed regardless of who you are, or what you're using the library for.
 
+Generate [label sheets and thermal labels](docs/LABELS.md) with Avery 5160 and 4 x 6 inch presets,
+custom stock, and starting positions for reusing partially used sheets.
+
 ## Feature parity roadmap
 
 Validated [PDF/A-2 and PDF/A-3 output](docs/feature-parity/PDF_ARCHIVAL.md) and [PDF/UA-1 generation with machine checks and author review](docs/feature-parity/PDF_UNIVERSAL_ACCESSIBILITY.md) are available through the optional .NET 9 `FossPDF.PdfOperations` package.
