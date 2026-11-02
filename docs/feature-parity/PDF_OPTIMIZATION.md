@@ -95,8 +95,10 @@ the object structure before qpdf sees it.
   preserved as well.
 - **Overlays and underlays** are applied first and then optimized with the rest of the document.
 - **Encryption**: optimization cannot be combined with `DocumentOperation.Encrypt(...)` because this adapter does not forward passwords to the external process. The plan throws `InvalidOperationException` before producing output. Decrypt and optimize as separate steps.
-- **PDF/A and PDF/UA**: no conformance claim is made. Optimization does not validate a profile, and
-  the conformance guards remain in place until FP-402/FP-403 implement their backends.
+- **PDF/A and PDF/UA**: optimization alone makes no profile claim. The companion's
+  [GeneratePdfA](PDF_ARCHIVAL.md)/[GeneratePdfUa](PDF_UNIVERSAL_ACCESSIBILITY.md) workflows support
+  their documented optimization modes and validate the final bytes. Ordinary GeneratePdf retains
+  its conformance guards; use the dedicated generation API for a validated selected profile.
 - **Image and preview output**: the options are PDF-only. `GenerateImages`, SVG, XPS and previewer
   output are unaffected and never require qpdf.
 

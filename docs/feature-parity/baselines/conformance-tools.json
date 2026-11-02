@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "verifiedOn": "2026-10-26",
+  "verifiedOn": "2026-11-01",
   "currentClaims": {
     "pdfA": "None",
     "pdfUa": "None"
@@ -13,14 +13,14 @@
     },
     "verapdf": {
       "minimumVersion": "1.26.0",
-      "purpose": "PDF/A and PDF/UA validation. Output is recorded for future profile work and is not a current claim.",
+      "purpose": "Optional inspection of the ordinary quality baseline, without a profile claim. Dedicated conformance APIs require the separately pinned veraPDF 1.30.3 and validate final output.",
       "availability": "Optional; the quality tool records it when present."
     }
   },
   "notes": [
-    "The library does not currently claim PDF/A or PDF/UA conformance.",
-    "Selectable PDF/A-2/PDF/A-3 profiles require FP-402.",
-    "PDF/UA-1 requires FP-401 and FP-403.",
+    "The ordinary quality baseline document makes no PDF/A or PDF/UA claim; currentClaims describes that document only.",
+    "Selectable PDF/A-2/PDF/A-3 profiles are implemented by GeneratePdfA in the optional .NET 9 companion.",
+    "PDF/UA-1 is implemented by GeneratePdfUa, with mandatory final validation and author review.",
     "The legacy DocumentMetadata.PdfA flag is not a validated profile."
   ]
 }

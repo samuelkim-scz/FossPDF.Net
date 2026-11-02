@@ -7,6 +7,9 @@ No additional public library API or wire-protocol version is required.
 
 [Windows validation evidence](evidence/fp-502-windows.md) records the build, regression suites,
 native smoke observations and remaining cross-platform checks.
+The [additional Windows/package record](evidence/fp-502-windows-followup.md) adds forty real
+hot reloads, large-document/export/error recovery, clean tool installation and explicit remaining
+clipboard/keyboard/pointer checks. Linux/macOS native review remains pending.
 
 ## Run the example
 

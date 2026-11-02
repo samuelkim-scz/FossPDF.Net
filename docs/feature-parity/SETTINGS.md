@@ -55,8 +55,8 @@ Each generation resolves one private snapshot before composition. It copies meta
 | DocumentSettings.ImageRasterDpi | DocumentMetadata.RasterDpi; legacy default 72 | Positive integer; renderer rasterization DPI, the default page-image DPI, and the default target DPI for images without a per-image override |
 | ImageCompressionQuality | DocumentMetadata.ImageQuality; legacy default 101 | Integer 0-101; 101 retains the legacy lossless behavior. Also the default per-image recompression quality; see [image optimization](IMAGE_OPTIMIZATION.md). |
 | ContentDirection | LeftToRight | LeftToRight or RightToLeft; explicit page/element direction takes precedence |
-| PdfAConformance | Existing metadata PdfA false -> None, true -> Legacy | None disables the legacy flag; Legacy enables the same flag |
-| PdfUaConformance | None | PdfUa1 is reserved and rejected for PDF until its backend is implemented |
+| PdfAConformance | Existing metadata PdfA false -> None, true -> Legacy | None/Legacy retain ordinary GeneratePdf behavior; six explicit PDF/A-2/3 profiles use the optional .NET 9 GeneratePdfA/GeneratePdfUa APIs with final validation |
+| PdfUaConformance | None | PdfUa1 selects the optional .NET 9 GeneratePdfUa workflow; ordinary GeneratePdf rejects it |
 | CompressDocument | true; normal renderer compression | false makes qpdf rewrite the PDF without stream compression; requires qpdf 11 or newer |
 | EnableAdditionalCompression | false | true runs qpdf with object streams, stream recompression and compression level 9; requires qpdf 11 or newer |
 | Linearize | false | true runs qpdf with `--linearize`; requires qpdf 11 or newer |
@@ -101,21 +101,21 @@ GenerateImagesToStreams adds caller-owned per-page writable streams without requ
 
 ## Conformance and compression extension points
 
-The contract reserves PdfA2A, PdfA2B, PdfA2U, PdfA3A, PdfA3B and PdfA3U in PdfAConformance, and PdfUa1 in PdfUaConformance. Requesting these PDF modes throws NotSupportedException before composition or output writes. Legacy is the existing unqualified Skia PdfA flag; it does not claim a particular validated PDF/A profile.
+PdfA2A, PdfA2B, PdfA2U, PdfA3A, PdfA3B and PdfA3U are implemented through the optional .NET 9 companion's GeneratePdfA/GeneratePdfUa methods, with final veraPDF validation. PdfUa1 uses GeneratePdfUa with semantic authoring and author review. Ordinary GeneratePdf still rejects these explicit conformance settings before composition/output; use the dedicated generation API. Legacy retains the unqualified historical Skia PdfA flag and does not claim a selected validated level.
 
 Likewise, the compression and linearization options are honored for PDF only through an installed qpdf 11+ executable. They are rejected before composition when qpdf cannot be found, and contradictory combinations fail with ArgumentException; see [the PDF optimization contract](PDF_OPTIMIZATION.md).
 
 | Capability owner | Integration obligation |
 | --- | --- |
-| [FP-402](https://github.com/samuelkim-scz/FossPDF.Net/issues/27) | Implement the six PDF/A profiles and validation; replace the corresponding generation guard only when the backend honors the selected profile. |
-| [FP-401 / FP-403](https://github.com/samuelkim-scz/FossPDF.Net/issues/26) / [PDF/UA](https://github.com/samuelkim-scz/FossPDF.Net/issues/28) | Carry semantic structure and enforce PDF/UA requirements before accepting PdfUa1. |
+| [FP-402](https://github.com/samuelkim-scz/FossPDF.Net/issues/27) | Six profiles implemented with mandatory final validation; see [PDF_ARCHIVAL.md](PDF_ARCHIVAL.md). |
+| [FP-401 / FP-403](https://github.com/samuelkim-scz/FossPDF.Net/issues/26) / [PDF/UA](https://github.com/samuelkim-scz/FossPDF.Net/issues/28) | Semantic/tagged output and validated PDF/UA-1 generation are implemented; see [PDF_UNIVERSAL_ACCESSIBILITY.md](PDF_UNIVERSAL_ACCESSIBILITY.md) for author responsibilities and evidence. |
 | [FP-306](https://github.com/samuelkim-scz/FossPDF.Net/issues/25) | Implemented for PDF through the external qpdf backend; see [PDF_OPTIMIZATION.md](PDF_OPTIMIZATION.md) for discovery, interactions and failure behavior. |
 | [FP-203](https://github.com/samuelkim-scz/FossPDF.Net/issues/17) | PNG/JPEG/WebP encoding, output quality, alpha/background policy and caller-owned streams follow [the image export contract](IMAGE_EXPORT.md). |
 | [FP-202](https://github.com/samuelkim-scz/FossPDF.Net/issues/16) | Per-image DPI and quality overrides take precedence over these document defaults; see [the image optimization contract](IMAGE_OPTIMIZATION.md). |
 
 Valid PDF-only conformance/compression options do not prevent PNG, SVG, XPS or preview generation. Those outputs do not make PDF conformance claims. Invalid enum values, non-positive explicit DPI/page limits and out-of-range explicit quality values fail with ArgumentOutOfRangeException. Null settings arguments fail with ArgumentNullException.
 
-These extension points establish a shared contract. The remaining conformance issues and their planned acceptance fixtures stay open until implemented and validated; the compression and linearization options are implemented and covered by the `PDF-306` fixture.
+These extension points share the same settings contract. ACC-401 through ACC-404 and PDF-306 are active; their feature guides record required external tools, validation and supported output boundaries.
 
 ## Ownership and compatibility
 

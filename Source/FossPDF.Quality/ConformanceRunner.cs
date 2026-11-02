@@ -41,7 +41,7 @@ internal sealed class ConformanceResult
     public string PdfAConformance { get; init; } = "None";
     public string PdfUaConformance { get; init; } = "None";
     public string Claims { get; init; } =
-        "No PDF/A or PDF/UA conformance claim. Selectable profiles require FP-402 and FP-403.";
+        "This ordinary baseline document makes no PDF/A or PDF/UA claim. Use the optional .NET 9 companion's GeneratePdfA/GeneratePdfUa workflows for final profile validation.";
     public bool Passed { get; init; }
     public ConformanceToolPolicy? Policy { get; init; }
     public List<ConformanceToolResult> Tools { get; init; } = new();
@@ -71,7 +71,7 @@ internal static class ConformanceRunner
             "qpdf performs a structural PDF check; it does not validate PDF/A or PDF/UA profiles.",
             "veraPDF output is recorded for the pinned baseline but is not a conformance claim.",
             "The legacy DocumentMetadata.PdfA flag is not a validated PDF/A profile.",
-            "PDF/A-2/PDF/A-3 and PDF/UA-1 remain blocked by FP-402 and FP-403."
+            "Selectable PDF/A-2/PDF/A-3 and PDF/UA-1 are implemented in the optional .NET 9 companion; their dedicated acceptance corpus validates final output."
         };
 
         var qpdf = tools[0];

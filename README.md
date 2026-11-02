@@ -12,6 +12,10 @@ Validated [ZUGFeRD 2.5.2 / Factur-X 1.09.2 EN16931 packaging](docs/feature-parit
 
 See the [shared feature-parity plan](FEATURE_PARITY.md) for the QuestPDF target, confirmed gaps, milestones and implementation issues. Contributors can claim work and track progress through the linked GitHub issues. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and build checks.
 
+The [current audit](docs/feature-parity/PARITY_AUDIT.md), [migration/API guide](docs/feature-parity/MIGRATION.md),
+[runtime support matrix](docs/feature-parity/RUNTIME_SUPPORT.md) and [unreleased notes](RELEASE_NOTES.md)
+record implementation evidence and the remaining native previewer acceptance gate.
+
 <table>
 <tr>
     <td>👨‍💻</td>

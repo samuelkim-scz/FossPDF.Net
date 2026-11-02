@@ -1,0 +1,412 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-11-01",
+  "ci_run": "https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/41360951828",
+  "qualified_head_commit": "f25d35ff266d9860d84028dc450b0c67c44d3838",
+  "merged_as": "4d6daeca4ae99c03f4ed2412a32216bdb7308792",
+  "runtime_run": "https://github.com/samuelkim-scz/FossPDF.Net/actions/runs/41360951808",
+  "platforms": [
+    {
+      "runner": "macos-26-intel",
+      "environment": {
+        "schemaVersion": 1,
+        "capturedAtUtc": "2026-11-01T23:14:34.0506380Z",
+        "baselineCommit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e",
+        "operatingSystem": "Darwin 25.6.0 Darwin Kernel Version 25.6.0: Sat Jul 11 15:22:40 PDT 2026; root:xnu-12377.161.13~4/RELEASE_X86_64",
+        "architecture": "X64",
+        "runtimeIdentifier": "osx-x64",
+        "framework": ".NET 9.0.22",
+        "fossPdfVersion": "2026.5.1",
+        "fossPdfInformationalVersion": "2026.5.1+2040b311d311079c7706e6cf52a4c19d6de4e6de",
+        "skiaSharpVersion": "3.119.4",
+        "harfBuzzSharpVersion": "8.3.1.5",
+        "fontSha256": {
+          "Lato-Black.ttf": "abf64cfa14645043a7c33f76435125f8b3de79c510adb938a1c16085518d4341",
+          "Lato-BlackItalic.ttf": "e1eb271de3a571d566e534d3e521cfa46becfc789821257bc347455167d586f3",
+          "Lato-Bold.ttf": "d7f0b7f2570f2f28b504da1181b4d71b1420b10be2c4fd690927f1c8ee3b19c3",
+          "Lato-BoldItalic.ttf": "e38611f4c0ff3251a58fe751991c39784d8f9be420b004891e0b9277228ec32f",
+          "Lato-Italic.ttf": "3be26bf6973f49df6a7dfd130041017354342bfbb023e6b9610b42daeba6de34",
+          "Lato-Light.ttf": "fb5343c4375c38b1c3026336d355335e6a5b8531cbc9c6506eb4b6f6d67c152f",
+          "Lato-LightItalic.ttf": "6d5176f3babd0ccba79845088f8e9ede5dbb7b408fb40161963daa95a71cef2e",
+          "Lato-Regular.ttf": "e82542aed8293f49fc83c4aaea566b1f6b4fc7a9ab5da11e6fb9bc0973b5324b",
+          "Lato-Thin.ttf": "fee1bd1daaa5efbcb93c8d074c61378dce155df0d32e00199b6a9457e427bc45",
+          "Lato-ThinItalic.ttf": "8130560da30ad6f19994fd410f71985acafca1576592235161ffb75757635594"
+        }
+      },
+      "performance_passed": true,
+      "visual_passed": true,
+      "performance_scenarios": [
+        {
+          "id": "report",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 158.7202,
+          "medianElapsedMs": 19.90595,
+          "pagesPerSecond": 50.40316229440235,
+          "allocatedBytesPerDocument": 2221448,
+          "peakManagedHeapBytes": 7641632,
+          "peakWorkingSetBytes": null,
+          "workingSetDeltaBytes": 1519616,
+          "averageDocumentBytes": 79214,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "image-heavy",
+          "documents": 5,
+          "totalPages": 5,
+          "totalElapsedMs": 37.3755,
+          "medianElapsedMs": 7.4678,
+          "pagesPerSecond": 133.77747454883547,
+          "allocatedBytesPerDocument": 520732.8,
+          "peakManagedHeapBytes": 671528,
+          "peakWorkingSetBytes": null,
+          "workingSetDeltaBytes": -4096,
+          "averageDocumentBytes": 78780,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "large-table",
+          "documents": 2,
+          "totalPages": 18,
+          "totalElapsedMs": 849.6557,
+          "medianElapsedMs": 424.8189,
+          "pagesPerSecond": 21.185051780385866,
+          "allocatedBytesPerDocument": 105213288,
+          "peakManagedHeapBytes": 18283536,
+          "peakWorkingSetBytes": null,
+          "workingSetDeltaBytes": 10104832,
+          "averageDocumentBytes": 123747,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "concurrent",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 52.5137,
+          "medianElapsedMs": 6.5642125,
+          "pagesPerSecond": 152.34119858246513,
+          "allocatedBytesPerDocument": 2216799,
+          "peakManagedHeapBytes": 1757080,
+          "peakWorkingSetBytes": null,
+          "workingSetDeltaBytes": -4468736,
+          "averageDocumentBytes": 79214,
+          "maxDegreeOfParallelism": 4,
+          "budgetFailures": []
+        }
+      ],
+      "test_suites": [
+        {
+          "suite": "net8.0 unit",
+          "total": 527,
+          "passed": 515,
+          "skipped": 12,
+          "trx_sha256": "edeed60da460ebcecac2835943deccc54b6cf40c54ecae5f589d50bebb3289a1"
+        },
+        {
+          "suite": "net9.0 unit",
+          "total": 720,
+          "passed": 719,
+          "skipped": 1,
+          "trx_sha256": "d8a3a00b4ddae0cbae237ecad6d9f7cdf75bcf85e9db5fb0aeb1c9276a48e2e0"
+        },
+        {
+          "suite": "examples",
+          "total": 5,
+          "passed": 5,
+          "skipped": 0,
+          "trx_sha256": "50c9c606ba9a2c9a0c5e000bdb91d2159acce6164bcbb2413e9675f6551b380f"
+        },
+        {
+          "suite": "examples",
+          "total": 8,
+          "passed": 8,
+          "skipped": 0,
+          "trx_sha256": "bfe92e2803ea26ff3ab628c8e69b7b4dd5049b81ab3878db21e4ac0099dfebcc"
+        }
+      ],
+      "conformance_manifests": [
+        {
+          "tool": "mustang",
+          "version": "2.26.0",
+          "manifest_sha256": "27d9f77157ae7c76b60b8790c162e9e4e0b8a9b1f0bb45b88acba950a6219f37"
+        },
+        {
+          "tool": "verapdf",
+          "version": "1.30.3",
+          "manifest_sha256": "e5ab70410732ae589cd82df60908431a2afcac7f2e5cc3df779932523676d6af"
+        }
+      ]
+    },
+    {
+      "runner": "ubuntu-latest",
+      "environment": {
+        "schemaVersion": 1,
+        "capturedAtUtc": "2026-11-01T23:14:12.5867324Z",
+        "baselineCommit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e",
+        "operatingSystem": "Ubuntu 24.04.5 LTS",
+        "architecture": "X64",
+        "runtimeIdentifier": "linux-x64",
+        "framework": ".NET 9.0.22",
+        "fossPdfVersion": "2026.5.1",
+        "fossPdfInformationalVersion": "2026.5.1+2040b311d311079c7706e6cf52a4c19d6de4e6de",
+        "skiaSharpVersion": "3.119.4",
+        "harfBuzzSharpVersion": "8.3.1.5",
+        "fontSha256": {
+          "Lato-Black.ttf": "abf64cfa14645043a7c33f76435125f8b3de79c510adb938a1c16085518d4341",
+          "Lato-BlackItalic.ttf": "e1eb271de3a571d566e534d3e521cfa46becfc789821257bc347455167d586f3",
+          "Lato-Bold.ttf": "d7f0b7f2570f2f28b504da1181b4d71b1420b10be2c4fd690927f1c8ee3b19c3",
+          "Lato-BoldItalic.ttf": "e38611f4c0ff3251a58fe751991c39784d8f9be420b004891e0b9277228ec32f",
+          "Lato-Italic.ttf": "3be26bf6973f49df6a7dfd130041017354342bfbb023e6b9610b42daeba6de34",
+          "Lato-Light.ttf": "fb5343c4375c38b1c3026336d355335e6a5b8531cbc9c6506eb4b6f6d67c152f",
+          "Lato-LightItalic.ttf": "6d5176f3babd0ccba79845088f8e9ede5dbb7b408fb40161963daa95a71cef2e",
+          "Lato-Regular.ttf": "e82542aed8293f49fc83c4aaea566b1f6b4fc7a9ab5da11e6fb9bc0973b5324b",
+          "Lato-Thin.ttf": "fee1bd1daaa5efbcb93c8d074c61378dce155df0d32e00199b6a9457e427bc45",
+          "Lato-ThinItalic.ttf": "8130560da30ad6f19994fd410f71985acafca1576592235161ffb75757635594"
+        }
+      },
+      "performance_passed": true,
+      "visual_passed": true,
+      "performance_scenarios": [
+        {
+          "id": "report",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 90.7141,
+          "medianElapsedMs": 11.321750000000002,
+          "pagesPerSecond": 88.18915692268345,
+          "allocatedBytesPerDocument": 2221328,
+          "peakManagedHeapBytes": 694328,
+          "peakWorkingSetBytes": 90984448,
+          "workingSetDeltaBytes": 11448320,
+          "averageDocumentBytes": 79199,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "image-heavy",
+          "documents": 5,
+          "totalPages": 5,
+          "totalElapsedMs": 28.2188,
+          "medianElapsedMs": 5.6303,
+          "pagesPerSecond": 177.18683997902107,
+          "allocatedBytesPerDocument": 520724.8,
+          "peakManagedHeapBytes": 686344,
+          "peakWorkingSetBytes": 91258880,
+          "workingSetDeltaBytes": -4096,
+          "averageDocumentBytes": 78773,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "large-table",
+          "documents": 2,
+          "totalPages": 18,
+          "totalElapsedMs": 381.9726,
+          "medianElapsedMs": 190.9771,
+          "pagesPerSecond": 47.123798932174715,
+          "allocatedBytesPerDocument": 105341720,
+          "peakManagedHeapBytes": 6067480,
+          "peakWorkingSetBytes": 166952960,
+          "workingSetDeltaBytes": 5201920,
+          "averageDocumentBytes": 123607,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "concurrent",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 25.3305,
+          "medianElapsedMs": 3.1663125,
+          "pagesPerSecond": 315.8247961943112,
+          "allocatedBytesPerDocument": 2216650,
+          "peakManagedHeapBytes": 714168,
+          "peakWorkingSetBytes": 166461440,
+          "workingSetDeltaBytes": 2224128,
+          "averageDocumentBytes": 79199,
+          "maxDegreeOfParallelism": 4,
+          "budgetFailures": []
+        }
+      ],
+      "test_suites": [
+        {
+          "suite": "net9.0 unit",
+          "total": 720,
+          "passed": 719,
+          "skipped": 1,
+          "trx_sha256": "8ecc21ca6d3b530cf9cc4a03a28fe22b21427bbb1a3ded77ac3be93620a21328"
+        },
+        {
+          "suite": "net8.0 unit",
+          "total": 527,
+          "passed": 515,
+          "skipped": 12,
+          "trx_sha256": "3eca6703648415ce21d35e086841ed72ee3cf03b50b2bed3c6f91186a50fc321"
+        },
+        {
+          "suite": "examples",
+          "total": 5,
+          "passed": 5,
+          "skipped": 0,
+          "trx_sha256": "f2c54c4d1a93ebb8f5d01a1bdf558706261b563db37ae3ddf5ca5788d5f19ca2"
+        },
+        {
+          "suite": "examples",
+          "total": 8,
+          "passed": 8,
+          "skipped": 0,
+          "trx_sha256": "f19f0a01fce75088999d668997a3567b031430e6bc23dbce667f6b2420fc00ba"
+        }
+      ],
+      "conformance_manifests": [
+        {
+          "tool": "mustang",
+          "version": "2.26.0",
+          "manifest_sha256": "27d9f77157ae7c76b60b8790c162e9e4e0b8a9b1f0bb45b88acba950a6219f37"
+        },
+        {
+          "tool": "verapdf",
+          "version": "1.30.3",
+          "manifest_sha256": "e5ab70410732ae589cd82df60908431a2afcac7f2e5cc3df779932523676d6af"
+        }
+      ]
+    },
+    {
+      "runner": "windows-latest",
+      "environment": {
+        "schemaVersion": 1,
+        "capturedAtUtc": "2026-11-01T23:13:45.4391252Z",
+        "baselineCommit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e",
+        "operatingSystem": "Microsoft Windows 10.0.26100",
+        "architecture": "X64",
+        "runtimeIdentifier": "win-x64",
+        "framework": ".NET 9.0.22",
+        "fossPdfVersion": "2026.5.1",
+        "fossPdfInformationalVersion": "2026.5.1+2040b311d311079c7706e6cf52a4c19d6de4e6de",
+        "skiaSharpVersion": "3.119.4",
+        "harfBuzzSharpVersion": "8.3.1.5",
+        "fontSha256": {
+          "Lato-Black.ttf": "abf64cfa14645043a7c33f76435125f8b3de79c510adb938a1c16085518d4341",
+          "Lato-BlackItalic.ttf": "e1eb271de3a571d566e534d3e521cfa46becfc789821257bc347455167d586f3",
+          "Lato-Bold.ttf": "d7f0b7f2570f2f28b504da1181b4d71b1420b10be2c4fd690927f1c8ee3b19c3",
+          "Lato-BoldItalic.ttf": "e38611f4c0ff3251a58fe751991c39784d8f9be420b004891e0b9277228ec32f",
+          "Lato-Italic.ttf": "3be26bf6973f49df6a7dfd130041017354342bfbb023e6b9610b42daeba6de34",
+          "Lato-Light.ttf": "fb5343c4375c38b1c3026336d355335e6a5b8531cbc9c6506eb4b6f6d67c152f",
+          "Lato-LightItalic.ttf": "6d5176f3babd0ccba79845088f8e9ede5dbb7b408fb40161963daa95a71cef2e",
+          "Lato-Regular.ttf": "e82542aed8293f49fc83c4aaea566b1f6b4fc7a9ab5da11e6fb9bc0973b5324b",
+          "Lato-Thin.ttf": "fee1bd1daaa5efbcb93c8d074c61378dce155df0d32e00199b6a9457e427bc45",
+          "Lato-ThinItalic.ttf": "8130560da30ad6f19994fd410f71985acafca1576592235161ffb75757635594"
+        }
+      },
+      "performance_passed": true,
+      "visual_passed": true,
+      "performance_scenarios": [
+        {
+          "id": "report",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 139.8258,
+          "medianElapsedMs": 17.2814,
+          "pagesPerSecond": 57.214047765147775,
+          "allocatedBytesPerDocument": 2221664,
+          "peakManagedHeapBytes": 1794688,
+          "peakWorkingSetBytes": 69103616,
+          "workingSetDeltaBytes": 9781248,
+          "averageDocumentBytes": 79197,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "image-heavy",
+          "documents": 5,
+          "totalPages": 5,
+          "totalElapsedMs": 35.6926,
+          "medianElapsedMs": 7.1321,
+          "pagesPerSecond": 140.08505964821842,
+          "allocatedBytesPerDocument": 520772.8,
+          "peakManagedHeapBytes": 905960,
+          "peakWorkingSetBytes": 69210112,
+          "workingSetDeltaBytes": 0,
+          "averageDocumentBytes": 78771,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "large-table",
+          "documents": 2,
+          "totalPages": 18,
+          "totalElapsedMs": 558.8434,
+          "medianElapsedMs": 279.40855,
+          "pagesPerSecond": 32.209381018009694,
+          "allocatedBytesPerDocument": 104852260,
+          "peakManagedHeapBytes": 7076816,
+          "peakWorkingSetBytes": 89534464,
+          "workingSetDeltaBytes": 11649024,
+          "averageDocumentBytes": 123605,
+          "maxDegreeOfParallelism": 1,
+          "budgetFailures": []
+        },
+        {
+          "id": "concurrent",
+          "documents": 8,
+          "totalPages": 8,
+          "totalElapsedMs": 36.8754,
+          "medianElapsedMs": 4.609425,
+          "pagesPerSecond": 216.94679922116103,
+          "allocatedBytesPerDocument": 2216745,
+          "peakManagedHeapBytes": 1897016,
+          "peakWorkingSetBytes": 89616384,
+          "workingSetDeltaBytes": 2379776,
+          "averageDocumentBytes": 79194.75,
+          "maxDegreeOfParallelism": 4,
+          "budgetFailures": []
+        }
+      ],
+      "test_suites": [
+        {
+          "suite": "net8.0 unit",
+          "total": 527,
+          "passed": 515,
+          "skipped": 12,
+          "trx_sha256": "c4853536b27431880a3b65296e0d78bd9721a963765bae3f49f5e85438d869df"
+        },
+        {
+          "suite": "net9.0 unit",
+          "total": 720,
+          "passed": 719,
+          "skipped": 1,
+          "trx_sha256": "04501af6181fb49a4f24e499cf4598d1bbd421355bd470e14893d1043f47e066"
+        },
+        {
+          "suite": "examples",
+          "total": 5,
+          "passed": 5,
+          "skipped": 0,
+          "trx_sha256": "4df270b036f1843f74ad773c18552d320f319f8fdaf447e7baac59a65266e176"
+        },
+        {
+          "suite": "examples",
+          "total": 8,
+          "passed": 8,
+          "skipped": 0,
+          "trx_sha256": "98fcb41e3a92d396b971456bb3b8912c2e561dc2c7d1781ca5e022ba03feab1e"
+        }
+      ],
+      "conformance_manifests": [
+        {
+          "tool": "mustang",
+          "version": "2.26.0",
+          "manifest_sha256": "fc549616012c8d0e2ebf2dd0e3b35dc781389d459e02008ee7a096b45a392b45"
+        },
+        {
+          "tool": "verapdf",
+          "version": "1.30.3",
+          "manifest_sha256": "3b77f1e38d9c942d700abcab85de1c768ff2c025a23c41252f22a7d09e329fbb"
+        }
+      ]
+    }
+  ]
+}

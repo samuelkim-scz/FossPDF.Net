@@ -1,0 +1,1172 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-11-01",
+  "target": {
+    "questpdf": "2026.9.1",
+    "questpdf_commit": "5a1422e15040484498236a5696d3aa9eefad8b10",
+    "fosspdf_baseline_commit": "0339255ff8f987a4abb62ef81f06bbcf00e0b81e",
+    "primary_consumer_framework": "net9.0",
+    "core_compatibility_framework": "netstandard2.1",
+    "test_frameworks": [
+      "net8.0",
+      "net9.0"
+    ]
+  },
+  "audited_implementation_commit": "4d6daeca4ae99c03f4ed2412a32216bdb7308792",
+  "release_gate": "pending-native-previewer-acceptance",
+  "next_parity_target": {
+    "status": "not-selected",
+    "latest_published_release_checked": "2026.9.1",
+    "policy": "Select a separately versioned target through an explicit rebaseline; do not advance this scope automatically.",
+    "decision": "User explicitly left the next target unselected on November 1, 2026."
+  },
+  "acceptance_fixtures": {
+    "total": 36,
+    "active": 36
+  },
+  "remaining_gates": [
+    "FP-502 remaining Windows native walkthrough and Linux/macOS desktop acceptance; Linux/macOS explicitly kept pending by the user",
+    "FP-504 final audit sign-off after every prerequisite is complete"
+  ],
+  "work_items": [
+    {
+      "id": "FP-001",
+      "title": "Define the parity specification and acceptance fixtures",
+      "issue": {
+        "number": 2,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/2"
+      },
+      "baseline_status": "planning",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 34,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/34"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "release",
+          "url": "https://github.com/QuestPDF/QuestPDF/releases/tag/2026.9.1"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PAG-001",
+        "PAG-002",
+        "TXT-001",
+        "IMG-001",
+        "OUT-001",
+        "FAIL-001",
+        "FAIL-002",
+        "RES-001"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/Parity/ParityAcceptanceTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/ACCEPTANCE.md"
+      ],
+      "example": "Source/FossPDF.Examples/MinimalApiExamples.cs"
+    },
+    {
+      "id": "FP-002",
+      "title": "Choose native backends and dependency contracts",
+      "issue": {
+        "number": 3,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/3"
+      },
+      "baseline_status": "decision required",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 39,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/39"
+        },
+        {
+          "number": 40,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/40"
+        },
+        {
+          "number": 41,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/41"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "svg",
+          "url": "https://www.questpdf.com/api-reference/image/svg.html"
+        }
+      ],
+      "acceptance_fixture_ids": [],
+      "tests": [
+        "Source/FossPDF.NativePrototypes/Program.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/NATIVE_DEPENDENCIES.md"
+      ],
+      "example": "Source/FossPDF.NativePrototypes/Program.cs"
+    },
+    {
+      "id": "FP-003",
+      "title": "Establish cross-platform visual, conformance and performance baselines",
+      "issue": {
+        "number": 4,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/4"
+      },
+      "baseline_status": "planning",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 38,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/38"
+        },
+        {
+          "number": 40,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/40"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "acceptance_fixture_ids": [],
+      "tests": [
+        "Source/FossPDF.Quality/Program.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/QUALITY.md"
+      ],
+      "example": "Source/FossPDF.Quality/Program.cs"
+    },
+    {
+      "id": "FP-004",
+      "title": "Define per-document settings and compatibility rules",
+      "issue": {
+        "number": 5,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/5"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 35,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/35"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "output",
+          "url": "https://www.questpdf.com/concepts/generating-output.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "OUT-001",
+        "SET-004"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/DocumentSettingsTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/SETTINGS.md"
+      ],
+      "example": "Source/FossPDF.Examples/DocumentSettingsExamples.cs"
+    },
+    {
+      "id": "FP-101",
+      "title": "Add paragraph justification, logical alignment, indentation and word spacing",
+      "issue": {
+        "number": 6,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/6"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 49,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/49"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "paragraph",
+          "url": "https://www.questpdf.com/api-reference/text/paragraph-style.html"
+        },
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "TXT-101"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/TextParagraphLayoutTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/TEXT_PARAGRAPH_LAYOUT.md"
+      ],
+      "example": "Source/FossPDF.Examples/ParagraphLayoutExamples.cs"
+    },
+    {
+      "id": "FP-102",
+      "title": "Add text line clamping and custom ellipses",
+      "issue": {
+        "number": 7,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/7"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 43,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/43"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "paragraph",
+          "url": "https://www.questpdf.com/api-reference/text/paragraph-style.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "TXT-102"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/TextLineClampTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/TEXT_CLAMPING.md"
+      ],
+      "example": "Source/FossPDF.Examples/TextClampExamples.cs"
+    },
+    {
+      "id": "FP-103",
+      "title": "Add OpenType controls and richer text decorations",
+      "issue": {
+        "number": 8,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/8"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 47,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/47"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "TXT-001",
+        "TXT-103"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/TextFeatureTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/TEXT_FEATURES.md"
+      ],
+      "example": "Source/FossPDF.Examples/TextFeatureExamples.cs"
+    },
+    {
+      "id": "FP-104",
+      "title": "Implement newspaper-style multi-column flow and balancing",
+      "issue": {
+        "number": 9,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/9"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 50,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/50"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "multicolumn",
+          "url": "https://www.questpdf.com/api-reference/multi-column.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "FAIL-002",
+        "LAY-104"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/MultiColumnTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/MULTI_COLUMN.md"
+      ],
+      "example": "Source/FossPDF.Examples/MultiColumnExamples.cs"
+    },
+    {
+      "id": "FP-105",
+      "title": "Add PreventPageBreak, Repeat and page-aware conditional rendering",
+      "issue": {
+        "number": 10,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/10"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 37,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/37"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "prevent",
+          "url": "https://www.questpdf.com/api-reference/prevent-page-break.html"
+        },
+        {
+          "title": "repeat",
+          "url": "https://www.questpdf.com/api-reference/repeat.html"
+        },
+        {
+          "title": "elementApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Fluent/ElementExtensions.cs"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PAG-001",
+        "PAG-002",
+        "PAG-105"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PageControlTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/ACCEPTANCE.md"
+      ],
+      "example": "Source/FossPDF.Examples/PageControlExamples.cs"
+    },
+    {
+      "id": "FP-106",
+      "title": "Implement Lazy and LazyWithCache composition",
+      "issue": {
+        "number": 11,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/11"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 48,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/48"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "lazy",
+          "url": "https://www.questpdf.com/api-reference/lazy.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "LAY-106"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/LazyLifecycleTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/LAZY_COMPOSITION.md"
+      ],
+      "example": "Source/FossPDF.Examples/LazyExamples.cs"
+    },
+    {
+      "id": "FP-107",
+      "title": "Complete layout helpers and inline-element alignment",
+      "issue": {
+        "number": 12,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/12"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 46,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/46"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "elementApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Fluent/ElementExtensions.cs"
+        },
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "LAY-107"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/LayoutHelperTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/LAYOUT_HELPERS.md"
+      ],
+      "example": "Source/FossPDF.Examples/LayoutHelperExamples.cs"
+    },
+    {
+      "id": "FP-108",
+      "title": "Add content-position capture and dynamic geometry access",
+      "issue": {
+        "number": 13,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/13"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 44,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/44"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "capture",
+          "url": "https://www.questpdf.com/concepts/code-patterns/capture-content-position.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "LAY-108"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/ContentPositionTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/CONTENT_POSITIONS.md"
+      ],
+      "example": "Source/FossPDF.Examples/ContentPositionExamples.cs"
+    },
+    {
+      "id": "FP-109",
+      "title": "Qualify complex-script, mixed-direction and CJK behavior",
+      "issue": {
+        "number": 14,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/14"
+      },
+      "baseline_status": "validation required",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 51,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/51"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "text",
+          "url": "https://www.questpdf.com/api-reference/text/text-style.html"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "TXT-109"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/ComplexScriptTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/COMPLEX_SCRIPTS.md"
+      ],
+      "example": "Source/FossPDF.Examples/ComplexScriptExamples.cs"
+    },
+    {
+      "id": "FP-201",
+      "title": "Add first-class SVG input and preloading",
+      "issue": {
+        "number": 15,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/15"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 52,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/52"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "svg",
+          "url": "https://www.questpdf.com/api-reference/image/svg.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "IMG-001",
+        "FAIL-001",
+        "IMG-201"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/SvgImageTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/SVG_INPUT.md"
+      ],
+      "example": "Source/FossPDF.Examples/SvgImageExample.cs"
+    },
+    {
+      "id": "FP-202",
+      "title": "Add per-image DPI, resampling and compression quality controls",
+      "issue": {
+        "number": 16,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/16"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 45,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/45"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "images",
+          "url": "https://www.questpdf.com/api-reference/image/optimization.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "IMG-001",
+        "IMG-202"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/ImageOptimizationTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/IMAGE_OPTIMIZATION.md"
+      ],
+      "example": "Source/FossPDF.Examples/ImageOptimizationExamples.cs"
+    },
+    {
+      "id": "FP-203",
+      "title": "Add JPEG and WebP page export settings",
+      "issue": {
+        "number": 17,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/17"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 36,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/36"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "output",
+          "url": "https://www.questpdf.com/concepts/generating-output.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "OUT-001",
+        "OUT-203"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/ImageExportTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/IMAGE_EXPORT.md"
+      ],
+      "example": "Source/FossPDF.Examples/ImageExamples.cs"
+    },
+    {
+      "id": "FP-204",
+      "title": "Add rounded containers, border alignment and gradients",
+      "issue": {
+        "number": 18,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/18"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 53,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/53"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "rounded",
+          "url": "https://www.questpdf.com/api-reference/rounded-corners.html"
+        },
+        {
+          "title": "background",
+          "url": "https://www.questpdf.com/api-reference/background.html"
+        },
+        {
+          "title": "border",
+          "url": "https://www.questpdf.com/api-reference/border.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "GFX-204"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/RoundedCornersTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/CONTAINER_STYLING.md"
+      ],
+      "example": "Source/FossPDF.Examples/ContainerStylingExamples.cs"
+    },
+    {
+      "id": "FP-205",
+      "title": "Add advanced line styles and shadows",
+      "issue": {
+        "number": 19,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/19"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 54,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/54"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "line",
+          "url": "https://www.questpdf.com/api-reference/line.html"
+        },
+        {
+          "title": "shadow",
+          "url": "https://www.questpdf.com/api-reference/shadow.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "GFX-205"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/LineAndShadowTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/LINE_STYLES_SHADOWS.md"
+      ],
+      "example": "Source/FossPDF.Examples/LineAndShadowExamples.cs"
+    },
+    {
+      "id": "FP-301",
+      "title": "Add generated-document merging and page-number strategies",
+      "issue": {
+        "number": 20,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/20"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 42,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/42"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "mergeApi",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/Infrastructure/IMergedDocument.cs"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PDF-301"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/MergedDocumentTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/MERGING.md"
+      ],
+      "example": "Source/FossPDF.Examples/DocumentMergeExamples.cs"
+    },
+    {
+      "id": "FP-302",
+      "title": "Implement existing-PDF loading, saving, page selection and merging",
+      "issue": {
+        "number": 21,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/21"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 55,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/55"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "RES-001",
+        "PDF-302"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfOperationTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_OPERATIONS.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfOperationExamples.cs"
+    },
+    {
+      "id": "FP-303",
+      "title": "Add existing-PDF overlays and underlays",
+      "issue": {
+        "number": 22,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/22"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 56,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/56"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PDF-303"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfLayerTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_LAYERS.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfLayerExamples.cs"
+    },
+    {
+      "id": "FP-304",
+      "title": "Add PDF encryption, decryption and permissions",
+      "issue": {
+        "number": 23,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/23"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 57,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/57"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PDF-304"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfSecurityTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_SECURITY.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfSecurityExamples.cs"
+    },
+    {
+      "id": "FP-305",
+      "title": "Add attachments, associated-file relationships and XMP extensions",
+      "issue": {
+        "number": 24,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/24"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 60,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/60"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PDF-305"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfAttachmentTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/ATTACHMENTS_XMP.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfAttachmentExamples.cs"
+    },
+    {
+      "id": "FP-306",
+      "title": "Add explicit PDF compression and linearization controls",
+      "issue": {
+        "number": 25,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/25"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 59,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/59"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "PDF-306"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfDocumentOptimizationTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_OPTIMIZATION.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfCompressionExamples.cs"
+    },
+    {
+      "id": "FP-401",
+      "title": "Implement semantic structure and tagged PDF",
+      "issue": {
+        "number": 26,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/26"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 61,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/61"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "ACC-401"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfTaggingTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_ACCESSIBILITY.md"
+      ],
+      "example": "Source/FossPDF.Examples/AccessiblePdfExamples.cs"
+    },
+    {
+      "id": "FP-402",
+      "title": "Add selectable PDF/A-2 and PDF/A-3 conformance levels",
+      "issue": {
+        "number": 27,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/27"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 62,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/62"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "ACC-402"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfATests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_ARCHIVAL.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfAExamples.cs"
+    },
+    {
+      "id": "FP-403",
+      "title": "Implement PDF/UA-1 accessibility conformance",
+      "issue": {
+        "number": 28,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/28"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 63,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/63"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        },
+        {
+          "title": "settings",
+          "url": "https://www.questpdf.com/concepts/document-settings.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "ACC-403"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/PdfUaTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PDF_UNIVERSAL_ACCESSIBILITY.md"
+      ],
+      "example": "Source/FossPDF.Examples/PdfUaExamples.cs"
+    },
+    {
+      "id": "FP-404",
+      "title": "Add validated ZUGFeRD and Factur-X packaging workflows",
+      "issue": {
+        "number": 29,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/29"
+      },
+      "baseline_status": "missing",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 64,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/64"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "operations",
+          "url": "https://www.questpdf.com/concepts/document-operations.html"
+        },
+        {
+          "title": "accessibility",
+          "url": "https://www.questpdf.com/concepts/accessibility.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "ACC-404"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/EInvoiceTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/EINVOICE.md"
+      ],
+      "example": "Source/FossPDF.Examples/EInvoiceExamples.cs"
+    },
+    {
+      "id": "FP-501",
+      "title": "Add previewer element-inspection transport and source mapping",
+      "issue": {
+        "number": 30,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/30"
+      },
+      "baseline_status": "partial",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 65,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/65"
+        },
+        {
+          "number": 67,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/67"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "companion",
+          "url": "https://www.questpdf.com/companion/features.html"
+        },
+        {
+          "title": "capture",
+          "url": "https://www.questpdf.com/concepts/code-patterns/capture-content-position.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "DEV-501"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/InspectionTransportTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PREVIEW_INSPECTION.md"
+      ],
+      "example": "Source/FossPDF.Previewer.Examples/Program.cs"
+    },
+    {
+      "id": "FP-502",
+      "title": "Add interactive inspection, measurement, search and source navigation",
+      "issue": {
+        "number": 31,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/31"
+      },
+      "baseline_status": "partial",
+      "status": "implementation-merged-validation-pending",
+      "implementation_prs": [
+        {
+          "number": 68,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/68"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "companion",
+          "url": "https://www.questpdf.com/companion/features.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "DEV-502"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/InteractiveInspectionTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PREVIEWER_TOOLS.md"
+      ],
+      "example": "Source/FossPDF.Previewer.Examples/Program.cs"
+    },
+    {
+      "id": "FP-503",
+      "title": "Qualify NativeAOT, trimming and runtime asset support",
+      "issue": {
+        "number": 32,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/32"
+      },
+      "baseline_status": "validation required",
+      "status": "complete",
+      "implementation_prs": [
+        {
+          "number": 69,
+          "url": "https://github.com/samuelkim-scz/FossPDF.Net/pull/69"
+        }
+      ],
+      "target_sources": [
+        {
+          "title": "aot",
+          "url": "https://github.com/QuestPDF/QuestPDF/blob/2026.9.1/src/dotnet/library/QuestPDF/QuestPDF.csproj"
+        },
+        {
+          "title": "roadmap",
+          "url": "https://www.questpdf.com/roadmap.html"
+        }
+      ],
+      "acceptance_fixture_ids": [
+        "RUN-503"
+      ],
+      "tests": [
+        "Source/FossPDF.UnitTests/Parity/ParityAcceptanceTests.Runtime.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/RUNTIME_SUPPORT.md"
+      ],
+      "example": "Source/FossPDF.RuntimeSmoke/Program.cs"
+    },
+    {
+      "id": "FP-504",
+      "title": "Complete the parity audit, migration guide and release evidence",
+      "issue": {
+        "number": 33,
+        "url": "https://github.com/samuelkim-scz/FossPDF.Net/issues/33"
+      },
+      "baseline_status": "release gate",
+      "status": "release-gate-pending",
+      "implementation_prs": [],
+      "target_sources": [
+        {
+          "title": "release",
+          "url": "https://github.com/QuestPDF/QuestPDF/releases/tag/2026.9.1"
+        },
+        {
+          "title": "overview",
+          "url": "https://www.questpdf.com/features-overview.html"
+        }
+      ],
+      "acceptance_fixture_ids": [],
+      "tests": [
+        "Source/FossPDF.UnitTests/Parity/ParityAcceptanceTests.cs"
+      ],
+      "documentation": [
+        "docs/feature-parity/PARITY_AUDIT.md"
+      ],
+      "example": "Source/FossPDF.RuntimeSmoke/qualify_runtime.py"
+    }
+  ],
+  "native_previewer_evidence": "docs/feature-parity/evidence/fp-502-windows-followup.md"
+}

@@ -2,7 +2,7 @@
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
-The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. Fixtures marked **active** are executed by the parity suite and contribute evidence; the remaining contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
+The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. All 36 fixture contracts are now **active**. Execution still depends on the documented framework, external validators and deployment-evidence prerequisites; a skipped check contributes no evidence of feature parity. Historical baseline assessments remain preserved separately.
 
 ## Public-contract and equivalence rules
 
@@ -96,7 +96,7 @@ RUN-503 is active on .NET 9 and requires a complete packaged publish/run manifes
 absent; the dedicated runtime workflow requires all twelve profiles for each native RID. See the
 [deployment guide and recorded matrix](RUNTIME_SUPPORT.md) for reproduction and qualification scope.
 
-PDF-operation inputs reuse the generated PAG-001/PAG-002 documents, whose page colors make selection/order observable. ACC-401 declares independently authored semantic content, language, heading order and figure alternatives; the PDF/A/PDF/UA contracts build on it. PDF-305 supplies exact attachment bytes/XMP values. The PDF/A and PDF/UA contracts remain planned; their inputs do not claim conforming output.
+PDF-operation inputs reuse the generated PAG-001/PAG-002 documents, whose page colors make selection/order observable. ACC-401 declares independently authored semantic content, language, heading order and figure alternatives; the PDF/A/PDF/UA contracts build on it. PDF-305 supplies exact attachment bytes/XMP values. ACC-402/403/404 actively validate final conformance/invoice output with the pinned external tools and their feature-specific human-review responsibilities.
 
 ## Visual tolerances
 
@@ -121,7 +121,7 @@ dotnet build FossPDF.sln -c Release --no-restore --warnaserror
 dotnet test FossPDF.UnitTests/FossPDF.UnitTests.csproj -c Release --no-build --no-restore --filter TestCategory=FeatureParity --logger trx --results-directory ../artifacts/parity
 ```
 
-Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. The category contains thirty executable scenarios on .NET 9 (twenty-three on .NET 8, where the net9.0-scoped `IMG-201`, `PDF-302`, `PDF-303`, `PDF-304`, `PDF-305`, `PDF-306` and `ACC-401` are skipped), one catalog/traceability check, four raster-comparison checks, and 6 explicitly planned/skipped contracts.
+Remove `--filter TestCategory=FeatureParity` to run the complete suite. Both target frameworks run automatically. All 36 fixture contracts are active. Twenty-four apply to .NET 8; twelve require .NET 9. On .NET 9, RUN-503 requires the separate packaged deployment evidence and explicitly skips when it is absent. Conformance fixtures require their pinned validators. The category also contains one catalog/traceability check and four raster-comparison checks; there are no planned fixtures.
 Artifacts are written beneath `Source/FossPDF.UnitTests/bin/Release/net8.0/parity-artifacts/` and `net9.0/parity-artifacts/`, grouped by fixture ID. Each rendering fixture emits its PDF and actual PNGs; geometric cases also emit reference PNGs. TRX attachments link these outputs. GitHub Actions uploads `parity-evidence-<OS runner>` artifacts, including TRX results, after each Windows/Linux/macOS test job.
 
 See the [initial Windows evidence](evidence/fp-001-windows.md) for the recorded local run. Other platform qualification and broader conformance/performance coverage remain tracked by their work items.
