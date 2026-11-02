@@ -12,6 +12,10 @@ and the next parity target unselected. Neither decision removes a capability fro
 The [expanded Windows record](evidence/fp-502-windows-followup.md) includes clean tool installation,
 forty hot reloads and large-document export/recovery. It also records the clipboard provider
 failure and remaining native walkthrough items without treating them as passes.
+The [November 2 Windows follow-up](evidence/fp-502-windows-keyboard-clipboard.md) fixes and
+qualifies clipboard copy/paste, numeric Escape, hierarchy keyboard handling and content picking,
+and records the user's successful Ctrl+wheel and middle-button pan checks. Native Linux/macOS
+acceptance and screen-reader review remain separate pending gates.
 
 All **36 acceptance fixtures are active**. Activation identifies executable coverage, not proof
 that every environment or human checkpoint has passed. RUN-503 requires its dedicated deployment
