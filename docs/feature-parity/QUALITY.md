@@ -152,9 +152,11 @@ from multiple runs and platforms.
 
 ## Conformance
 
-The current library does **not** claim PDF/A or PDF/UA conformance. `PdfAConformance.None` is the
-default; selectable PDF/A-2/PDF/A-3 profiles require FP-402, and PDF/UA-1 requires FP-401/FP-403.
-The legacy `DocumentMetadata.PdfA` flag is not a validated profile.
+The quality tool's ordinary baseline document makes **no PDF/A or PDF/UA claim** and uses
+`PdfAConformance.None`. Validated profiles are implemented separately by the optional .NET 9
+companion: see [PDF/A-2/3](PDF_ARCHIVAL.md) and [PDF/UA-1](PDF_UNIVERSAL_ACCESSIBILITY.md) for
+mandatory final validation and author responsibilities. The legacy `DocumentMetadata.PdfA` flag
+is not a validated profile. Baseline policy `currentClaims` refers to this ordinary document only.
 
 The conformance run writes `conformance.json` and records:
 
@@ -162,10 +164,12 @@ The conformance run writes `conformance.json` and records:
   passes; structural errors fail);
 - `verapdf` output when available, without treating it as a conformance claim;
 - the pinned minimum tool versions from `conformance-tools.json`;
-- explicit notes about the unimplemented profiles.
+- explicit notes distinguishing this baseline from the dedicated profile qualification corpus.
 
 The Linux CI runner installs qpdf. verapdf is optional because it requires a Java runtime; when it
-is present, its report is retained in the artifact for future profile work.
+is present, its report is retained as baseline inspection evidence. The dedicated acceptance
+workflow deploys the pinned veraPDF 1.30.3 and validates final selected-profile output; this optional
+baseline check does not replace it.
 
 ## Baselines and artifacts
 

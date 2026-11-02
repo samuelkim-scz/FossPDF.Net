@@ -2,7 +2,7 @@
 
 This is the FP-001 acceptance contract for functional parity with **QuestPDF 2026.9.1**, starting from FossPDF commit `0339255ff8f987a4abb62ef81f06bbcf00e0b81e`. It accompanies the [roadmap](../../FEATURE_PARITY.md) and [shared tracker](https://github.com/samuelkim-scz/FossPDF.Net/issues/1).
 
-The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. Fixtures marked **active** are executed by the parity suite and contribute evidence; the remaining contracts are planned and appear as **skipped**, with their owning work item, until contributors implement and activate them. A skipped contract contributes no evidence of feature parity.
+The independently authored [fixture catalog](acceptance-fixtures.json) defines inputs, expected outcomes and traceability for all 27 feature work packages. All 36 fixture contracts are now **active**. Execution still depends on the documented framework, external validators and deployment-evidence prerequisites; a skipped check contributes no evidence of feature parity. Historical baseline assessments remain preserved separately.
 
 ## Public-contract and equivalence rules
 
