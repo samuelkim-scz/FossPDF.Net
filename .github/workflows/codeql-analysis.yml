@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze C#
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       actions: read
       contents: read
@@ -32,6 +32,7 @@ jobs:
           languages: csharp
 
       - name: Restore and build
+        shell: bash
         run: |
           dotnet restore Source/FossPDF.sln
           dotnet build Source/FossPDF.sln -c Release --no-restore

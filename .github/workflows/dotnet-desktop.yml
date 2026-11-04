@@ -17,15 +17,7 @@ on:
 
 jobs:
   main:
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
-          - macos-26-intel
-          - ubuntu-latest
-          - windows-latest
+    runs-on: windows-latest
     env:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -54,18 +46,10 @@ jobs:
         working-directory: ./Source
 
       - name: Install qpdf for PDF optimization coverage
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            sudo apt-get update && sudo apt-get install -y qpdf
-          elif [ "$RUNNER_OS" = "macOS" ]; then
-            brew install qpdf
-          else
-            choco install qpdf -y --no-progress
-          fi
+        shell: pwsh
+        run: choco install qpdf -y --no-progress
 
       - name: Make the installed Windows qpdf available to every validation step
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $qpdf = (Get-Command qpdf -ErrorAction SilentlyContinue).Source
@@ -144,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: parity-evidence-${{ matrix.environment }}
+          name: parity-evidence-windows-latest
           path: |
             artifacts/parity/**/*.trx
             artifacts/parity/verapdf/qualification-manifest.json
@@ -161,7 +145,6 @@ jobs:
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
-        if: ${{ matrix.environment == 'windows-latest' }}
         with:
           name: Build Package
           path: |
@@ -170,16 +153,8 @@ jobs:
             !.nuget
 
   quality:
-    name: Quality baselines (${{ matrix.environment }})
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
-          - macos-26-intel
-          - ubuntu-latest
-          - windows-latest
+    name: Quality baselines (Windows)
+    runs-on: windows-latest
     env:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -204,10 +179,19 @@ jobs:
         run: dotnet build -c Release --no-restore --warnaserror
         working-directory: ./Source
 
-      - name: Install qpdf (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: sudo apt-get update && sudo apt-get install -y qpdf
+      - name: Install qpdf for PDF optimization coverage
+        shell: pwsh
+        run: choco install qpdf -y --no-progress
+
+      - name: Make the installed Windows qpdf available to every validation step
+        shell: pwsh
+        run: |
+          $qpdf = (Get-Command qpdf -ErrorAction SilentlyContinue).Source
+          if (-not $qpdf) { $qpdf = Get-ChildItem -LiteralPath $env:ProgramFiles -Directory -Filter 'qpdf*' |
+            Sort-Object Name -Descending | ForEach-Object { Join-Path $_.FullName 'bin/qpdf.exe' } |
+            Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1 }
+          if (-not $qpdf) { throw 'The installed qpdf executable was not found.' }
+          Split-Path -Parent $qpdf | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Run quality baselines
         shell: bash
@@ -218,20 +202,12 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: quality-evidence-${{ matrix.environment }}
+          name: quality-evidence-windows-latest
           path: artifacts/quality/**/*
 
   native-prototypes:
-    name: Native backend prototypes (${{ matrix.environment }})
-    runs-on: ${{ matrix.environment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          # Pin the supported Intel image while hosted macOS ARM capacity is constrained.
-          - macos-26-intel
-          - ubuntu-latest
-          - windows-latest
+    name: Native backend prototypes (Windows)
+    runs-on: windows-latest
     env:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -278,7 +254,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: fp-002-native-prototypes-${{ matrix.environment }}
+          name: fp-002-native-prototypes-windows-latest
           path: artifacts/fp-002/**/*
 
 

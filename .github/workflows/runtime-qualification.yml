@@ -18,16 +18,9 @@ jobs:
         include:
           - environment: windows-latest
             rid: win-x64
-          - environment: ubuntu-latest
-            rid: linux-x64
-          - environment: macos-26-intel
-            rid: osx-x64
           - environment: windows-11-arm
             rid: win-arm64
             python-architecture: x64
-          - environment: ubuntu-24.04-arm
-            rid: linux-arm64
-            python-architecture: arm64
     env:
       DOTNET_NOLOGO: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -42,7 +35,6 @@ jobs:
           python-version: '3.12'
           architecture: ${{ matrix.python-architecture || 'x64' }}
       - name: Configure the Windows native toolchain
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $architecture = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'amd64' }
@@ -56,17 +48,11 @@ jobs:
             $value = [Environment]::GetEnvironmentVariable($name)
             if ($value) { "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
           }
-      - name: Install the Linux native toolchain
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
       - name: Record the publishing environment
         shell: bash
         run: |
           mkdir -p artifacts/runtime-environment
           dotnet --info > artifacts/runtime-environment/dotnet-info.txt
-          if [ "$RUNNER_OS" != "Windows" ]; then
-            clang --version > artifacts/runtime-environment/clang-version.txt
-          fi
       - name: Install pinned independent readers
         shell: bash
         run: python -m pip install -r Source/FossPDF.RuntimeSmoke/requirements-validation.txt
