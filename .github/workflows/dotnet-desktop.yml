@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      publish_packages:
+        description: Publish packages to the hsadev Azure Artifacts feed
+        type: boolean
+        required: false
+        default: false
   schedule:
     - cron: '3 0 * * 0'
 
@@ -274,3 +280,82 @@ jobs:
         with:
           name: fp-002-native-prototypes-${{ matrix.environment }}
           path: artifacts/fp-002/**/*
+
+
+  publish-packages:
+    name: Publish NuGet packages to hsadev
+    needs: [main, quality, native-prototypes]
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_packages && github.ref == 'refs/heads/main' }}
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      AZURE_ARTIFACTS_FEED_URL: https://pkgs.dev.azure.com/hsadev/_packaging/hsadev/nuget/v3/index.json
+
+    steps:
+      - name: Fetch sources
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Choose the internal package version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content -LiteralPath Source/FossPDF/FossPDF.csproj -Raw
+          $baseVersion = $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText
+          $packageVersion = "$baseVersion-internal.$env:GITHUB_RUN_NUMBER"
+          "PACKAGE_VERSION=$packageVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Output "Publishing version $packageVersion"
+
+      - name: Pack the public consumer packages
+        shell: pwsh
+        working-directory: Source
+        run: |
+          $projects = @('FossPDF', 'FossPDF.FontSubset', 'FossPDF.FontSubset.Glue', 'FossPDF.Svg', 'FossPDF.PdfOperations')
+          $packageDirectory = Join-Path $env:RUNNER_TEMP 'foss-pdf-packages'
+          foreach ($project in $projects) {
+            dotnet pack "$project/$project.csproj" -c Release -p:GeneratePackageOnBuild=false "-p:PackageVersion=$env:PACKAGE_VERSION" --output $packageDirectory
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Upload the packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: hsadev-packages-${{ env.PACKAGE_VERSION }}
+          path: ${{ runner.temp }}/foss-pdf-packages/*
+          if-no-files-found: error
+
+      - name: Publish the packages to Azure Artifacts
+        shell: pwsh
+        working-directory: Source
+        env:
+          AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AZURE_DEVOPS_TOKEN)) {
+            throw 'Add the AZURE_DEVOPS_TOKEN repository secret before publishing.'
+          }
+          $env:NuGetPackageSourceCredentials_hsadev = "Username=github;Password=$env:AZURE_DEVOPS_TOKEN;ValidAuthenticationTypes=Basic"
+          $configPath = Join-Path $env:RUNNER_TEMP 'hsadev.nuget.config'
+          '<configuration><packageSources><clear /></packageSources></configuration>' | Set-Content -LiteralPath $configPath -Encoding utf8
+          dotnet nuget add source $env:AZURE_ARTIFACTS_FEED_URL --name hsadev --configfile $configPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $projects = @('FossPDF', 'FossPDF.FontSubset', 'FossPDF.FontSubset.Glue', 'FossPDF.Svg', 'FossPDF.PdfOperations')
+          foreach ($project in $projects) {
+            $packagePath = Join-Path $env:RUNNER_TEMP "foss-pdf-packages/$project.$env:PACKAGE_VERSION.nupkg"
+            if (-not (Test-Path -LiteralPath $packagePath)) { throw "Missing package: $packagePath" }
+            dotnet nuget push $packagePath --source hsadev --api-key AzureArtifacts --skip-duplicate --no-symbols --configfile $configPath
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Show the published version
+        shell: pwsh
+        run: |
+          "Published FossPDF, FossPDF.FontSubset, FossPDF.FontSubset.Glue, FossPDF.Svg, and FossPDF.PdfOperations version **$env:PACKAGE_VERSION** to [hsadev](https://dev.azure.com/hsadev/_artifacts/feed/hsadev)." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
